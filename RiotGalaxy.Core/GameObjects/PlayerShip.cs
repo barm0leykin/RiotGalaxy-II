@@ -2,10 +2,10 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
-using RiotGalaxy.Components;
-using RiotGalaxy.Weapons;
+using RiotGalaxy.Core.Components;
+using RiotGalaxy.Core.Weapons;
 
-namespace RiotGalaxy.GameObjects
+namespace RiotGalaxy.Core.GameObjects
 {
     /// <summary>
     /// Типы оружия

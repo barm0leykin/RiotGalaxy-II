@@ -1,9 +1,9 @@
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using RiotGalaxy.Managers;
+using RiotGalaxy.Core.Managers;
 
-namespace RiotGalaxy.GameObjects
+namespace RiotGalaxy.Core.GameObjects
 {
     /// <summary>
     /// Базовый класс снаряда. Аналог Shell из CocosSharp.
@@ -17,10 +17,18 @@ namespace RiotGalaxy.GameObjects
         public int Damage { get; set; } = 10;
         public int Hp { get; set; } = 1;
         public bool PlayerSide { get; set; } = true;   // true = выпущен игроком (для отключения friendly-fire)
-        public bool IsPiercing { get; protected set; } = false; // летит насквозь (лазер)
+        public bool IsPiercing { get; set; } = false; // летит насквозь (лазер)
 
-        protected Shell(Vector2 position) : base(position, new Vector2(8, 16))
+        /// <summary>
+        /// Снаряд задаётся данными (спрайт + пробивание) — раньше были классы Bullet/Slug/Laser.
+        /// Speed/Damage/Direction/PlayerSide выставляет оружие при выстреле (Weapon.FireOnce).
+        /// </summary>
+        public Shell(Vector2 position, string sprite = null, bool piercing = false)
+            : base(position, new Vector2(8, 16))
         {
+            IsPiercing = piercing;
+            if (!string.IsNullOrEmpty(sprite))
+                LoadSprite(sprite);
         }
 
         /// <summary>

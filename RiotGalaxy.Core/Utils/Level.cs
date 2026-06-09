@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using RiotGalaxy.GameObjects;
+using RiotGalaxy.Core.GameObjects;
 
-namespace RiotGalaxy.Utils
+namespace RiotGalaxy.Core.Utils
 {
     /// <summary>
     /// Уровень: загружается из Content/Levels/level{N}.yaml, разворачивает события в таймлайн

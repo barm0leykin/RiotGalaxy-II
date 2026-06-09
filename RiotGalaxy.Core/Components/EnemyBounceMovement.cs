@@ -1,9 +1,9 @@
 using System;
 using Microsoft.Xna.Framework;
-using RiotGalaxy.GameObjects;
-using RiotGalaxy.Managers;
+using RiotGalaxy.Core.GameObjects;
+using RiotGalaxy.Core.Managers;
 
-namespace RiotGalaxy.Components
+namespace RiotGalaxy.Core.Components
 {
     /// <summary>
     /// Движение врага с отскоком от боковых границ и телепортом снизу-вверх.

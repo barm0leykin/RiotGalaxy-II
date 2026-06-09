@@ -1,10 +1,10 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using RiotGalaxy.Managers;
-using RiotGalaxy.Utils;
+using RiotGalaxy.Core.Managers;
+using RiotGalaxy.Core.Utils;
 
-namespace RiotGalaxy.Screens
+namespace RiotGalaxy.Core.Screens
 {
     /// <summary>
     /// Экран настроек: громкость звуковых эффектов с сохранением в файл.

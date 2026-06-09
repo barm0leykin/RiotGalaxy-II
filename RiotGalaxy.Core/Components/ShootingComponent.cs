@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
-using RiotGalaxy.GameObjects;
+using RiotGalaxy.Core.GameObjects;
 
-namespace RiotGalaxy.Components
+namespace RiotGalaxy.Core.Components
 {
     /// <summary>
     /// Базовый класс компонентов стрельбы (паттерн Стратегия).

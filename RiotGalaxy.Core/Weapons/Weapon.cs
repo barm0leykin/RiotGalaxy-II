@@ -1,9 +1,9 @@
 using System;
 using Microsoft.Xna.Framework;
-using RiotGalaxy.GameObjects;
-using RiotGalaxy.Managers;
+using RiotGalaxy.Core.GameObjects;
+using RiotGalaxy.Core.Managers;
 
-namespace RiotGalaxy.Weapons
+namespace RiotGalaxy.Core.Weapons
 {
     /// <summary>
     /// Базовый класс оружия. Адаптация Weapon из CocosSharp.
@@ -12,7 +12,7 @@ namespace RiotGalaxy.Weapons
     /// </summary>
     public class Weapon
     {
-        public enum WeaponType { CANNON = 0, MINIGUN, LASER }
+        // Тип оружия — единый enum RiotGalaxy.Core.GameObjects.WeaponType (Cannon/MachineGun/Laser).
 
         public int WeaponTypeId;
         public WeaponOptions Options;
@@ -109,8 +109,8 @@ namespace RiotGalaxy.Weapons
         /// <summary>Угол текущего выстрела (минигатлинг переопределяет для разброса).</summary>
         protected virtual float GetFireAngle() => _aimAngle;
 
-        /// <summary>Создание конкретного снаряда (переопределяется в наследниках).</summary>
-        protected virtual Shell CreateShell(Vector2 position) => new Bullet(position);
+        /// <summary>Создание снаряда (наследники задают спрайт/пробивание данными).</summary>
+        protected virtual Shell CreateShell(Vector2 position) => new Shell(position, "Images/bullet");
 
         /// <summary>
         /// Одиночный выстрел: создаёт снаряд, задаёт ему параметры и добавляет в игру.
@@ -149,11 +149,11 @@ namespace RiotGalaxy.Weapons
     {
         public WeaponCannon(GameObject owner, int lvl = 0) : base(owner)
         {
-            WeaponTypeId = (int)WeaponType.CANNON;
+            WeaponTypeId = (int)WeaponType.Cannon;
             InitLevel(WeaponConfig.Cannons, lvl);
         }
 
-        protected override Shell CreateShell(Vector2 position) => new Bullet(position);
+        protected override Shell CreateShell(Vector2 position) => new Shell(position, "Images/bullet");
     }
 
     /// <summary>Пулемёт: быстрые очереди слабых снарядов (Slug) с разбросом ±5°.</summary>
@@ -163,7 +163,7 @@ namespace RiotGalaxy.Weapons
 
         public WeaponMinigun(GameObject owner, int lvl = 0) : base(owner)
         {
-            WeaponTypeId = (int)WeaponType.MINIGUN;
+            WeaponTypeId = (int)WeaponType.MachineGun;
             InitLevel(WeaponConfig.Miniguns, lvl);
         }
 
@@ -174,7 +174,7 @@ namespace RiotGalaxy.Weapons
             return _aimAngle + MathHelper.ToRadians(spreadDeg);
         }
 
-        protected override Shell CreateShell(Vector2 position) => new Slug(position);
+        protected override Shell CreateShell(Vector2 position) => new Shell(position, "Images/slug");
     }
 
     /// <summary>Лазер: быстрые пробивающие снаряды (Laser).</summary>
@@ -182,11 +182,11 @@ namespace RiotGalaxy.Weapons
     {
         public WeaponLaser(GameObject owner, int lvl = 0) : base(owner)
         {
-            WeaponTypeId = (int)WeaponType.LASER;
+            WeaponTypeId = (int)WeaponType.Laser;
             InitLevel(WeaponConfig.Lasers, lvl);
         }
 
-        protected override Shell CreateShell(Vector2 position) => new Laser(position);
+        protected override Shell CreateShell(Vector2 position) => new Shell(position, "Images/laser", piercing: true);
     }
 
     /// <summary>Отсутствие оружия (Null Object). Аналог NoWeapon из CocosSharp.</summary>

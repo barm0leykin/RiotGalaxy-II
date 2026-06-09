@@ -1,7 +1,7 @@
 using System.Collections.Generic;
-using RiotGalaxy.Utils;
+using RiotGalaxy.Core.Utils;
 
-namespace RiotGalaxy.Weapons
+namespace RiotGalaxy.Core.Weapons
 {
     /// <summary>
     /// Параметры оружия по уровням. Грузятся из Content/Config/weapons.yaml (Load()).

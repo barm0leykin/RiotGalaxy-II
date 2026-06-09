@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace RiotGalaxy.Effects
+namespace RiotGalaxy.Core.Effects
 {
     /// <summary>
     /// Лёгкая система частиц для «сочности»: взрывы, искры попаданий, дульные вспышки.

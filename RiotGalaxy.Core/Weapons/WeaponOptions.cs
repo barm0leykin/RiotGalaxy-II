@@ -1,4 +1,4 @@
-namespace RiotGalaxy.Weapons
+namespace RiotGalaxy.Core.Weapons
 {
     /// <summary>
     /// Параметры оружия. Точная копия структуры WeaponOptions из CocosSharp.

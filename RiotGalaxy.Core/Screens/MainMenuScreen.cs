@@ -3,9 +3,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using RiotGalaxy.Core;
-using RiotGalaxy.Managers;
+using RiotGalaxy.Core.Managers;
 
-namespace RiotGalaxy.Screens
+namespace RiotGalaxy.Core.Screens
 {
     /// <summary>
     /// Главное меню: заголовок + кнопки «Начать игру / Настройки / Выход».

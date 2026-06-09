@@ -1,9 +1,9 @@
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using RiotGalaxy.Managers;
+using RiotGalaxy.Core.Managers;
 
-namespace RiotGalaxy.GameObjects
+namespace RiotGalaxy.Core.GameObjects
 {
     /// <summary>
     /// Типы бонусов (как в CocosSharp).
@@ -24,6 +24,25 @@ namespace RiotGalaxy.GameObjects
         protected Bonus(Vector2 position) : base(position, new Vector2(20, 20))
         {
             SetDirection(180f); // по умолчанию падает вниз
+        }
+
+        /// <summary>
+        /// Простой бонус-усиление, заданный типом (HP_UP/BULLET_UP/NUKE_BOMB) — раньше это были
+        /// отдельные классы. Спрайт выбирается по типу, эффект — в базовом Apply.
+        /// (STAR имеет уникальное поведение — отдельный класс BonusStar.)
+        /// </summary>
+        public Bonus(BonusType type, Vector2 position) : this(position)
+        {
+            Type = type;
+            string sprite = type switch
+            {
+                BonusType.HP_UP     => "Images/bonusHPUp",
+                BonusType.BULLET_UP => "Images/bonusBulletUp",
+                BonusType.NUKE_BOMB => "Images/bonusNukeBomb",
+                _                   => null,
+            };
+            if (sprite != null)
+                LoadSprite(sprite);
         }
 
         protected void LoadSprite(string asset)
@@ -67,53 +86,27 @@ namespace RiotGalaxy.GameObjects
             IsAlive = false;
         }
 
-        /// <summary>Применить эффект бонуса к игроку (переопределяется типами).</summary>
-        public virtual void Apply(PlayerShip player) { }
-    }
-
-    /// <summary>Восстановление здоровья до максимума.</summary>
-    public class BonusHpUp : Bonus
-    {
-        public BonusHpUp(Vector2 pos) : base(pos)
+        /// <summary>
+        /// Применить эффект простого бонуса по типу. STAR переопределяет (свой Apply).
+        /// </summary>
+        public virtual void Apply(PlayerShip player)
         {
-            Type = BonusType.HP_UP;
-            LoadSprite("Images/bonusHPUp");
-        }
-
-        public override void Apply(PlayerShip player)
-        {
-            int before = player.Health;
-            player.Heal(Utils.BonusConfig.Current.HpUpAmount);
-            int gained = player.Health - before;
-            Managers.MessageLog.Add(gained > 0 ? $"+{gained} HP" : "HP полное", Color.Lime);
-        }
-    }
-
-    /// <summary>Улучшение текущего оружия.</summary>
-    public class BonusBulletUp : Bonus
-    {
-        public BonusBulletUp(Vector2 pos) : base(pos)
-        {
-            Type = BonusType.BULLET_UP;
-            LoadSprite("Images/bonusBulletUp");
-        }
-
-        public override void Apply(PlayerShip player) => player.UpgradeWeapon();
-    }
-
-    /// <summary>Уничтожение всех врагов на экране.</summary>
-    public class BonusNukeBomb : Bonus
-    {
-        public BonusNukeBomb(Vector2 pos) : base(pos)
-        {
-            Type = BonusType.NUKE_BOMB;
-            LoadSprite("Images/bonusNukeBomb");
-        }
-
-        public override void Apply(PlayerShip player)
-        {
-            GameManager.Instance.KillAllEnemies();
-            Managers.MessageLog.Add("Бомба! Всех в труху", Color.Orange);
+            switch (Type)
+            {
+                case BonusType.HP_UP:
+                    int before = player.Health;
+                    player.Heal(Utils.BonusConfig.Current.HpUpAmount);
+                    int gained = player.Health - before;
+                    Managers.MessageLog.Add(gained > 0 ? $"+{gained} HP" : "HP полное", Color.Lime);
+                    break;
+                case BonusType.BULLET_UP:
+                    player.UpgradeWeapon();
+                    break;
+                case BonusType.NUKE_BOMB:
+                    GameManager.Instance.KillAllEnemies();
+                    Managers.MessageLog.Add("Бомба! Всех в труху", Color.Orange);
+                    break;
+            }
         }
     }
 

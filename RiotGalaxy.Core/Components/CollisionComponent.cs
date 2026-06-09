@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
-using RiotGalaxy.GameObjects;
+using RiotGalaxy.Core.GameObjects;
 
-namespace RiotGalaxy.Components
+namespace RiotGalaxy.Core.Components
 {
     /// <summary>
     /// Базовый класс для компонентов столкновений
@@ -71,7 +71,7 @@ namespace RiotGalaxy.Components
         /// <summary>
         /// Обработка столкновения с пулей
         /// </summary>
-        public virtual void OnBulletHit(Bullet bullet)
+        public virtual void OnBulletHit(Shell bullet)
         {
             // Реализация по умолчанию
             if (!_owner.IsAlive)
@@ -156,9 +156,9 @@ namespace RiotGalaxy.Components
     /// </summary>
     public class BulletCollisionComponent : CollisionComponent
     {
-        private Bullet _bullet;
-        
-        public BulletCollisionComponent(Bullet bullet) : base(bullet, 5f)
+        private Shell _bullet;
+
+        public BulletCollisionComponent(Shell bullet) : base(bullet, 5f)
         {
             _bullet = bullet;
 

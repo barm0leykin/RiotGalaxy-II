@@ -1,7 +1,7 @@
-using RiotGalaxy.GameObjects;
-using RiotGalaxy.Managers;
+using RiotGalaxy.Core.GameObjects;
+using RiotGalaxy.Core.Managers;
 
-namespace RiotGalaxy.AI
+namespace RiotGalaxy.Core.AI
 {
     /// <summary>
     /// Контроллер ИИ врага — машина состояний. Порт BehAI из CocosSharp

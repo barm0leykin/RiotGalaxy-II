@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace RiotGalaxy.Utils
+namespace RiotGalaxy.Core.Utils
 {
     /// <summary>
     /// Параметры визуальных эффектов и параллакс-фона из Content/Config/effects.yaml.

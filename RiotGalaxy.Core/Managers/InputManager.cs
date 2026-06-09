@@ -3,12 +3,12 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
-using RiotGalaxy.Commands;
-using RiotGalaxy.Interface;
-using RiotGalaxy.Components;
-using RiotGalaxy.GameObjects;
+using RiotGalaxy.Core.Commands;
+using RiotGalaxy.Core.Interface;
+using RiotGalaxy.Core.Components;
+using RiotGalaxy.Core.GameObjects;
 
-namespace RiotGalaxy.Managers
+namespace RiotGalaxy.Core.Managers
 {
     /// <summary>
     /// Класс InputManager - обрабатывает ввод пользователя.

@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 
-namespace RiotGalaxy.GameObjects
+namespace RiotGalaxy.Core.GameObjects
 {
     /// <summary>
     /// Маршрут движения врага — последовательность точек (экранные координаты).

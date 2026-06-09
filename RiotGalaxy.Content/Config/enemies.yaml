@@ -14,6 +14,14 @@
 #   snake   — змейкой (синус по X)
 #   ram     — таран: прямо в точку, где был игрок на момент вылета
 #   ellipse — петля/дуга (Galaga-стиль)
+#
+# Внешний вид и поведение (раньше задавались классами-наследниками, теперь — данными):
+#   sprite           — ассет спрайта (Images/...)
+#   scale            — масштаб спрайта и хитбокса (1 — обычный; босс крупнее)
+#   shoot            — стрельба: none / down (вниз) / aim (прицельно в игрока)
+#   ai               — машина состояний: none / blue / red (иначе — движение с отскоком)
+#   wander           — периодически менять курс/скорость (как зелёный)
+#   dirMin / dirMax  — диапазон стартового курса при движении с отскоком (градусы; 180 — строго вниз)
 
 scout:
   hp: 10
@@ -22,6 +30,10 @@ scout:
   speedMax: 100
   shootInterval: 0      # разведчик не стреляет
   tactics: [random]
+  sprite: Images/enemySmallScout
+  shoot: none
+  dirMin: 155
+  dirMax: 205
 
 blue:
   hp: 10
@@ -30,6 +42,9 @@ blue:
   attackSpeed: 200
   shootInterval: 4
   tactics: [snake, ram]
+  sprite: Images/enemyBlue
+  ai: blue
+  shoot: down
 
 green:
   hp: 10
@@ -39,6 +54,11 @@ green:
   attackSpeed: 200
   shootInterval: 4
   tactics: [random, snake]
+  sprite: Images/enemyGreen
+  shoot: down
+  wander: true
+  dirMin: 135
+  dirMax: 225
 
 red:
   hp: 20
@@ -47,9 +67,18 @@ red:
   attackSpeed: 160
   shootInterval: 6
   tactics: [ram, ellipse]
+  sprite: Images/enemyRed
+  ai: red
+  shoot: aim
 
 boss:
   hp: 200
   damage: 20
   speed: 50
   shootInterval: 1.2
+  tactics: []
+  sprite: Images/enemyRed   # отдельного спрайта босса нет — крупный enemyRed
+  scale: 2.5
+  shoot: aim
+  dirMin: 135
+  dirMax: 135

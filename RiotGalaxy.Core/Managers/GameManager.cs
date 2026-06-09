@@ -3,11 +3,11 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Content;
-using RiotGalaxy.GameObjects;
-using RiotGalaxy.Components;
-using RiotGalaxy.Interface;
+using RiotGalaxy.Core.GameObjects;
+using RiotGalaxy.Core.Components;
+using RiotGalaxy.Core.Interface;
 
-namespace RiotGalaxy.Managers
+namespace RiotGalaxy.Core.Managers
 {
     /// <summary>
     /// Класс GameManager - центральный диспетчер игры.
@@ -28,36 +28,30 @@ namespace RiotGalaxy.Managers
         }
 
         // Ссылки на основные компоненты игры
-        private Game _game;
         private GraphicsDeviceManager _graphics;
         private ContentManager _content;
         private SpriteBatch _spriteBatch;
         private SpriteFont _defaultFont;
         
-        // Игровые события (аналог GamePlay.cs)
-        public List<Action> GameEvents { get; private set; } = new List<Action>();
-        
-        // Счетчики для отслеживания статистики
-        public int EnemiesKilled { get; private set; }
-        public int EnemiesRemaining { get; private set; }
-
         // Базовые игровые состояния
         public enum GameState { Splash, MainMenu, Settings, Playing, Paused, GameOver, Victory, NextLevel }
         public GameState CurrentGameState { get; private set; }
 
-        // Мир и формации (этап 10)
-        private World _world;
-        private Hive _hive;
+        // Оркестратор уровней (World/Hive, спавн, прогрессия, счётчики врагов).
+        private readonly LevelDirector _levels = new LevelDirector();
 
-        // Текущий уровень и прогрессия
-        private Utils.Level _level;
-        private int _currentLevel = 1;
-        private int _totalLevels = 1;
         private int _lastScore; // итоговый счёт для экранов GameOver/Victory
-        private static readonly Random _spawnRnd = new Random();
-        public int CurrentLevel => _currentLevel;
-        public int TotalLevels => _totalLevels;
-        public string CurrentLevelDescription => _level?.Description ?? "";
+        public int LastScore => _lastScore;
+
+        // Время текущего кадра (для DrawGameplay, вызываемого из GameplayScreen.Draw).
+        private GameTime _drawTime = new GameTime();
+
+        // Счётчики и прогрессия — делегируются в LevelDirector (публичный API сохранён).
+        public int EnemiesKilled => _levels.EnemiesKilled;
+        public int EnemiesRemaining => _levels.EnemiesRemaining;
+        public int CurrentLevel => _levels.CurrentLevel;
+        public int TotalLevels => _levels.TotalLevels;
+        public string CurrentLevelDescription => _levels.CurrentLevelDescription;
 
         // Система экранов меню (заставка/меню/настройки)
         public Screens.ScreenSystem Screens { get; private set; } = new Screens.ScreenSystem();
@@ -92,6 +86,12 @@ namespace RiotGalaxy.Managers
 
         // Параллакс-фон (звёзды). Анимируется во всех состояниях, рисуется под сценой.
         private Effects.StarField _starField;
+
+        // Отрисовщик боевого HUD (вынесен из GameManager).
+        private readonly Interface.HudRenderer _hud = new Interface.HudRenderer();
+
+        // Обработка столкновений (вынесена из GameManager).
+        private readonly CollisionSystem _collisions = new CollisionSystem();
 
 
         // Вспомогательные текстуры
@@ -171,11 +171,7 @@ namespace RiotGalaxy.Managers
             GameObjects = new List<GameObject>();
             ScreenWidth = 1280;
             ScreenHeight = 768;
-            
-            // Инициализируем статистические счетчики
-            EnemiesKilled = 0;
-            EnemiesRemaining = 0;
-            
+
             // Инициализируем обработчик ввода
             userInputHandler = InputManager.Instance;
         }
@@ -185,7 +181,6 @@ namespace RiotGalaxy.Managers
         /// </summary>
         public void Initialize(Game game, GraphicsDeviceManager graphics, ContentManager content)
         {
-            _game = game;
             _graphics = graphics;
             _content = content;
 
@@ -254,23 +249,12 @@ namespace RiotGalaxy.Managers
             _starField = new Effects.StarField(ScreenWidth, ScreenHeight);
 
             // Сколько уровней доступно (по файлам Content/Levels/level*.yaml)
-            _totalLevels = Utils.Level.CountLevels();
-            if (_totalLevels < 1) _totalLevels = 1;
-            Utils.Log.Debug($"Configs loaded. Levels found: {_totalLevels}, player HP: {Utils.GameOptions.PlayerMaxHp}");
+            _levels.InitTotalLevels();
+            Utils.Log.Debug($"Configs loaded. Levels found: {_levels.TotalLevels}, player HP: {Utils.GameOptions.PlayerMaxHp}");
 
             ChangeGameState(GameState.Splash);
         }
 
-        /// <summary>
-        /// Рисование текста по центру по горизонтали на заданной высоте.
-        /// </summary>
-        private void DrawCenteredText(string text, float y, Color color)
-        {
-            if (_defaultFont == null)
-                return;
-            Vector2 size = _defaultFont.MeasureString(text);
-            _spriteBatch.DrawString(_defaultFont, text, new Vector2(ScreenWidth / 2f - size.X / 2f, y), color);
-        }
 
         /// <summary>
         /// Основной игровой цикл - обновление состояния игры
@@ -283,32 +267,10 @@ namespace RiotGalaxy.Managers
             // Параллакс-фон анимируется во всех состояниях (живой фон в меню и в бою).
             _starField?.Update(deltaTime);
 
-            // Условия завершения игры проверяются только в состоянии Playing
-            // (внутри UpdateGameplay). Иначе в Victory/GameOver EnemiesRemaining==0
-            // снова форсил бы Victory и блокировал выход.
-
-            // Обновляем все объекты в соответствии с текущим состоянием
-            switch (CurrentGameState)
-            {
-                case GameState.Splash:
-                case GameState.MainMenu:
-                case GameState.Settings:
-                case GameState.NextLevel:
-                    Screens.Update(gameTime);
-                    break;
-                case GameState.Playing:
-                    UpdateGameplay(gameTime);
-                    break;
-                case GameState.Paused:
-                    UpdatePaused(deltaTime);
-                    break;
-                case GameState.GameOver:
-                    UpdateGameOver(deltaTime);
-                    break;
-                case GameState.Victory:
-                    UpdateVictory(deltaTime);
-                    break;
-            }
+            // Все состояния — это экраны (ScreenSystem). Логику боя несёт GameplayScreen,
+            // оверлеи паузы/итога — Paused/GameOver/VictoryScreen. Переходы между состояниями
+            // (Esc/P/Q/Space) по-прежнему обрабатывает Game1.HandleGameplayKeys по CurrentGameState.
+            Screens.Update(gameTime);
         }
 
         /// <summary>
@@ -316,6 +278,7 @@ namespace RiotGalaxy.Managers
         /// </summary>
         public void Draw(GameTime gameTime)
         {
+            _drawTime = gameTime; // для GameplayScreen.Draw → DrawGameplay (нужен gameObject.Draw)
             _graphics.GraphicsDevice.Clear(Color.Black);
 
             // Letterbox: пересчитываем матрицу под текущий back buffer и масштабируем всю сцену.
@@ -330,31 +293,11 @@ namespace RiotGalaxy.Managers
 
             // Параллакс-звёзды поверх задника, под игровой сценой/UI.
             if (SimpleTexture == null)
-                SimpleTexture = CreateSimpleTexture(Color.White);
+                SimpleTexture = Utils.Textures.CreateSolid(GraphicsDevice, Color.White);
             _starField?.Draw(_spriteBatch, SimpleTexture);
 
-            // Рисуем в соответствии с текущим состоянием
-            switch (CurrentGameState)
-            {
-                case GameState.Splash:
-                case GameState.MainMenu:
-                case GameState.Settings:
-                case GameState.NextLevel:
-                    Screens.Draw(_spriteBatch);
-                    break;
-                case GameState.Playing:
-                    DrawGameplay(gameTime);
-                    break;
-                case GameState.Paused:
-                    DrawPaused(gameTime);
-                    break;
-                case GameState.GameOver:
-                    DrawGameOver(gameTime);
-                    break;
-                case GameState.Victory:
-                    DrawVictory(gameTime);
-                    break;
-            }
+            // Все состояния рисует ScreenSystem (включая GameplayScreen → DrawGameplay).
+            Screens.Draw(_spriteBatch);
 
             _spriteBatch.End();
         }
@@ -434,31 +377,21 @@ namespace RiotGalaxy.Managers
                     // Из паузы — продолжение; из NextLevel — уровень уже загружен.
                     if (oldState != GameState.Paused && oldState != GameState.NextLevel)
                         InitializeGameplay();
+                    Screens.Change(new Screens.GameplayScreen());
+                    break;
+                case GameState.Paused:
+                    Screens.Change(new Screens.PausedScreen());
+                    break;
+                case GameState.GameOver:
+                    Screens.Change(new Screens.GameOverScreen());
+                    break;
+                case GameState.Victory:
+                    Screens.Change(new Screens.VictoryScreen());
                     break;
             }
         }
 
-        #region Методы обновления для каждого состояния
-
-        private void UpdatePaused(float deltaTime)
-        {
-            // Логика обновления паузы (заглушка)
-            // Будем реализовывать на следующих этапах
-        }
-
-        private void UpdateGameOver(float deltaTime)
-        {
-            // Логика обновления экрана поражения (заглушка)
-            // Будем реализовывать на следующих этапах
-        }
-
-        private void UpdateVictory(float deltaTime)
-        {
-            // Логика обновления экрана победы (заглушка)
-            // Будем реализовывать на следующих этапах
-        }
-
-        private void UpdateGameplay(GameTime gameTime)
+        public void UpdateGameplay(GameTime gameTime)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
@@ -476,25 +409,15 @@ namespace RiotGalaxy.Managers
                     userInputHandler.HandleScGameInput();
                 }
                 
-                // Барражирование улья (формации)
-                _hive?.Update(deltaTime);
+                // Барражирование улья + спавн врагов по таймлайну (вынесено в LevelDirector)
+                _levels.Update(deltaTime);
 
                 // Всплывающие сообщения
                 MessageLog.Update(deltaTime);
 
-                // Спавн врагов по таймлайну уровня
-                if (_level != null)
-                {
-                    foreach (var info in _level.Tick(deltaTime))
-                        SpawnEnemy(info.Type, info.Formation, info.Route, info.After);
-                }
-
                 // Аналог основного цикла из GamePlay.cs - обрабатываем все объекты
                 // (удаление мёртвых объектов встроено в ProcessGameObjects)
                 ProcessGameObjects(gameTime);
-
-                // Обрабатываем игровые события (аналог gameEventDirector.Update())
-                ProcessGameEvents();
             }
         }
 
@@ -507,13 +430,13 @@ namespace RiotGalaxy.Managers
             // Проверка поражения - игрок уничтожен
             if (Player != null && Player.Health <= 0)
             {
-                Utils.Log.Debug($"Game over: score={Player.Score}, level={_currentLevel}");
+                Utils.Log.Debug($"Game over: score={Player.Score}, level={_levels.CurrentLevel}");
                 ChangeGameState(GameState.GameOver);
                 return true;
             }
 
             // Уровень пройден: все враги уровня заспавнены и уничтожены
-            if (_level != null && _level.AllSpawned && EnemiesRemaining <= 0)
+            if (_levels.LevelComplete)
             {
                 AdvanceLevel();
                 return true;
@@ -528,69 +451,51 @@ namespace RiotGalaxy.Managers
         /// </summary>
         private void ProcessGameObjects(GameTime gameTime)
         {
-            // Создаем список для объектов, которые нужно удалить в этой итерации
-            var objectsToRemove = new List<int>();
-            
+            // 1. Обновляем все объекты (позиции/таймеры) — до проверки столкновений,
+            //    чтобы столкновения считались по актуальным позициям.
             for (int i = 0; i < GameObjects.Count; i++)
+                GameObjects[i]?.Update(gameTime);
+
+            // 2. Столкновения (вынесено в CollisionSystem, O(n²/2)).
+            _collisions.ResolveAll(GameObjects);
+
+            // 3. Удаляем мёртвые объекты (с конца — безопасно при удалении по индексу).
+            //    ProcessObjectRemoval может дозаписать бонусы в конец списка — они окажутся
+            //    за пределами текущего i и в этой итерации не обрабатываются (это норм).
+            for (int i = GameObjects.Count - 1; i >= 0; i--)
             {
-                if (GameObjects[i] == null)
+                var obj = GameObjects[i];
+                if (obj == null)
+                {
+                    GameObjects.RemoveAt(i);
                     continue;
-                
-                // Обновляем состояние объекта
-                GameObjects[i].Update(gameTime);
-                
-                // Проверка столкновений с другими объектами
-                for (int z = 0; z < GameObjects.Count; z++)
-                {
-                    if (i == z) continue; // Пропускаем столкновение с самим собой
-                    
-                    if (GameObjects[i].Intersects(GameObjects[z]))
-                    {
-                        ProcessCollision(GameObjects[i], GameObjects[z]);
-                    }
                 }
-                
-                // Проверяем, нужно ли удалить объект
-                if (!GameObjects[i].IsAlive)
+                if (!obj.IsAlive)
                 {
-                    objectsToRemove.Add(i);
-                }
-            }
-            
-            // Сортируем индексы в обратном порядке для безопасного удаления
-            objectsToRemove.Sort((a, b) => b.CompareTo(a));
-            
-            // Удаляем объекты от большего индекса к меньшему
-            foreach (var index in objectsToRemove)
-            {
-                if (index >= 0 && index < GameObjects.Count && GameObjects[index] != null)
-                {
-                    ProcessObjectRemoval(GameObjects[index]);
-                    GameObjects.RemoveAt(index);
+                    ProcessObjectRemoval(obj);
+                    GameObjects.RemoveAt(i);
                 }
             }
         }
 
-        #endregion
-
         #region Методы отрисовки для каждого состояния
 
-        private void DrawGameplay(GameTime gameTime)
+        public void DrawGameplay()
         {
             
             // Рисуем все игровые объекты
             foreach (var gameObject in GameObjects)
             {
-                gameObject.Draw(gameTime, _spriteBatch);
+                gameObject.Draw(_drawTime, _spriteBatch);
             }
 
             // Частицы (взрывы/искры) — поверх объектов, под HUD.
             if (SimpleTexture == null)
-                SimpleTexture = CreateSimpleTexture(Color.White);
+                SimpleTexture = Utils.Textures.CreateSolid(GraphicsDevice, Color.White);
             Particles.Draw(_spriteBatch, SimpleTexture);
 
             // Рисуем HUD
-            DrawHUD();
+            _hud.Draw(_spriteBatch, _defaultFont, SimpleTexture, Player, ScreenWidth);
 
             // Панель тестовых кнопок
             foreach (var btn in InputManager.Instance.GuiButtons)
@@ -600,39 +505,7 @@ namespace RiotGalaxy.Managers
             MessageLog.Draw(_spriteBatch, _defaultFont, ScreenWidth, ScreenHeight);
         }
 
-        private void DrawPaused(GameTime gameTime)
-        {
-            // Сначала рисуем игру под паузой
-            DrawGameplay(gameTime);
-            
-            // Затем накладываем полупрозрачный фон
-            // Если текстура не загружена, создаем простую
-            if (SimpleTexture == null)
-                SimpleTexture = CreateSimpleTexture(Color.White);
-                
-            _spriteBatch.Draw(SimpleTexture,
-                new Rectangle(0, 0, ScreenWidth, ScreenHeight),
-                new Color(0, 0, 0, 150));
-
-            // Меню паузы
-            DrawCenteredText("ПАУЗА", ScreenHeight / 2f - 40, Color.White);
-            DrawCenteredText("Esc / P — продолжить", ScreenHeight / 2f + 20, Color.Yellow);
-            DrawCenteredText("Q — выход в меню", ScreenHeight / 2f + 56, Color.Gray);
-        }
-
-        private void DrawGameOver(GameTime gameTime)
-        {
-            DrawCenteredText("GAME OVER", ScreenHeight / 2f - 40, Color.Red);
-            DrawCenteredText($"Очки: {_lastScore}", ScreenHeight / 2f + 10, Color.White);
-            DrawCenteredText("Пробел — заново, Esc — в меню", ScreenHeight / 2f + 60, Color.Gray);
-        }
-
-        private void DrawVictory(GameTime gameTime)
-        {
-            DrawCenteredText("ПОБЕДА!", ScreenHeight / 2f - 40, Color.Gold);
-            DrawCenteredText($"Очки: {_lastScore}", ScreenHeight / 2f + 10, Color.White);
-            DrawCenteredText("Пробел — заново, Esc — в меню", ScreenHeight / 2f + 60, Color.Gray);
-        }
+        // Оверлеи DrawPaused/DrawGameOver/DrawVictory вынесены в одноимённые Screen-классы.
 
         #endregion
 
@@ -643,15 +516,10 @@ namespace RiotGalaxy.Managers
             try
             {
                 // Новая игра — с первого уровня
-                ResetGameplayStats();
-                _currentLevel = 1;
+                _levels.ResetToFirst();
 
                 // Инициализация игрового процесса
                 GameObjects.Clear();
-                GameEvents.Clear();
-                
-                // Базовые параметры уровня (аналог GamePlay.cs Init)
-                InitializeLevelParameters();
                 
                 // Создаем игрока (аналог GamePlay.cs строка 49-58)
                 Player = new PlayerShip(new Vector2(ScreenWidth / 2, ScreenHeight - 100));
@@ -670,12 +538,9 @@ namespace RiotGalaxy.Managers
                 SubscribeToPlayerEvents();
                 
                 GameObjects.Add(Player);
-                
-                // Регистрируем обработчики событий (аналог GamePlay.cs строка 47)
-                SetupGameplayEvents();
-                
+
                 // Загружаем первый уровень (враги спавнятся по таймлайну в UpdateGameplay)
-                LoadLevel(_currentLevel);
+                _levels.Load(_levels.CurrentLevel, ScreenWidth, ScreenHeight);
 
                 // Панель тестовых кнопок
                 CreateDebugButtons();
@@ -687,56 +552,6 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Сброс статистики игрового процесса
-        /// Аналог сброса параметров в GamePlay.cs Init()
-        /// </summary>
-        private void ResetGameplayStats()
-        {
-            EnemiesKilled = 0;
-            EnemiesRemaining = 0; // фактическое значение задаст LoadLevel по данным уровня
-        }
-
-        /// <summary>
-        /// Инициализация параметров уровня
-        /// Аналог инициализации мир и улья в GamePlay.cs строка 41-42
-        /// </summary>
-        private void InitializeLevelParameters()
-        {
-            // todo: Добавить World и Hive когда они будут реализованы
-            // world = new World();
-            // hive = new Hive();
-            
-            // Базовые параметры уровня
-        }
-
-        /// <summary>
-        /// Создание начальных игровых объектов
-        /// Позволяет сразу запустить игру с базовыми объектами
-        /// </summary>
-        /// <summary>Загрузить уровень N: данные из YAML, счётчики врагов. Игрока не трогает.</summary>
-        private void LoadLevel(int number)
-        {
-            _level = new Utils.Level();
-            if (!_level.Load(number))
-            {
-                Console.WriteLine($"=== Level {number} not loaded ===");
-                EnemiesRemaining = 0;
-                return;
-            }
-            EnemiesKilled = 0;
-            EnemiesRemaining = _level.TotalEnemies;
-            Utils.Log.Debug($"Level {_currentLevel} loaded: \"{_level.Description}\", enemies={_level.TotalEnemies}");
-
-            // Мир и улей (формации) — пересоздаём на каждый уровень (сброс занятых ячеек)
-            _world = new World(ScreenWidth, ScreenHeight);
-            _hive = new Hive(_world, 4, 1, 8, 2); // 8×2 у верхней кромки
-
-            // Вылеты из улья (Galaga) — если включены в описании уровня
-            if (_level.Sortie)
-                _hive.EnableSortie(_level.SortieInterval, _level.SortieCount);
-        }
-
         /// <summary>Удалить все объекты кроме игрока (между уровнями).</summary>
         private void ClearNonPlayerObjects()
         {
@@ -746,75 +561,18 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
         /// <summary>Перейти к следующему уровню или к финальной победе.</summary>
         private void AdvanceLevel()
         {
-            if (_currentLevel >= _totalLevels)
+            if (!_levels.HasNextLevel)
             {
                 ChangeGameState(GameState.Victory); // все уровни пройдены
             }
             else
             {
-                _currentLevel++;
-                LoadLevel(_currentLevel);            // подготовить следующий уровень
-                ChangeGameState(GameState.NextLevel); // показать экран между уровнями
+                _levels.GoToNextLevel(ScreenWidth, ScreenHeight); // подготовить следующий уровень
+                ChangeGameState(GameState.NextLevel);             // показать экран между уровнями
             }
         }
 
-        /// <summary>
-        /// Создать врага сверху экрана. formation — в улей; routeName — пустить по маршруту.
-        /// </summary>
-        private void SpawnEnemy(EnemyType type, bool formation, string routeName = null, string after = null)
-        {
-            // Пытаемся занять ячейку улья для формации
-            int cx = -1, cy = -1;
-            bool inFormation = formation && _hive != null && _hive.TryTakeCell(out cx, out cy);
-
-            // Маршрут (если не в формации и задан)
-            Route route = (!inFormation && !string.IsNullOrEmpty(routeName) && _world != null)
-                ? Route.Load(routeName, _world)
-                : null;
-
-            // Точка появления: ячейка улья / первая точка маршрута / случайно по X
-            Vector2 pos;
-            if (inFormation)
-                pos = new Vector2(_hive.CellWorldPos(cx, cy).X, -30);
-            else if (route != null && route.HasPoints)
-                pos = route.Current;
-            else
-            {
-                float border = ScreenWidth * 0.12f;
-                float x = border + (float)_spawnRnd.NextDouble() * (ScreenWidth - 2 * border);
-                pos = new Vector2(x, -30);
-            }
-
-            Enemy e;
-            switch (type)
-            {
-                case EnemyType.BLUE: e = new EnemySmallBlue(pos); break;
-                case EnemyType.GREEN: e = new EnemySmallGreen(pos); break;
-                case EnemyType.RED: e = new EnemySmallRed(pos); break;
-                case EnemyType.BOSS: e = new EnemyBoss(pos); break;
-                default: e = new EnemySmallScout(pos); break;
-            }
-
-            if (inFormation)
-            {
-                e.JoinFormation(_hive, cx, cy);
-                _hive.Register(e, cx, cy); // учёт в улье — для координации вылетов
-            }
-            else if (route != null && route.HasPoints)
-                e.SetRoute(route, ParseRouteEnd(after), _hive);
-
-            GameObjects.Add(e);
-        }
-
-        private static RouteEndBehavior ParseRouteEnd(string s)
-        {
-            switch (s?.Trim().ToLowerInvariant())
-            {
-                case "formation": return RouteEndBehavior.Formation;
-                case "scatter": return RouteEndBehavior.Scatter;
-                default: return RouteEndBehavior.Bounce;
-            }
-        }
+        // LoadLevel/SpawnEnemy/ParseRouteEnd вынесены в LevelDirector.
 
         /// <summary>Тестовый переход на следующий уровень (кнопка/команда).</summary>
         public void DebugNextLevel()
@@ -851,19 +609,7 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             InputManager.Instance.GuiButtons.Add(b);
             x += size + gap;
         }
-        
-/// <summary>
-        /// Настройка игровых событий (аналог GamePlay.cs)
-        /// </summary>
-        private void SetupGameplayEvents()
-        {
-            // Очищаем предыдущие события
-            GameEvents.Clear();
-            
-            // В будущем здесь будут регистрироваться основные игровые события
-            // Например: событие смерти врага, достижение目标和 т.п.
-        }
-        
+
         /// <summary>
         /// Подписка на события игрока
         /// </summary>
@@ -926,7 +672,7 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             {
                 // Визуальный взрыв + тряска экрана (босс — заметно мощнее). Параметры — из effects.yaml.
                 bool isBoss = enemy.Type == EnemyType.BOSS;
-                Particles.Explosion(obj.Position, ExplosionColorFor(enemy.Type),
+                Particles.Explosion(obj.Position, enemy.ExplosionColor,
                     isBoss ? Utils.EffectsConfig.BossExplosion : Utils.EffectsConfig.EnemyExplosion);
                 var deathShake = isBoss ? Utils.EffectsConfig.BossDeathShake : Utils.EffectsConfig.EnemyDeathShake;
                 Shake(deathShake.Magnitude, deathShake.Duration);
@@ -941,16 +687,6 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             // Выполняем базовое удаление объекта
             obj.IsAlive = false; // Помечаем объект как мертвый
         }
-
-        /// <summary>Цвет взрыва по типу врага (под палитру спрайтов).</summary>
-        private static Color ExplosionColorFor(EnemyType type) => type switch
-        {
-            EnemyType.BLUE  => new Color(80, 160, 255),
-            EnemyType.GREEN => new Color(120, 230, 120),
-            EnemyType.RED   => new Color(255, 90, 70),
-            EnemyType.BOSS  => new Color(255, 170, 60),
-            _               => new Color(255, 210, 120), // scout / прочие
-        };
 
         private static readonly Random _bonusRnd = new Random();
 
@@ -968,14 +704,14 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             if (roll < 30)
             {
                 int kind = _bonusRnd.Next(100);
-                Bonus bonus;
+                BonusType bt;
                 if (kind < 45)
-                    bonus = new BonusHpUp(pos);        // 45%
+                    bt = BonusType.HP_UP;      // 45%
                 else if (kind < 90)
-                    bonus = new BonusBulletUp(pos);    // 45%
+                    bt = BonusType.BULLET_UP;  // 45%
                 else
-                    bonus = new BonusNukeBomb(pos);    // 10%
-                GameObjects.Add(bonus);
+                    bt = BonusType.NUKE_BOMB;  // 10%
+                GameObjects.Add(new Bonus(bt, pos));
             }
         }
 
@@ -1005,162 +741,17 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             
         }
 
-        /// <summary>
-        /// Обработка столкновения двойной пары объектов (аналог GameObject.Collision из CocosSharp).
-        /// Вызывается из ProcessGameObjects для каждой пересекающейся пары.
-        /// </summary>
-        private void ProcessCollision(GameObject a, GameObject b)
-        {
-            // Мёртвые объекты больше не наносят и не получают урон
-            if (!a.IsAlive || !b.IsAlive)
-                return;
+        /// <summary>Уничтожить всех врагов на экране (бонус NukeBomb). Делегирует в CollisionSystem.</summary>
+        public void KillAllEnemies() => _collisions.KillAllEnemies(GameObjects);
 
-            // Снаряд игрока попал во врага
-            if (a is Shell shell && b is Enemy enemy && shell.PlayerSide)
-            {
-                ShellHitsEnemy(shell, enemy);
-            }
-            // Враг столкнулся с кораблём игрока (таран)
-            else if (a is Enemy en && b is PlayerShip ship)
-            {
-                EnemyHitsPlayer(en, ship);
-            }
-            // Вражеский снаряд попал в игрока
-            else if (a is Shell sh && b is PlayerShip ps && !sh.PlayerSide)
-            {
-                ShellHitsPlayer(sh, ps);
-            }
-            // Игрок подобрал бонус
-            else if (a is Bonus bonus && b is PlayerShip player)
-            {
-                bonus.Apply(player);
-                bonus.IsAlive = false;
-            }
-        }
-
-        /// <summary>Уничтожить всех врагов на экране (бонус NukeBomb).</summary>
-        public void KillAllEnemies()
-        {
-            foreach (var obj in GameObjects)
-            {
-                if (obj is Enemy enemy)
-                    enemy.TakeDamage(enemy.Hp);
-            }
-            Shake(Utils.EffectsConfig.NukeShake.Magnitude, Utils.EffectsConfig.NukeShake.Duration); // «нюк»
-        }
-
-        private void ShellHitsEnemy(Shell shell, Enemy enemy)
-        {
-            // Искра в точке попадания (если враг выживет — это hit-feedback; если умрёт,
-            // ProcessObjectRemoval добавит полноценный взрыв сверху).
-            if (enemy.Hp > shell.Damage)
-                Particles.HitSpark(shell.Position, ExplosionColorFor(enemy.Type));
-
-            enemy.TakeDamage(shell.Damage);
-            if (!shell.IsPiercing)
-                shell.IsAlive = false; // обычный снаряд исчезает; лазер летит насквозь
-        }
-
-        private void EnemyHitsPlayer(Enemy enemy, PlayerShip player)
-        {
-            player.TakeDamage(enemy.Damage);
-            enemy.TakeDamage(enemy.Hp); // враг уничтожается при таране
-        }
-
-        private void ShellHitsPlayer(Shell shell, PlayerShip player)
-        {
-            player.TakeDamage(shell.Damage);
-            shell.IsAlive = false;
-        }
-
-        private void DrawHUD()
-        {
-            if (Player == null)
-                return;
-
-            // Текст здоровья и очков
-            if (_defaultFont != null)
-            {
-                _spriteBatch.DrawString(_defaultFont, $"HP: {Player.Health}/{Player.MaxHealth}",
-                    new Vector2(10, 10), Color.White);
-
-                string scoreText = $"Очки: {Player.Score}";
-                float scoreW = _defaultFont.MeasureString(scoreText).X;
-                _spriteBatch.DrawString(_defaultFont, scoreText, new Vector2(ScreenWidth - scoreW - 10, 10), Color.White);
-
-                string weaponText = $"Оружие: {Player.CurrentWeapon} (ур. {Player.Gun.Level + 1})";
-                _spriteBatch.DrawString(_defaultFont, weaponText, new Vector2(10, 60), Color.LightGray);
-            }
-
-            // Полоска здоровья: тёмный фон + цветная заполненная часть
-            if (SimpleTexture != null)
-            {
-                _spriteBatch.Draw(SimpleTexture, new Rectangle(10, 38, 200, 16), new Color(40, 40, 40, 180));
-                int healthWidth = (int)(200 * (float)Player.Health / Player.MaxHealth);
-                DrawHealthBar(10, 38, healthWidth, 16, Player.Health);
-            }
-        }
-        
-        /// <summary>
-        /// Рисование полоски здоровья
-        /// </summary>
-        private void DrawHealthBar(int x, int y, int width, int height, int health)
-        {
-            Color barColor = Color.Green;
-            if (health < 30) barColor = Color.Red;
-            else if (health < 60) barColor = Color.Yellow;
-            
-            _spriteBatch.Draw(SimpleTexture, new Rectangle(x, y, width, height), barColor);
-        }
-        
-        /// <summary>
-        /// Создание простой текстуры
-        /// </summary>
-        private Texture2D CreateSimpleTexture(Color color)
-        {
-            Texture2D texture = new Texture2D(GraphicsDevice, 64, 64);
-            Color[] data = new Color[64 * 64];
-            
-            for (int i = 0; i < data.Length; ++i)
-                data[i] = color;
-                
-            texture.SetData(data);
-            return texture;
-        }
-        
-        /// <summary>
-        /// Обработка игровых событий (аналог gameEventDirector.Update() из GamePlay.cs)
-        /// </summary>
-        private void ProcessGameEvents()
-        {
-            // Обрабатываем события в безопасном цикле, чтобы избежать problemas с изменением списка во время итерации
-            var eventsToProcess = new List<Action>(GameEvents);
-            
-            // Копируем события и очищаем основной список
-            foreach (var gameEvent in GameEvents)
-            {
-                eventsToProcess.Add(gameEvent);
-            }
-            
-            // Очищаем основной список
-            GameEvents.Clear();
-            
-            // Обрабатываем скопированные события
-            foreach (var gameEvent in eventsToProcess)
-            {
-                gameEvent?.Invoke();
-            }
-            
-        }
+        // ProcessCollision/ShellHitsEnemy/EnemyHitsPlayer/ShellHitsPlayer вынесены в CollisionSystem.
+        // DrawHUD/DrawHealthBar вынесены в Interface.HudRenderer.
+        // CreateSimpleTexture вынесен в Utils.Textures.CreateSolid (был продублирован).
 
         private void TriggerEnemyDeathEvent(GameObject enemy)
         {
-            
-            // Обновляем счетчики
-            EnemiesKilled++;
-            EnemiesRemaining = Math.Max(0, EnemiesRemaining - 1);
-            
-            // Добавляем событие в список событий для обработки в конце обновления
+            // Обновляем счётчики врагов уровня (в LevelDirector).
+            _levels.OnEnemyKilled();
         }
 
         #endregion

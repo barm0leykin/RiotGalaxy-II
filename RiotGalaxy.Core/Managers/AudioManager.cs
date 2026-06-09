@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework.Audio;
 using Microsoft.Xna.Framework.Content;
 
-namespace RiotGalaxy.Managers
+namespace RiotGalaxy.Core.Managers
 {
     /// <summary>
     /// Менеджер аудио. Загружает и проигрывает звуковые эффекты (SFX).

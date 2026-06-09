@@ -2,10 +2,10 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using RiotGalaxy.Commands;
-using RiotGalaxy.GameObjects;
+using RiotGalaxy.Core.Commands;
+using RiotGalaxy.Core.GameObjects;
 
-namespace RiotGalaxy.Interface
+namespace RiotGalaxy.Core.Interface
 {
     /// <summary>
     /// Класс GUI кнопки

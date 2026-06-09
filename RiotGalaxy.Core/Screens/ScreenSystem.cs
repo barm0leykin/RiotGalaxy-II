@@ -1,7 +1,7 @@
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace RiotGalaxy.Screens
+namespace RiotGalaxy.Core.Screens
 {
     /// <summary>
     /// Простой менеджер экранов меню: хранит активный Screen и проксирует Update/Draw.

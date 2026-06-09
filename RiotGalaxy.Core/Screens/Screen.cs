@@ -2,9 +2,9 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using Microsoft.Xna.Framework.Input.Touch;
-using RiotGalaxy.Managers;
+using RiotGalaxy.Core.Managers;
 
-namespace RiotGalaxy.Screens
+namespace RiotGalaxy.Core.Screens
 {
     /// <summary>
     /// Базовый класс экрана меню (заставка, главное меню, настройки).

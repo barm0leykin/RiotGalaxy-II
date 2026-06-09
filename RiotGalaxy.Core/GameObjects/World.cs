@@ -1,6 +1,6 @@
 using Microsoft.Xna.Framework;
 
-namespace RiotGalaxy.GameObjects
+namespace RiotGalaxy.Core.GameObjects
 {
     /// <summary>
     /// Ячейка координатной сетки мира: позиция на экране и (опц.) занявший её объект.

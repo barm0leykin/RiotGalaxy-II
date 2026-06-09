@@ -1,10 +1,10 @@
 using System;
 using Microsoft.Xna.Framework;
-using RiotGalaxy.Managers;
-using RiotGalaxy.Commands;
-using RiotGalaxy.Interface;
+using RiotGalaxy.Core.Managers;
+using RiotGalaxy.Core.Commands;
+using RiotGalaxy.Core.Interface;
 
-namespace RiotGalaxy.Commands
+namespace RiotGalaxy.Core.Commands
 {
     /// <summary>
     /// Классы команд для управления игрой

@@ -1,11 +1,11 @@
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using RiotGalaxy.Components;
-using RiotGalaxy.Managers;
-using RiotGalaxy.Weapons;
+using RiotGalaxy.Core.Components;
+using RiotGalaxy.Core.Managers;
+using RiotGalaxy.Core.Weapons;
 
-namespace RiotGalaxy.GameObjects
+namespace RiotGalaxy.Core.GameObjects
 {
     /// <summary>
     /// Типы врагов (как в CocosSharp).
@@ -26,6 +26,16 @@ namespace RiotGalaxy.GameObjects
         public float CurrentSpeed { get; set; } = 100f;
         public float AttackSpeed { get; set; } = 100f; // скорость во время вылета/атаки из улья
 
+        /// <summary>Цвет взрыва/искр попадания — под палитру спрайта врага.</summary>
+        public Color ExplosionColor => Type switch
+        {
+            EnemyType.BLUE  => new Color(80, 160, 255),
+            EnemyType.GREEN => new Color(120, 230, 120),
+            EnemyType.RED   => new Color(255, 90, 70),
+            EnemyType.BOSS  => new Color(255, 170, 60),
+            _               => new Color(255, 210, 120), // scout / прочие
+        };
+
         // Типизированный доступ к компоненту движения с отскоком
         protected EnemyBounceMovement Move;
 
@@ -33,6 +43,13 @@ namespace RiotGalaxy.GameObjects
         public Weapon Gun { get; protected set; }
         protected float ShootInterval = 3f; // сек между выстрелами
         private float _actionTime;
+
+        // Поведение из конфига (enemies.yaml) вместо классов-наследников.
+        private string _shootMode = "none";   // none / down / aim
+        private bool _wander;                  // периодически менять курс/скорость (зелёный)
+        private float _ideaTime;
+        private const float IdeaInterval = 2f;
+        private float _dirMin = 155f, _dirMax = 205f; // диапазон стартового курса при отскоке
 
         // ИИ-машина состояний (опционально; аналог Enemy.ai из CocosSharp). Если задан —
         // управляет движением/скоростью/стрельбой. Формация/маршрут (YAML) её отключают.
@@ -44,10 +61,44 @@ namespace RiotGalaxy.GameObjects
         /// <summary>Источник случайности для состояний ИИ.</summary>
         public Random AiRandom => Rnd;
 
-        public Enemy(Vector2 position) : base(position, new Vector2(45, 45))
+        /// <summary>
+        /// Создаёт врага заданного типа, конфигурируя себя целиком из enemies.yaml
+        /// (спрайт, масштаб, движение/ИИ, режим стрельбы, блуждание). Раньше это делали
+        /// классы-наследники (EnemySmallBlue/Green/Red/Scout, EnemyBoss) — теперь данные.
+        /// </summary>
+        public Enemy(EnemyType type, Vector2 position) : base(position, new Vector2(45, 45))
         {
             Gun = new WeaponCannon(this);
-            _actionTime = (float)Rnd.NextDouble() * ShootInterval; // разнобой старта стрельбы
+            ApplyStats(type); // hp/damage/скорости/интервал стрельбы (+ рандом из конфига)
+
+            var s = Utils.EnemyConfig.Get(type);
+            _shootMode = s.Shoot ?? "none";
+            _wander = s.Wander;
+            _dirMin = s.DirMin;
+            _dirMax = s.DirMax;
+
+            if (!string.IsNullOrEmpty(s.Sprite))
+                LoadSprite(s.Sprite);
+
+            if (s.Scale != 1f)
+            {
+                Scale = new Vector2(s.Scale);
+                Size = new Vector2(Size.X * s.Scale, Size.Y * s.Scale); // хитбокс крупнее
+            }
+
+            Collision = new EnemyCollisionComponent(this);
+
+            // Движение: машина состояний (blue/red) ИЛИ движение с отскоком (+ опц. блуждание).
+            switch ((s.Ai ?? "none").Trim().ToLowerInvariant())
+            {
+                case "blue": Ai = new AI.EnemyAIBlue(this); break;
+                case "red":  Ai = new AI.EnemyAIRed(this); break;
+                default:
+                    Move = new EnemyBounceMovement(this, CurrentSpeed);
+                    Movement = Move;
+                    PickWanderDirection(); // стартовый курс из [dirMin..dirMax]
+                    break;
+            }
         }
 
         public override void Update(GameTime gameTime)
@@ -59,6 +110,18 @@ namespace RiotGalaxy.GameObjects
 
             // ИИ-машина состояний (если задана): управляет движением/скоростью/стрельбой
             Ai?.Update(dt);
+
+            // Блуждание (зелёный): периодически меняем курс и скорость при движении с отскоком.
+            if (_wander && Move != null)
+            {
+                _ideaTime += dt;
+                if (_ideaTime > IdeaInterval)
+                {
+                    _ideaTime = 0f;
+                    CurrentSpeed = Utils.EnemyConfig.Get(Type).PickSpeed(Rnd);
+                    PickWanderDirection();
+                }
+            }
 
             // Оружие (очереди/перезарядка)
             Gun?.Update(gameTime);
@@ -147,8 +210,23 @@ namespace RiotGalaxy.GameObjects
             _actionTime = (float)Rnd.NextDouble() * (ShootInterval > 0 ? ShootInterval : 1f); // разнобой старта
         }
 
-        /// <summary>Поведение стрельбы. По умолчанию враг не стреляет (переопределяется типами).</summary>
-        protected virtual void Shoot() { }
+        /// <summary>Стартовый курс при движении с отскоком: случайный из [dirMin..dirMax] градусов.</summary>
+        private void PickWanderDirection()
+        {
+            float dir = _dirMin + (float)Rnd.NextDouble() * (_dirMax - _dirMin);
+            Move?.SetDirection(dir);
+        }
+
+        /// <summary>Поведение стрельбы по режиму из конфига (none/down/aim).</summary>
+        private void Shoot()
+        {
+            switch (_shootMode)
+            {
+                case "down": ShootDown(); break;
+                case "aim":  ShootAimAtPlayer(); break;
+                // "none" и прочее — не стреляет
+            }
+        }
 
         /// <summary>Выстрел строго вниз (аналог ObjBehShootDown).</summary>
         protected void ShootDown()

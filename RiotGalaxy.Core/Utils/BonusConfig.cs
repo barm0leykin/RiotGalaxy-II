@@ -1,4 +1,4 @@
-namespace RiotGalaxy.Utils
+namespace RiotGalaxy.Core.Utils
 {
     /// <summary>
     /// Параметры бонусов из Content/Config/bonuses.yaml (фолбэк — дефолты в коде).

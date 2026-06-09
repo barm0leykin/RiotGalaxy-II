@@ -6,7 +6,7 @@ using Android.Views;
 using Android.Window;
 using Microsoft.Xna.Framework;
 using RiotGalaxy.Core;
-using RiotGalaxy.Managers;
+using RiotGalaxy.Core.Managers;
 
 namespace RiotGalaxy
 {
@@ -54,7 +54,7 @@ namespace RiotGalaxy
         /// <summary>Общая обработка «Назад»: из игры — в меню, из меню/заставки — выход.</summary>
         private void HandleBack()
         {
-            if (Game1.Instance != null && RiotGalaxy.Managers.GameManager.Instance.OnBackRequested())
+            if (Game1.Instance != null && RiotGalaxy.Core.Managers.GameManager.Instance.OnBackRequested())
                 Finish(); // мы в меню/заставке → закрываем приложение
             // иначе — переход в меню (отложен в игровой поток), активность остаётся
         }
@@ -70,7 +70,7 @@ namespace RiotGalaxy
         // --- Fallback для старых устройств (кнопка/жест → KEYCODE_BACK или OnBackPressed) ---
         public override void OnBackPressed()
         {
-            if (Game1.Instance != null && RiotGalaxy.Managers.GameManager.Instance.OnBackRequested())
+            if (Game1.Instance != null && RiotGalaxy.Core.Managers.GameManager.Instance.OnBackRequested())
                 base.OnBackPressed(); // выход
         }
 

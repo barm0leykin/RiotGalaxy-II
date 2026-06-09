@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using RiotGalaxy.Managers;
+using RiotGalaxy.Core.Managers;
 
 namespace RiotGalaxy.Core
 {
@@ -52,7 +52,7 @@ namespace RiotGalaxy.Core
             _gameManager.LoadContent();
             
             // Создаем простую текстуру для заглушек
-            _gameManager.SimpleTexture = CreateSimpleTexture(Color.White);
+            _gameManager.SimpleTexture = RiotGalaxy.Core.Utils.Textures.CreateSolid(GraphicsDevice, Color.White);
         }
 
         protected override void Update(GameTime gameTime)
@@ -136,21 +136,6 @@ namespace RiotGalaxy.Core
 
             // Сохраняем предыдущее состояние клавиатуры
             _previousKeyboardState = keyboardState;
-        }
-        
-        /// <summary>
-        /// Создание простой текстуры (белый квадрат)
-        /// </summary>
-        private Texture2D CreateSimpleTexture(Color color)
-        {
-            Texture2D texture = new Texture2D(GraphicsDevice, 64, 64);
-            Color[] data = new Color[64 * 64];
-            
-            for (int i = 0; i < data.Length; ++i)
-                data[i] = color;
-                
-            texture.SetData(data);
-            return texture;
         }
         
         // Храним предыдущее состояние клавиатуры для детектирования нажатий

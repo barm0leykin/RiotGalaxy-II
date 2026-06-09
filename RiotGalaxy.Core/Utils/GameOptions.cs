@@ -1,4 +1,4 @@
-namespace RiotGalaxy.Utils
+namespace RiotGalaxy.Core.Utils
 {
     /// <summary>
     /// Основные настройки игры из Content/Config/options.yaml (аналог options.ini).

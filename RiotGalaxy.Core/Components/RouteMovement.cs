@@ -1,8 +1,8 @@
 using System;
 using Microsoft.Xna.Framework;
-using RiotGalaxy.GameObjects;
+using RiotGalaxy.Core.GameObjects;
 
-namespace RiotGalaxy.Components
+namespace RiotGalaxy.Core.Components
 {
     /// <summary>Что делает враг после прохождения маршрута.</summary>
     public enum RouteEndBehavior

@@ -36,8 +36,11 @@
 - [ ] Таблица рекордов, достижения.
 
 ## Техдолг / заметки
-- [ ] Привести namespace к структуре папок (`RiotGalaxy.Core.*`) — сейчас историческое расхождение (warning).
-- [ ] Подчистить неиспользуемые поля/методы `GameManager` (см. hints анализатора).
+- [x] Привести namespace к структуре папок (`RiotGalaxy.Core.*`) — сделано (рефакторинг 2026-06-09).
+- [x] Подчистить неиспользуемые поля/методы `GameManager` — убраны `_game`, `GameEvents`/`ProcessGameEvents`,
+      `EnemyMovementComponent`, пустые заглушки; дубли `CreateSimpleTexture` → `Utils.Textures`,
+      два `WeaponType` объединены; из `GameManager` выделены `CollisionSystem`/`LevelDirector`/`HudRenderer`,
+      состояния — в `Screens/*Screen`.
 - [ ] Route→formation враги не регистрируются в улье для `sortie` (вылетают только спавненные `formation: true`).
 
 ---

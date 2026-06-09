@@ -1,6 +1,6 @@
-using RiotGalaxy.GameObjects;
+using RiotGalaxy.Core.GameObjects;
 
-namespace RiotGalaxy.AI
+namespace RiotGalaxy.Core.AI
 {
     /// <summary>
     /// Базовое состояние ИИ врага. Порт AIState из CocosSharp (Objects/ObjBehavior/AIState.cs).

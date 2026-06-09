@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using RiotGalaxy.GameObjects;
+using RiotGalaxy.Core.GameObjects;
 
-namespace RiotGalaxy.Utils
+namespace RiotGalaxy.Core.Utils
 {
     /// <summary>
     /// Параметры врагов из Content/Config/enemies.yaml. Скорость и интервал стрельбы
@@ -29,6 +29,21 @@ namespace RiotGalaxy.Utils
             /// <summary>Тактики пике при вылете из улья (random/snake/ram/ellipse). Пусто — random.</summary>
             public List<string> Tactics { get; set; }
 
+            // ── Внешний вид и поведение (data-driven вместо классов-наследников) ──
+            /// <summary>Ассет спрайта (напр. "Images/enemyBlue").</summary>
+            public string Sprite { get; set; }
+            /// <summary>Масштаб спрайта и хитбокса (1 — обычный; босс крупнее).</summary>
+            public float Scale { get; set; } = 1f;
+            /// <summary>Стрельба: "none" / "down" (вниз) / "aim" (прицельно в игрока).</summary>
+            public string Shoot { get; set; } = "none";
+            /// <summary>ИИ-машина состояний: "none" / "blue" / "red". Иначе — движение с отскоком.</summary>
+            public string Ai { get; set; } = "none";
+            /// <summary>Периодически менять курс/скорость (как зелёный). Только при движении с отскоком.</summary>
+            public bool Wander { get; set; }
+            /// <summary>Диапазон стартового курса при движении с отскоком (градусы; 180 — строго вниз).</summary>
+            public float DirMin { get; set; } = 155f;
+            public float DirMax { get; set; } = 205f;
+
             public float PickSpeed(Random r) => Pick(Speed, SpeedMin, SpeedMax, r);
             public float PickShootInterval(Random r) => Pick(ShootInterval, ShootIntervalMin, ShootIntervalMax, r);
             /// <summary>Скорость атаки; 0 — не задана (вызывающий берёт обычную скорость).</summary>
@@ -41,11 +56,16 @@ namespace RiotGalaxy.Utils
         // Дефолтные параметры (совпадают с прежними хардкодами)
         private static readonly Dictionary<EnemyType, Stats> _defaults = new Dictionary<EnemyType, Stats>
         {
-            [EnemyType.BLUE]     = new Stats { Hp = 10, Damage = 10, Speed = 130, AttackSpeed = 200, ShootInterval = 3, Tactics = new List<string> { "snake", "ram" } },
-            [EnemyType.GREEN]    = new Stats { Hp = 10, Damage = 10, SpeedMin = 100, SpeedMax = 150, AttackSpeed = 200, ShootInterval = 3, Tactics = new List<string> { "random", "snake" } },
-            [EnemyType.RED]      = new Stats { Hp = 20, Damage = 10, Speed = 60, AttackSpeed = 160, ShootInterval = 3, Tactics = new List<string> { "ram", "ellipse" } },
-            [EnemyType.SM_SCOUT] = new Stats { Hp = 10, Damage = 5, SpeedMin = 60, SpeedMax = 100, AttackSpeed = 150, ShootInterval = 0, Tactics = new List<string> { "random" } },
-            [EnemyType.BOSS]     = new Stats { Hp = 200, Damage = 20, Speed = 50, ShootInterval = 1.2f },
+            [EnemyType.BLUE]     = new Stats { Hp = 10, Damage = 10, Speed = 130, AttackSpeed = 200, ShootInterval = 3, Tactics = new List<string> { "snake", "ram" },
+                                               Sprite = "Images/enemyBlue", Ai = "blue", Shoot = "down" },
+            [EnemyType.GREEN]    = new Stats { Hp = 10, Damage = 10, SpeedMin = 100, SpeedMax = 150, AttackSpeed = 200, ShootInterval = 3, Tactics = new List<string> { "random", "snake" },
+                                               Sprite = "Images/enemyGreen", Shoot = "down", Wander = true, DirMin = 135, DirMax = 225 },
+            [EnemyType.RED]      = new Stats { Hp = 20, Damage = 10, Speed = 60, AttackSpeed = 160, ShootInterval = 3, Tactics = new List<string> { "ram", "ellipse" },
+                                               Sprite = "Images/enemyRed", Ai = "red", Shoot = "aim" },
+            [EnemyType.SM_SCOUT] = new Stats { Hp = 10, Damage = 5, SpeedMin = 60, SpeedMax = 100, AttackSpeed = 150, ShootInterval = 0, Tactics = new List<string> { "random" },
+                                               Sprite = "Images/enemySmallScout", Shoot = "none", DirMin = 155, DirMax = 205 },
+            [EnemyType.BOSS]     = new Stats { Hp = 200, Damage = 20, Speed = 50, ShootInterval = 1.2f,
+                                               Sprite = "Images/enemyRed", Scale = 2.5f, Shoot = "aim", DirMin = 135, DirMax = 135 },
         };
 
         private static Dictionary<EnemyType, Stats> _stats;

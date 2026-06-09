@@ -1,6 +1,6 @@
 using System;
 
-namespace RiotGalaxy.Commands
+namespace RiotGalaxy.Core.Commands
 {
     /// <summary>
     /// Интерфейс команды по паттерну Command

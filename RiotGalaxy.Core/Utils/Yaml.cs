@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace RiotGalaxy.Utils
+namespace RiotGalaxy.Core.Utils
 {
     /// <summary>
     /// Общие помощники для работы с YAML-конфигами.

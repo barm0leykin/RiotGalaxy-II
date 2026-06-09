@@ -1,10 +1,10 @@
 using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using RiotGalaxy.Components;
-using RiotGalaxy.Managers;
+using RiotGalaxy.Core.Components;
+using RiotGalaxy.Core.Managers;
 
-namespace RiotGalaxy.GameObjects
+namespace RiotGalaxy.Core.GameObjects
 {
     /// <summary>
     /// Базовый класс для всех игровых объектов в игре.
@@ -105,9 +105,10 @@ namespace RiotGalaxy.GameObjects
             // Создаем простую текстуру один раз
             if (GameManager.Instance.SimpleTexture == null)
             {
-                GameManager.Instance.SimpleTexture = CreateSimpleTexture(Color.White);
+                GameManager.Instance.SimpleTexture =
+                    RiotGalaxy.Core.Utils.Textures.CreateSolid(GameManager.Instance.GraphicsDevice, Color.White);
             }
-            
+
             spriteBatch.Draw(
                 GameManager.Instance.SimpleTexture,
                 Position,
@@ -120,22 +121,7 @@ namespace RiotGalaxy.GameObjects
                 0f
             );
         }
-        
-        /// <summary>
-        /// Создание простой текстуры
-        /// </summary>
-        private Texture2D CreateSimpleTexture(Color color)
-        {
-            Texture2D texture = new Texture2D(GameManager.Instance.GraphicsDevice, 64, 64);
-            Color[] data = new Color[64 * 64];
-            
-            for (int i = 0; i < data.Length; ++i)
-                data[i] = color;
-                
-            texture.SetData(data);
-            return texture;
-        }
-        
+
         /// <summary>
         /// Проверка пересечения с другим объектом
         /// </summary>

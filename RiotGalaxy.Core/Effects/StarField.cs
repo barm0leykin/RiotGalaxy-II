@@ -2,7 +2,7 @@ using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace RiotGalaxy.Effects
+namespace RiotGalaxy.Core.Effects
 {
     /// <summary>
     /// Параллакс-фон из нескольких слоёв звёзд, плывущих вниз с разной скоростью.

@@ -1,7 +1,7 @@
-using RiotGalaxy.GameObjects;
-using RiotGalaxy.Managers;
+using RiotGalaxy.Core.GameObjects;
+using RiotGalaxy.Core.Managers;
 
-namespace RiotGalaxy.Commands
+namespace RiotGalaxy.Core.Commands
 {
     /// <summary>
     /// Команды для управления оружием (адаптировано из CocosSharp CommandsWeapon.cs).

@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace RiotGalaxy.Managers
+namespace RiotGalaxy.Core.Managers
 {
     /// <summary>
     /// Короткие всплывающие сообщения (тост-лог) — «+25 HP», «Оружие: лазер» и т.п.

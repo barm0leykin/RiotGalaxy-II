@@ -1,9 +1,9 @@
 using System;
 using Microsoft.Xna.Framework;
-using RiotGalaxy.GameObjects;
-using RiotGalaxy.Managers;
+using RiotGalaxy.Core.GameObjects;
+using RiotGalaxy.Core.Managers;
 
-namespace RiotGalaxy.Components
+namespace RiotGalaxy.Core.Components
 {
     /// <summary>Тактика пике при вылете из улья (задаётся списком в enemies.yaml).</summary>
     public enum SortieTactic

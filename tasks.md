@@ -69,16 +69,19 @@
 - [ ] **Сохранение/загрузка прогресса** на диск (расширить [GameSettings.cs](RiotGalaxy.Core/Utils/GameSettings.cs)
       или новый `SaveData`): пройденная глава/уровень, валюта, купленные апгрейды, рекорды.
       Кросс-платформенный путь (desktop + Android).
-- [ ] **HUD-класс** — вынести отрисовку HP/очков/оружия/валюты из
-      [GameManager.cs](RiotGalaxy.Core/Managers/GameManager.cs) в `Interface/Hud.cs`. Из [TODO.md](TODO.md).
+- [x] **HUD-класс** — отрисовка HP/очков/оружия вынесена из `GameManager` в
+      [Interface/HudRenderer.cs](RiotGalaxy.Core/Interface/HudRenderer.cs) (рефакторинг 2026-06-09).
+      *(добавить валюту — когда появится система валюты ниже).*
 - [ ] **Система валюты** — счётчик в [PlayerShip.cs](RiotGalaxy.Core/GameObjects/PlayerShip.cs),
       начисление за убийства/звёзды, отображение в HUD, перенос между уровнями.
 - [ ] **Диалоговая система (движок)** — `Dialogue/DialogueScreen.cs` + загрузка реплик из YAML
       (`Content/Dialogues/*.yaml`): портрет, имя, текст, последовательность, кнопка «далее»/skip.
       Переиспользуется этапом 4.
 - [ ] **Локализация-каркас** — строки в данные (ru как эталон), чтобы тексты диалогов/меню не были в коде.
-- [ ] **Техдолг (разблокирующий):** привести namespace к структуре папок (`RiotGalaxy.Core.*`),
-      подчистить неиспользуемые поля `GameManager`. Из [TODO.md](TODO.md).
+- [x] **Техдолг (разблокирующий):** namespace приведён к `RiotGalaxy.Core.*`; `GameManager`
+      разгружен (1170→759 строк): выделены `CollisionSystem`/`LevelDirector`/`HudRenderer`,
+      состояния → `Screens/*Screen`, убран мёртвый код, враги/бонусы/снаряды переведены на данные
+      (рефакторинг 2026-06-09). Подробности — в [ARCHITECTURE.md](ARCHITECTURE.md) §3/§6/§12/§14.
 
 ## Этап 3 — Прогрессия и магазин (гибрид)
 

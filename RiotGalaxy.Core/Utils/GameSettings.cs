@@ -1,9 +1,9 @@
 using System;
 using System.IO;
 using Microsoft.Xna.Framework;
-using RiotGalaxy.Managers;
+using RiotGalaxy.Core.Managers;
 
-namespace RiotGalaxy.Utils
+namespace RiotGalaxy.Core.Utils
 {
     /// <summary>
     /// Пользовательские настройки (громкость) в файле settings.yaml рядом с приложением.

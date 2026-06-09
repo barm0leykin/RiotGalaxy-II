@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace RiotGalaxy.Utils
+namespace RiotGalaxy.Core.Utils
 {
     /// <summary>
     /// Простой кросс-платформенный лог: пишет в Console (видно в терминале/Debug Console VSCode)
