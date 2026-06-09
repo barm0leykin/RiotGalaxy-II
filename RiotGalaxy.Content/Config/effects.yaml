@@ -1,0 +1,38 @@
+# Параметры визуальных эффектов и параллакс-фона.
+# Все значения имеют дефолты в коде (EffectsConfig) — игра работает и без этого файла.
+
+# Система частиц.
+#   count — число частиц; speed — скорость разлёта (пикс/сек);
+#   size — базовый размер; life — базовое время жизни (сек).
+particles:
+  enemyExplosion:                 # взрыв обычного врага при гибели
+    count: 24
+    speed: 220
+    size: 6
+    life: 0.55
+  bossExplosion:                  # взрыв босса — мощнее
+    count: 80
+    speed: 320
+    size: 11
+    life: 0.9
+  hitSpark:                       # искра при попадании/уроне
+    count: 6
+    speed: 140
+    size: 4
+    life: 0.25
+
+# Тряска экрана. magnitude — амплитуда в виртуальных пикселях; duration — длительность (сек).
+screenShake:
+  enemyDeath: { magnitude: 4,  duration: 0.18 }
+  bossDeath:  { magnitude: 14, duration: 0.5 }
+  nuke:       { magnitude: 16, duration: 0.6 }   # бонус «убить всех»
+  playerHit:  { magnitude: 7,  duration: 0.25 }
+
+# Параллакс-фон: слои звёзд (порядок: дальний → ближний).
+#   count — число звёзд; speed — скорость прокрутки вниз (пикс/сек);
+#   sizeMin/Max — размер точки; brightMin/Max — яркость 0..1.
+starField:
+  layers:
+    - { count: 70, speed: 18, sizeMin: 1.0, sizeMax: 2.0, brightMin: 0.25, brightMax: 0.5 }
+    - { count: 45, speed: 45, sizeMin: 1.5, sizeMax: 2.5, brightMin: 0.45, brightMax: 0.75 }
+    - { count: 22, speed: 95, sizeMin: 2.0, sizeMax: 3.5, brightMin: 0.7,  brightMax: 1.0 }

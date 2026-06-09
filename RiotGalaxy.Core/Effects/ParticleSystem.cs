@@ -72,12 +72,18 @@ namespace RiotGalaxy.Effects
             }
         }
 
+        /// <summary>Всплеск частиц по параметрам из конфига (взрыв/искра).</summary>
+        public void Explosion(Vector2 position, Color color, Utils.EffectsConfig.Burst b)
+        {
+            Explosion(position, color, b.Count, b.Speed, b.Size, b.Life);
+        }
+
         /// <summary>
-        /// Искра попадания: короткий узкий разлёт (для hit-feedback по врагу).
+        /// Искра попадания: короткий узкий разлёт (для hit-feedback). Параметры — из конфига.
         /// </summary>
         public void HitSpark(Vector2 position, Color color)
         {
-            Explosion(position, color, count: 6, speed: 140f, size: 4f, life: 0.25f);
+            Explosion(position, color, Utils.EffectsConfig.HitSpark);
         }
 
         /// <summary>Слегка варьирует цвет, чтобы взрыв «играл» оттенками.</summary>

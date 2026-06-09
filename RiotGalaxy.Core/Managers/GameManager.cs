@@ -90,6 +90,9 @@ namespace RiotGalaxy.Managers
         // Система частиц (взрывы, искры). Обновляется в UpdateGameplay, рисуется в DrawGameplay.
         public Effects.ParticleSystem Particles { get; } = new Effects.ParticleSystem();
 
+        // Параллакс-фон (звёзды). Анимируется во всех состояниях, рисуется под сценой.
+        private Effects.StarField _starField;
+
 
         // Вспомогательные текстуры
         public Texture2D SimpleTexture { get; set; }
@@ -243,7 +246,12 @@ namespace RiotGalaxy.Managers
             Utils.EnemyConfig.Load();
             Utils.BonusConfig.Load();
             Utils.GameOptions.Load();
+            Utils.EffectsConfig.Load();
             Utils.GameSettings.Load();
+
+            // Параллакс-фон из звёзд (процедурный, без ассетов). Слои — из EffectsConfig,
+            // поэтому создаём после загрузки конфигов.
+            _starField = new Effects.StarField(ScreenWidth, ScreenHeight);
 
             // Сколько уровней доступно (по файлам Content/Levels/level*.yaml)
             _totalLevels = Utils.Level.CountLevels();
@@ -271,6 +279,9 @@ namespace RiotGalaxy.Managers
         public void Update(GameTime gameTime)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            // Параллакс-фон анимируется во всех состояниях (живой фон в меню и в бою).
+            _starField?.Update(deltaTime);
 
             // Условия завершения игры проверяются только в состоянии Playing
             // (внутри UpdateGameplay). Иначе в Victory/GameOver EnemiesRemaining==0
@@ -316,6 +327,11 @@ namespace RiotGalaxy.Managers
             {
                 _spriteBatch.Draw(_background, new Rectangle(0, 0, ScreenWidth, ScreenHeight), Color.White);
             }
+
+            // Параллакс-звёзды поверх задника, под игровой сценой/UI.
+            if (SimpleTexture == null)
+                SimpleTexture = CreateSimpleTexture(Color.White);
+            _starField?.Draw(_spriteBatch, SimpleTexture);
 
             // Рисуем в соответствии с текущим состоянием
             switch (CurrentGameState)
@@ -870,7 +886,7 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             // Визуальная обратная связь по урону: тряска экрана + искры у корабля.
             if (newHealth < oldHealth && Player != null)
             {
-                Shake(7f, 0.25f);
+                Shake(Utils.EffectsConfig.PlayerHitShake.Magnitude, Utils.EffectsConfig.PlayerHitShake.Duration);
                 Particles.HitSpark(Player.Position, new Color(255, 80, 80));
             }
         }
@@ -908,14 +924,12 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             // Для врагов выполняем дополнительные действия (аналог GamePlay.cs)
             if (obj is Enemy enemy)
             {
-                // Визуальный взрыв + тряска экрана (босс — заметно мощнее).
+                // Визуальный взрыв + тряска экрана (босс — заметно мощнее). Параметры — из effects.yaml.
                 bool isBoss = enemy.Type == EnemyType.BOSS;
                 Particles.Explosion(obj.Position, ExplosionColorFor(enemy.Type),
-                    count: isBoss ? 80 : 24,
-                    speed: isBoss ? 320f : 220f,
-                    size:  isBoss ? 11f : 6f,
-                    life:  isBoss ? 0.9f : 0.55f);
-                Shake(isBoss ? 14f : 4f, isBoss ? 0.5f : 0.18f);
+                    isBoss ? Utils.EffectsConfig.BossExplosion : Utils.EffectsConfig.EnemyExplosion);
+                var deathShake = isBoss ? Utils.EffectsConfig.BossDeathShake : Utils.EffectsConfig.EnemyDeathShake;
+                Shake(deathShake.Magnitude, deathShake.Duration);
 
                 // Запускаем ивент смерти врага
                 TriggerEnemyDeathEvent(obj);
@@ -1032,7 +1046,7 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
                 if (obj is Enemy enemy)
                     enemy.TakeDamage(enemy.Hp);
             }
-            Shake(16f, 0.6f); // мощная тряска на «нюк»
+            Shake(Utils.EffectsConfig.NukeShake.Magnitude, Utils.EffectsConfig.NukeShake.Duration); // «нюк»
         }
 
         private void ShellHitsEnemy(Shell shell, Enemy enemy)
