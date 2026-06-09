@@ -80,6 +80,16 @@ namespace RiotGalaxy.Managers
         private float _renderScale = 1f;
         private Vector2 _renderOffset = Vector2.Zero;
 
+        // Screenshake: тряска виртуального кадра при взрывах/боссе/нюке/уроне.
+        private Vector2 _shakeOffset = Vector2.Zero;
+        private float _shakeTime = 0f;
+        private float _shakeDuration = 0f;
+        private float _shakeMagnitude = 0f;
+        private readonly Random _shakeRng = new Random();
+
+        // Система частиц (взрывы, искры). Обновляется в UpdateGameplay, рисуется в DrawGameplay.
+        public Effects.ParticleSystem Particles { get; } = new Effects.ParticleSystem();
+
 
         // Вспомогательные текстуры
         public Texture2D SimpleTexture { get; set; }
@@ -98,8 +108,44 @@ namespace RiotGalaxy.Managers
             _renderOffset = new Vector2(
                 (vp.Width - ScreenWidth * scale) / 2f,
                 (vp.Height - ScreenHeight * scale) / 2f);
+            // Смещение screenshake задаётся в виртуальных пикселях → умножаем на scale,
+            // чтобы амплитуда тряски одинаково выглядела при любом letterbox-масштабе.
             _renderMatrix = Matrix.CreateScale(scale, scale, 1f)
-                          * Matrix.CreateTranslation(_renderOffset.X, _renderOffset.Y, 0f);
+                          * Matrix.CreateTranslation(
+                                _renderOffset.X + _shakeOffset.X * scale,
+                                _renderOffset.Y + _shakeOffset.Y * scale, 0f);
+        }
+
+        /// <summary>
+        /// Запустить тряску экрана. Слабая тряска не перебивает более сильную активную.
+        /// </summary>
+        /// <param name="magnitude">амплитуда в виртуальных пикселях</param>
+        /// <param name="duration">длительность, сек</param>
+        public void Shake(float magnitude, float duration = 0.3f)
+        {
+            if (magnitude <= 0f) return;
+            if (_shakeTime <= 0f || magnitude >= _shakeMagnitude)
+            {
+                _shakeMagnitude = magnitude;
+                _shakeDuration = duration;
+                _shakeTime = duration;
+            }
+        }
+
+        /// <summary>Затухание тряски и пересчёт случайного смещения кадра.</summary>
+        private void UpdateScreenShake(float dt)
+        {
+            if (_shakeTime <= 0f)
+            {
+                _shakeOffset = Vector2.Zero;
+                return;
+            }
+            _shakeTime -= dt;
+            float k = Math.Max(0f, _shakeTime / _shakeDuration); // 1 → 0, линейное затухание
+            float mag = _shakeMagnitude * k;
+            _shakeOffset = new Vector2(
+                (float)(_shakeRng.NextDouble() * 2.0 - 1.0) * mag,
+                (float)(_shakeRng.NextDouble() * 2.0 - 1.0) * mag);
         }
 
         /// <summary>Переводит координаты экрана (пиксели мыши/тача) в виртуальные (1280x768).</summary>
@@ -399,7 +445,11 @@ namespace RiotGalaxy.Managers
         private void UpdateGameplay(GameTime gameTime)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            
+
+            // Эффекты обновляем всегда (продолжают доигрывать даже на кадре завершения уровня).
+            UpdateScreenShake(deltaTime);
+            Particles.Update(deltaTime);
+
             // Проверка условий завершения игры (аналог GamePlay.cs)
             if (!CheckGameEndConditions())
             {
@@ -517,6 +567,11 @@ namespace RiotGalaxy.Managers
             {
                 gameObject.Draw(gameTime, _spriteBatch);
             }
+
+            // Частицы (взрывы/искры) — поверх объектов, под HUD.
+            if (SimpleTexture == null)
+                SimpleTexture = CreateSimpleTexture(Color.White);
+            Particles.Draw(_spriteBatch, SimpleTexture);
 
             // Рисуем HUD
             DrawHUD();
@@ -812,11 +867,12 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
         /// </summary>
         private void OnPlayerHealthChanged(int oldHealth, int newHealth)
         {
-            
-            // Здесь можно добавить дополнительную логику:
-            // - Обновление HUD
-            // - Звуковые эффекты
-            // - Визуальная обратная связь
+            // Визуальная обратная связь по урону: тряска экрана + искры у корабля.
+            if (newHealth < oldHealth && Player != null)
+            {
+                Shake(7f, 0.25f);
+                Particles.HitSpark(Player.Position, new Color(255, 80, 80));
+            }
         }
         
         /// <summary>
@@ -850,8 +906,17 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             
             
             // Для врагов выполняем дополнительные действия (аналог GamePlay.cs)
-            if (obj is Enemy)
+            if (obj is Enemy enemy)
             {
+                // Визуальный взрыв + тряска экрана (босс — заметно мощнее).
+                bool isBoss = enemy.Type == EnemyType.BOSS;
+                Particles.Explosion(obj.Position, ExplosionColorFor(enemy.Type),
+                    count: isBoss ? 80 : 24,
+                    speed: isBoss ? 320f : 220f,
+                    size:  isBoss ? 11f : 6f,
+                    life:  isBoss ? 0.9f : 0.55f);
+                Shake(isBoss ? 14f : 4f, isBoss ? 0.5f : 0.18f);
+
                 // Запускаем ивент смерти врага
                 TriggerEnemyDeathEvent(obj);
 
@@ -862,6 +927,16 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             // Выполняем базовое удаление объекта
             obj.IsAlive = false; // Помечаем объект как мертвый
         }
+
+        /// <summary>Цвет взрыва по типу врага (под палитру спрайтов).</summary>
+        private static Color ExplosionColorFor(EnemyType type) => type switch
+        {
+            EnemyType.BLUE  => new Color(80, 160, 255),
+            EnemyType.GREEN => new Color(120, 230, 120),
+            EnemyType.RED   => new Color(255, 90, 70),
+            EnemyType.BOSS  => new Color(255, 170, 60),
+            _               => new Color(255, 210, 120), // scout / прочие
+        };
 
         private static readonly Random _bonusRnd = new Random();
 
@@ -897,6 +972,7 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             
             // Очистка ресурсов игрового процесса
             GameObjects.Clear();
+            Particles.Clear();
             InputManager.Instance.GuiButtons.Clear(); // убрать тестовые кнопки
             MessageLog.Clear();
             Player = null;
@@ -956,10 +1032,16 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
                 if (obj is Enemy enemy)
                     enemy.TakeDamage(enemy.Hp);
             }
+            Shake(16f, 0.6f); // мощная тряска на «нюк»
         }
 
         private void ShellHitsEnemy(Shell shell, Enemy enemy)
         {
+            // Искра в точке попадания (если враг выживет — это hit-feedback; если умрёт,
+            // ProcessObjectRemoval добавит полноценный взрыв сверху).
+            if (enemy.Hp > shell.Damage)
+                Particles.HitSpark(shell.Position, ExplosionColorFor(enemy.Type));
+
             enemy.TakeDamage(shell.Damage);
             if (!shell.IsPiercing)
                 shell.IsAlive = false; // обычный снаряд исчезает; лазер летит насквозь
