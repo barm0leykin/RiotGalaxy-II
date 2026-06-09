@@ -33,8 +33,8 @@ RiotGalaxy.Android/     # Android-обёртка (net9.0-android, вне .sln)
 docker/                 # сборочное окружение Android (по PRD — только в Docker)
 ```
 
-Подробно об архитектуре — в [ARCHITECTURE.md](ARCHITECTURE.md). Список открытых задач —
-в [TODO.md](TODO.md).
+Продуктовое видение и требования — в [prd.md](prd.md). Подробно об архитектуре — в
+[ARCHITECTURE.md](ARCHITECTURE.md). Список открытых задач — в [TODO.md](TODO.md).
 
 ## Сборка и запуск
 
