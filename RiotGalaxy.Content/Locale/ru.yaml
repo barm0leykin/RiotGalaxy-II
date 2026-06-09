@@ -1,0 +1,49 @@
+# Локализация UI (эталонная локаль — ru). Плоская карта ключ→текст.
+# Шаблоны с {0}/{1} подставляются через Loc.F(key, args). Для новой локали — копия файла
+# (напр. en.yaml) с теми же ключами. Ключи, которых нет, отображаются как есть (видно пропуск).
+
+# Заставка
+splash.title: "RIOT GALAXY"
+splash.loading: "загрузка..."
+
+# Главное меню
+menu.title: "-= Galaxy Riot! =-"
+menu.start: "Начать игру"
+menu.settings: "Настройки"
+menu.exit: "Выход"
+menu.record: "Рекорд: {0}"
+menu.credits: "Кредиты: {0}"
+menu.hint: "Тап по пункту · стрелки + Enter · Esc — выход"
+
+# Настройки
+settings.title: "Настройки"
+settings.volume: "Громкость эффектов: {0}%"
+settings.back: "Назад"
+settings.hint: "Тап [-]/[+] или стрелки ←/→ · Esc — назад"
+
+# Между уровнями
+nextlevel.title: "Уровень {0} из {1}"
+nextlevel.score: "Очки: {0}"
+nextlevel.hint: "Тап / Пробел / Enter — продолжить"
+
+# Пауза
+paused.title: "ПАУЗА"
+paused.resume: "Esc / P — продолжить"
+paused.menu: "Q — выход в меню"
+
+# Поражение / Победа
+gameover.title: "GAME OVER"
+victory.title: "ПОБЕДА!"
+result.score: "Очки: {0}"
+result.record: "Рекорд: {0}"
+result.newrecord: "Новый рекорд!"
+result.hint: "Тап / Пробел — заново · Esc — в меню"
+
+# HUD (боевой)
+hud.hp: "HP: {0}/{1}"
+hud.score: "Очки: {0}"
+hud.weapon: "Оружие: {0} (ур. {1})"
+hud.credits: "Кредиты: {0}"
+
+# Диалоги
+dialogue.hint: "{0}/{1}  ·  тап / пробел — далее · Esc — пропустить"

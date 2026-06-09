@@ -60,9 +60,14 @@ dotnet run --project RiotGalaxy.DesktopGL/RiotGalaxy.DesktopGL.csproj
 
 ```bash
 ./docker/build-image.sh        # один раз: образ riotgalaxy-android-build (.NET9+JDK17+AndroidSDK)
+./run_phone.sh                 # собрать APK + поставить/запустить на телефоне + лог → riot_android.log
+# или по шагам:
 ./docker/build-apk.sh Debug    # → RiotGalaxy.Android/bin/Debug/net9.0-android/*-Signed.apk
 ./docker/run-on-device.sh      # установить и запустить на USB-устройстве (adb из контейнера)
 ```
+
+`run_phone.sh` — аналог `run_game.sh`, но для телефона: пересобирает APK, ставит, запускает и
+пишет лог запуска в `riot_android.log` (тег `DOTNET`: `[DBG]/[ERR]` + ошибки).
 
 На Android: тач-управление, автоогонь, letterbox-масштаб, кнопка «Назад». Подробности —
 [ARCHITECTURE.md](ARCHITECTURE.md) (§18.5).

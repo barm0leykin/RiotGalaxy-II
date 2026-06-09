@@ -18,7 +18,7 @@ namespace RiotGalaxy.Core.Screens
         // Крупные квадратные тач-зоны по бокам от значения громкости.
         private Rectangle MinusRect => new Rectangle((int)(ScreenW / 2f - 240), (int)(ScreenH * 0.44f), 120, 100);
         private Rectangle PlusRect => new Rectangle((int)(ScreenW / 2f + 120), (int)(ScreenH * 0.44f), 120, 100);
-        private Rectangle BackRect => CenteredItemRect("Назад", ScreenH * 0.7f, ItemScale);
+        private Rectangle BackRect => CenteredItemRect(Utils.Loc.T("settings.back"), ScreenH * 0.7f, ItemScale);
 
         private void ChangeVolume(float delta)
         {
@@ -54,10 +54,10 @@ namespace RiotGalaxy.Core.Screens
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            DrawCentered(spriteBatch, "Настройки", ScreenH * 0.20f, Color.Orange, TitleScale);
+            DrawCentered(spriteBatch, Utils.Loc.T("settings.title"), ScreenH * 0.20f, Color.Orange, TitleScale);
 
             int percent = (int)System.Math.Round(AudioManager.Instance.EffectsVolume * 100);
-            DrawCentered(spriteBatch, $"Громкость эффектов: {percent}%", ScreenH * 0.32f, Color.White, ItemScale);
+            DrawCentered(spriteBatch, Utils.Loc.F("settings.volume", percent), ScreenH * 0.32f, Color.White, ItemScale);
 
             bool minusHover = MinusRect.Contains(MousePoint);
             bool plusHover = PlusRect.Contains(MousePoint);
@@ -65,9 +65,9 @@ namespace RiotGalaxy.Core.Screens
             DrawButton(spriteBatch, "[+]", PlusRect, plusHover);
 
             bool backHover = BackRect.Contains(MousePoint);
-            DrawCentered(spriteBatch, "Назад", ScreenH * 0.7f, backHover ? Color.Yellow : Color.White, ItemScale);
+            DrawCentered(spriteBatch, Utils.Loc.T("settings.back"), ScreenH * 0.7f, backHover ? Color.Yellow : Color.White, ItemScale);
 
-            DrawCentered(spriteBatch, "Тап [-]/[+] или стрелки ←/→ · Esc — назад", ScreenH * 0.9f, Color.Gray, HintScale);
+            DrawCentered(spriteBatch, Utils.Loc.T("settings.hint"), ScreenH * 0.9f, Color.Gray, HintScale);
         }
 
         /// <summary>Крупный символ-кнопка по центру тач-зоны (подсветка цветом при наведении).</summary>

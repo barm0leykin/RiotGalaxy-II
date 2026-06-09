@@ -59,6 +59,9 @@ namespace RiotGalaxy.Core.GameObjects
         // Очки игрока (за звёзды-бонусы)
         public int Score { get; set; }
 
+        // Валюта (кредиты), заработанная за текущую партию; в конце игры идёт в профиль (SaveData).
+        public int Currency { get; set; }
+
         // Сохранённые уровни прокачки по типам оружия (индекс = (int)WeaponType)
         private readonly int[] _weaponLevels = new int[3];
 

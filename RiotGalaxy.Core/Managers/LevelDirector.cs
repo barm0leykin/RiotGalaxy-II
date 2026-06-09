@@ -70,6 +70,10 @@ namespace RiotGalaxy.Core.Managers
             EnemiesRemaining = _level.TotalEnemies;
             Utils.Log.Debug($"Level {CurrentLevel} loaded: \"{_level.Description}\", enemies={_level.TotalEnemies}");
 
+            // Прогресс кампании (самый дальний уровень) — в профиль.
+            Utils.SaveData.ReportLevelReached(CurrentLevel);
+            Utils.SaveData.Save();
+
             // Мир и улей (формации) — пересоздаём на каждый уровень (сброс занятых ячеек)
             _world = new World(screenW, screenH);
             _hive = new Hive(_world, 4, 1, 8, 2); // 8×2 у верхней кромки

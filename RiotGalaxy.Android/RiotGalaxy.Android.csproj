@@ -60,6 +60,8 @@
     <AndroidAsset Include="../RiotGalaxy.Content/Config/*.yaml" Link="Assets/Content/Config/%(Filename)%(Extension)" />
     <AndroidAsset Include="../RiotGalaxy.Content/Levels/*.yaml" Link="Assets/Content/Levels/%(Filename)%(Extension)" />
     <AndroidAsset Include="../RiotGalaxy.Content/Routes/*.yaml" Link="Assets/Content/Routes/%(Filename)%(Extension)" />
+    <AndroidAsset Include="../RiotGalaxy.Content/Dialogues/*.yaml" Link="Assets/Content/Dialogues/%(Filename)%(Extension)" />
+    <AndroidAsset Include="../RiotGalaxy.Content/Locale/*.yaml" Link="Assets/Content/Locale/%(Filename)%(Extension)" />
   </ItemGroup>
 
 </Project>

@@ -91,7 +91,8 @@ RiotGalaxy.Core/
 ├── Screens/                 # ВСЕ состояния — экраны (см. §14)
 │   ├── Screen.cs, ScreenSystem.cs
 │   ├── SplashScreen / MainMenuScreen / SettingsScreen / NextLevelScreen
-│   └── GameplayScreen / PausedScreen / GameOverScreen / VictoryScreen
+│   ├── GameplayScreen / PausedScreen / GameOverScreen / VictoryScreen
+│   └── DialogueScreen (диалоги/брифинги; контент — Content/Dialogues/*.yaml)
 ├── Commands/                # паттерн «Команда» (смена оружия, kill all, next level…)
 ├── Interface/               # MyButton + кнопки (тестовая панель), HudRenderer.cs (боевой HUD)
 ├── Effects/                 # ParticleSystem.cs (взрывы/искры), StarField.cs (параллакс), см. §6
@@ -459,7 +460,8 @@ GREEN, RED, BOSS }`). Прежних подклассов (`EnemySmallBlue/Green
 - **Стрельба**: по таймеру `ShootInterval`, режим из конфига `shoot`: `down` (вниз),
   `aim` (прицельно в игрока), `none` (не стреляет). Флаг `ShootSafe` временно глушит
   стрельбу (им управляют состояния ИИ).
-- Гибель: `TakeDamage`→`Die` (звук `explode1`), уменьшает `EnemiesRemaining`, роняет бонус.
+- Гибель: `TakeDamage`→`Die` (звук `explode1`), уменьшает `EnemiesRemaining`, роняет бонус,
+  начисляет игроку валюту `Reward` (поле `reward` в enemies.yaml).
 
 **ИИ — машина состояний** ([AI/](RiotGalaxy.Core/AI/), порт `BehAI`/`AIState` из CocoSharp).
 У врага есть опциональный `Ai` ([EnemyAI](RiotGalaxy.Core/AI/EnemyAI.cs)) — контроллер с
@@ -532,6 +534,11 @@ GREEN, RED, BOSS }`). Прежних подклассов (`EnemySmallBlue/Green
 - Игровые: **`GameplayScreen`** (тонкая обёртка → `GameManager.UpdateGameplay/DrawGameplay`),
   **`PausedScreen`** (замороженная игра + затемнение), **`GameOverScreen`**/**`VictoryScreen`**
   (рестарт по **тапу**/Enter — на телефоне нет Space/Esc; «в меню» — Esc/кнопка «Назад»).
+- **`DialogueScreen`** — диалоги/брифинги: реплики по очереди (имя + текст с переносом + опц.
+  портрет) в нижней панели; тап/пробел — далее, Esc — пропустить. Контент —
+  `Content/Dialogues/*.yaml` ([Utils/Dialogue.cs](RiotGalaxy.Core/Utils/Dialogue.cs)). Запуск:
+  `GameManager.PlayDialogue(name, next)` → `GameState.Dialogue` → `EndDialogue()` переходит в `next`
+  (нет файла — сразу `next`). Основа сюжета (этап 4). Демо: интро `intro.yaml` перед 1-м уровнем.
 
 `GameManager.Update/Draw` для ВСЕХ состояний делегируют в `ScreenSystem`; экран создаётся в
 `ChangeGameState`. Боевая петля и отрисовка боя остаются в `GameManager` (их вызывает
@@ -545,7 +552,10 @@ GREEN, RED, BOSS }`). Прежних подклассов (`EnemySmallBlue/Green
 спавнит врагов по `Level.Tick(dt)`, ведёт `EnemiesRemaining`/`CurrentLevel` (а `GameManager`
 отдаёт их делегирующими свойствами). Когда все враги уровня заспавнены и убиты — переход на
 следующий (`NextLevel` экран) или, если уровней больше нет, — `Victory`. Игрок и счёт
-переносятся между уровнями. Поражение (`GameOver`) и победа показывают очки и предлагают рестарт.
+переносятся между уровнями. Поражение (`GameOver`) и победа показывают очки и **рекорд** и
+предлагают рестарт. Рекорд/прогресс/валюта сохраняются в профиле ([Utils/SaveData.cs](RiotGalaxy.Core/Utils/SaveData.cs),
+`save.yaml`): грузится при старте (`GameManager.LoadContent`), пишется в конце партии
+(`ChangeGameState`) и при загрузке уровня (`LevelDirector.Load`). См. §16.
 
 Формат уровня (YAML):
 
@@ -573,15 +583,28 @@ events:
 | Файл | Что | Загрузчик |
 |---|---|---|
 | `Content/Config/weapons.yaml` | оружие по уровням + `magnet` (магнит корабля) | `Weapons.WeaponConfig.Load()` |
-| `Content/Config/enemies.yaml` | враги: hp/урон/скорость/`attackSpeed`/`tactics` + вид и поведение (`sprite`/`scale`/`shoot`/`ai`/`wander`/`dirMin`/`dirMax`) | `Utils.EnemyConfig.Load()` |
+| `Content/Config/enemies.yaml` | враги: hp/урон/скорость/`attackSpeed`/`tactics`/`reward` + вид и поведение (`sprite`/`scale`/`shoot`/`ai`/`wander`/`dirMin`/`dirMax`) | `Utils.EnemyConfig.Load()` |
 | `Content/Config/bonuses.yaml` | параметры бонусов (хил HP, очки за звезду) | `Utils.BonusConfig.Load()` |
 | `Content/Config/options.yaml` | экран + игрок (HP, скорость, время неуязвимости…) | `Utils.GameOptions.Load()` |
 | `Content/Config/effects.yaml` | частицы (взрывы/искры), screenshake, слои параллакса | `Utils.EffectsConfig.Load()` |
 | `settings.yaml` (рядом с .exe) | громкость (пользовательская) | `Utils.GameSettings` |
+| `save.yaml` (рядом с .exe) | профиль игрока: рекорд, дальний уровень, валюта | `Utils.SaveData` |
 
 Все три читаются в `GameManager.LoadContent`. У каждого конфига есть дефолты в коде —
-игра работает и без файлов. Уровни (`Level`) — тоже YAML (§15).
+игра работает и без файлов. Уровни (`Level`) — тоже YAML (§15). Диалоги —
+`Content/Dialogues/*.yaml` ([Utils/Dialogue.cs](RiotGalaxy.Core/Utils/Dialogue.cs), грузятся по
+требованию через `Dialogue.Load(name)`; см. §14).
 
+**Локализация UI** — [Utils/Loc.cs](RiotGalaxy.Core/Utils/Loc.cs): строки меню/настроек/итогов/
+паузы/HUD/диалога вынесены из кода в `Content/Locale/<lang>.yaml` (плоская карта ключ→текст,
+эталон — `ru.yaml`). Доступ: `Loc.T("menu.start")`, шаблоны — `Loc.F("hud.hp", hp, max)`.
+Грузится в `GameManager.LoadContent` (`Loc.Load()`). Нет ключа/файла → возвращается сам ключ
+(пропуск виден, без падений). Новая локаль — копия `ru.yaml` с теми же ключами.
+
+> Папки YAML-контента (`Config`/`Levels`/`Routes`/`Dialogues`) копируются в выход: на desktop —
+> `<None CopyToOutputDirectory>`, на Android — `<AndroidAsset>` в `Assets/Content/...` (оба csproj).
+> Добавляешь новую папку YAML — пропиши её в **обоих** проектах.
+>
 > Почему YAML, а не Content Pipeline: это **текстовые** конфиги, их не нужно компилировать
 > в `.xnb`. Они копируются в выход через `<None CopyToOutputDirectory>` (см. §8) и читаются
 > обычным `File.ReadAllText` из `AppContext.BaseDirectory`.
@@ -735,10 +758,16 @@ dotnet publish RiotGalaxy.DesktopGL/RiotGalaxy.DesktopGL.csproj \
 ```bash
 cd MonoGame
 ./docker/build-image.sh          # один раз: образ riotgalaxy-android-build (.NET9+JDK17+AndroidSDK+workload)
+./run_phone.sh [Debug] [сек]     # ⭐ всё разом: собрать APK + поставить/запустить + лог → riot_android.log
 ./docker/build-apk.sh Debug      # APK → RiotGalaxy.Android/bin/Debug/net9.0-android/*-Signed.apk
 ./docker/run-on-device.sh        # установить и запустить на USB-телефоне (adb из контейнера), снять logcat
 ./docker/shell.sh                # интерактивная оболочка в контейнере (исходники в /src)
 ```
+
+`run_phone.sh` (корень) — удобный аналог `run_game.sh` для Android: пересобирает APK, ставит на
+телефон, запускает и дублирует лог запуска в `riot_android.log` (тег `DOTNET`: `[DBG]/[ERR]` + ошибки),
+чтобы можно было проанализировать. Важно: `run-on-device.sh` сам APK **не** пересобирает —
+после правок кода нужен либо `run_phone.sh`, либо `build-apk.sh` перед `run-on-device.sh`.
 
 `run-on-device.sh` пробрасывает USB в контейнер (`--privileged -v /dev/bus/usb`). При первом
 подключении телефон спросит разрешение на отладку — подтвердить (ключ adb хранится в

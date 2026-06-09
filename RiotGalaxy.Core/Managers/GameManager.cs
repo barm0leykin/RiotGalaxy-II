@@ -34,8 +34,13 @@ namespace RiotGalaxy.Core.Managers
         private SpriteFont _defaultFont;
         
         // Базовые игровые состояния
-        public enum GameState { Splash, MainMenu, Settings, Playing, Paused, GameOver, Victory, NextLevel }
+        public enum GameState { Splash, MainMenu, Settings, Playing, Paused, GameOver, Victory, NextLevel, Dialogue }
         public GameState CurrentGameState { get; private set; }
+
+        // Диалог (брифинг/сюжет) и состояние, в которое перейти после него.
+        private Utils.Dialogue _dialogue;
+        private GameState _dialogueNext;
+        public Utils.Dialogue CurrentDialogue => _dialogue;
 
         // Оркестратор уровней (World/Hive, спавн, прогрессия, счётчики врагов).
         private readonly LevelDirector _levels = new LevelDirector();
@@ -237,12 +242,14 @@ namespace RiotGalaxy.Core.Managers
             }
 
             // Загружаем конфиги из YAML (оружие, враги, параметры игры) и сохранённые настройки
+            Utils.Loc.Load();              // локализация UI (Content/Locale/ru.yaml)
             Weapons.WeaponConfig.Load();
             Utils.EnemyConfig.Load();
             Utils.BonusConfig.Load();
             Utils.GameOptions.Load();
             Utils.EffectsConfig.Load();
             Utils.GameSettings.Load();
+            Utils.SaveData.Load(); // профиль игрока: рекорд/прогресс/валюта
 
             // Параллакс-фон из звёзд (процедурный, без ассетов). Слои — из EffectsConfig,
             // поэтому создаём после загрузки конфигов.
@@ -349,7 +356,13 @@ namespace RiotGalaxy.Core.Managers
                 (oldState == GameState.Paused && newState == GameState.MainMenu);
             if (endGame)
             {
-                if (Player != null) _lastScore = Player.Score; // запоминаем счёт до очистки
+                if (Player != null)
+                {
+                    _lastScore = Player.Score;                 // запоминаем счёт до очистки
+                    Utils.SaveData.Currency += Player.Currency; // банкуем заработанную валюту
+                }
+                Utils.SaveData.ReportScore(_lastScore);        // обновить рекорд
+                Utils.SaveData.Save();                         // сохранить профиль (рекорд/прогресс/валюта)
                 CleanupGameplay();
             }
 
@@ -388,7 +401,34 @@ namespace RiotGalaxy.Core.Managers
                 case GameState.Victory:
                     Screens.Change(new Screens.VictoryScreen());
                     break;
+                case GameState.Dialogue:
+                    Screens.Change(new Screens.DialogueScreen());
+                    break;
             }
+        }
+
+        /// <summary>
+        /// Показать диалог по имени (Content/Dialogues/&lt;name&gt;.yaml), затем перейти в состояние next.
+        /// Если диалога нет — сразу переходит в next (безопасный фолбэк).
+        /// </summary>
+        public void PlayDialogue(string name, GameState next)
+        {
+            var d = Utils.Dialogue.Load(name);
+            if (d == null)
+            {
+                ChangeGameState(next);
+                return;
+            }
+            _dialogue = d;
+            _dialogueNext = next;
+            ChangeGameState(GameState.Dialogue);
+        }
+
+        /// <summary>Завершить диалог и перейти в заранее заданное состояние.</summary>
+        public void EndDialogue()
+        {
+            _dialogue = null;
+            ChangeGameState(_dialogueNext);
         }
 
         public void UpdateGameplay(GameTime gameTime)
@@ -680,6 +720,10 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
                     isBoss ? Utils.EffectsConfig.BossExplosion : Utils.EffectsConfig.EnemyExplosion);
                 var deathShake = isBoss ? Utils.EffectsConfig.BossDeathShake : Utils.EffectsConfig.EnemyDeathShake;
                 Shake(deathShake.Magnitude, deathShake.Duration);
+
+                // Награда-валюта за убийство (копится за партию, банкуется в профиль в конце).
+                if (Player != null)
+                    Player.Currency += enemy.Reward;
 
                 // Запускаем ивент смерти врага
                 TriggerEnemyDeathEvent(obj);

@@ -26,8 +26,8 @@ namespace RiotGalaxy.Core.Screens
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            DrawCentered(spriteBatch, "RIOT GALAXY", ScreenH * 0.4f, Color.Orange, 2.5f);
-            DrawCentered(spriteBatch, "загрузка...", ScreenH * 0.6f, Color.Gray);
+            DrawCentered(spriteBatch, Utils.Loc.T("splash.title"), ScreenH * 0.4f, Color.Orange, 2.5f);
+            DrawCentered(spriteBatch, Utils.Loc.T("splash.loading"), ScreenH * 0.6f, Color.Gray);
         }
     }
 }

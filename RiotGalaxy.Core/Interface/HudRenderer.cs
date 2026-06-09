@@ -19,15 +19,20 @@ namespace RiotGalaxy.Core.Interface
             // Текст здоровья, очков и оружия.
             if (font != null)
             {
-                spriteBatch.DrawString(font, $"HP: {player.Health}/{player.MaxHealth}",
+                spriteBatch.DrawString(font, Utils.Loc.F("hud.hp", player.Health, player.MaxHealth),
                     new Vector2(10, 10), Color.White);
 
-                string scoreText = $"Очки: {player.Score}";
+                string scoreText = Utils.Loc.F("hud.score", player.Score);
                 float scoreW = font.MeasureString(scoreText).X;
                 spriteBatch.DrawString(font, scoreText, new Vector2(screenWidth - scoreW - 10, 10), Color.White);
 
-                string weaponText = $"Оружие: {player.CurrentWeapon} (ур. {player.Gun.Level + 1})";
+                string weaponText = Utils.Loc.F("hud.weapon", player.CurrentWeapon, player.Gun.Level + 1);
                 spriteBatch.DrawString(font, weaponText, new Vector2(10, 60), Color.LightGray);
+
+                // Валюта (кредиты) за текущую партию — справа под очками.
+                string credits = Utils.Loc.F("hud.credits", player.Currency);
+                float cw = font.MeasureString(credits).X;
+                spriteBatch.DrawString(font, credits, new Vector2(screenWidth - cw - 10, 34), Color.Gold);
             }
 
             // Полоса здоровья: тёмный фон + цветная заполненная часть.

@@ -25,6 +25,7 @@ namespace RiotGalaxy.Core.GameObjects
         public float MaxSpeed { get; set; } = 100f;
         public float CurrentSpeed { get; set; } = 100f;
         public float AttackSpeed { get; set; } = 100f; // скорость во время вылета/атаки из улья
+        public int Reward { get; set; } = 1;            // валюта (кредиты) за убийство
 
         /// <summary>Цвет взрыва/искр попадания — под палитру спрайта врага.</summary>
         public Color ExplosionColor => Type switch
@@ -203,6 +204,7 @@ namespace RiotGalaxy.Core.GameObjects
             var s = Utils.EnemyConfig.Get(type);
             Hp = MaxHp = (int)s.Hp;
             Damage = (int)s.Damage;
+            Reward = s.Reward;
             MaxSpeed = CurrentSpeed = s.PickSpeed(Rnd);
             float atk = s.PickAttackSpeed(Rnd);
             AttackSpeed = atk > 0f ? atk : MaxSpeed; // 0 в конфиге → берём обычную скорость

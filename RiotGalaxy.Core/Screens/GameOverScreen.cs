@@ -21,9 +21,14 @@ namespace RiotGalaxy.Core.Screens
         public override void Draw(SpriteBatch spriteBatch)
         {
             int score = GameManager.Instance.LastScore;
-            DrawCentered(spriteBatch, "GAME OVER", ScreenH * 0.34f, Color.Red, TitleScale);
-            DrawCentered(spriteBatch, $"Очки: {score}", ScreenH * 0.5f, Color.White, ItemScale);
-            DrawCentered(spriteBatch, "Тап / Пробел — заново · Esc — в меню", ScreenH * 0.6f, Color.Gray, HintScale);
+            DrawCentered(spriteBatch, Utils.Loc.T("gameover.title"), ScreenH * 0.30f, Color.Red, TitleScale);
+            DrawCentered(spriteBatch, Utils.Loc.F("result.score", score), ScreenH * 0.46f, Color.White, ItemScale);
+
+            bool newRecord = score > 0 && score >= Utils.SaveData.HighScore;
+            DrawCentered(spriteBatch, newRecord ? Utils.Loc.T("result.newrecord") : Utils.Loc.F("result.record", Utils.SaveData.HighScore),
+                ScreenH * 0.56f, newRecord ? Color.Gold : Color.LightGray, ItemScale);
+
+            DrawCentered(spriteBatch, Utils.Loc.T("result.hint"), ScreenH * 0.66f, Color.Gray, HintScale);
         }
     }
 }

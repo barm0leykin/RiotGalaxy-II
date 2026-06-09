@@ -72,20 +72,27 @@
       на GameOver/Victory. *(Шрифт пока 14pt и масштабируется — при желании можно поднять базовый
       размер в TestFont.spritefont для чёткости.)*
 
-## Этап 2 — Фундамент (системы, разблокирующие остальное)
+## Этап 2 — Фундамент (системы, разблокирующие остальное) — ✅ ГОТОВО
 
-- [ ] **Сохранение/загрузка прогресса** на диск (расширить [GameSettings.cs](RiotGalaxy.Core/Utils/GameSettings.cs)
-      или новый `SaveData`): пройденная глава/уровень, валюта, купленные апгрейды, рекорды.
-      Кросс-платформенный путь (desktop + Android).
+- [x] **Сохранение/загрузка прогресса** — [Utils/SaveData.cs](RiotGalaxy.Core/Utils/SaveData.cs)
+      (`save.yaml`, кросс-платформенно как `settings.yaml`): рекорд, самый дальний уровень, валюта.
+      Грузится при старте, пишется в конце партии и при загрузке уровня. Рекорд показан в меню/итогах.
+      *(купленные апгрейды добавим вместе с магазином — этап 3).*
 - [x] **HUD-класс** — отрисовка HP/очков/оружия вынесена из `GameManager` в
       [Interface/HudRenderer.cs](RiotGalaxy.Core/Interface/HudRenderer.cs) (рефакторинг 2026-06-09).
       *(добавить валюту — когда появится система валюты ниже).*
-- [ ] **Система валюты** — счётчик в [PlayerShip.cs](RiotGalaxy.Core/GameObjects/PlayerShip.cs),
-      начисление за убийства/звёзды, отображение в HUD, перенос между уровнями.
-- [ ] **Диалоговая система (движок)** — `Dialogue/DialogueScreen.cs` + загрузка реплик из YAML
-      (`Content/Dialogues/*.yaml`): портрет, имя, текст, последовательность, кнопка «далее»/skip.
+- [x] **Система валюты** — `PlayerShip.Currency` (кредиты за партию), начисление за убийства
+      (`reward` по типу в enemies.yaml), показ в HUD; в конце партии банкуется в `SaveData.Currency`.
+      Всего кредитов видно в меню. *(трата — в магазине, этап 3).*
+- [x] **Диалоговая система (движок)** — [Screens/DialogueScreen.cs](RiotGalaxy.Core/Screens/DialogueScreen.cs)
+      + модель/загрузчик [Utils/Dialogue.cs](RiotGalaxy.Core/Utils/Dialogue.cs) из YAML
+      (`Content/Dialogues/*.yaml`): имя, текст (перенос по словам), опц. портрет, последовательность,
+      тап/пробел — далее, Esc — пропустить. Запуск — `GameManager.PlayDialogue(name, next)` →
+      по завершении переход в `next` (`GameState.Dialogue`/`EndDialogue`). Демо: интро перед 1-м уровнем.
       Переиспользуется этапом 4.
-- [ ] **Локализация-каркас** — строки в данные (ru как эталон), чтобы тексты диалогов/меню не были в коде.
+- [x] **Локализация-каркас** — [Utils/Loc.cs](RiotGalaxy.Core/Utils/Loc.cs) + строки в
+      [Content/Locale/ru.yaml](RiotGalaxy.Content/Locale/ru.yaml) (ru — эталон). UI меню/настроек/итогов/
+      паузы/HUD/диалога переведён на ключи (`Loc.T`/`Loc.F`). Новая локаль — копия `ru.yaml` (напр. `en.yaml`).
 - [x] **Техдолг (разблокирующий):** namespace приведён к `RiotGalaxy.Core.*`; `GameManager`
       разгружен (1170→759 строк): выделены `CollisionSystem`/`LevelDirector`/`HudRenderer`,
       состояния → `Screens/*Screen`, убран мёртвый код, враги/бонусы/снаряды переведены на данные

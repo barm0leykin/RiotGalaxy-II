@@ -13,7 +13,11 @@ namespace RiotGalaxy.Core.Screens
     /// </summary>
     public class MainMenuScreen : Screen
     {
-        private static readonly string[] Items = { "Начать игру", "Настройки", "Выход" };
+        // Пункты берутся из локализации (Loc загружается до показа меню).
+        private static string[] Items => new[]
+        {
+            Utils.Loc.T("menu.start"), Utils.Loc.T("menu.settings"), Utils.Loc.T("menu.exit")
+        };
         private const float SpacingY = 100f; // крупные пункты + запас под палец
         private int _selected;
         private int _hover = -1;
@@ -62,7 +66,8 @@ namespace RiotGalaxy.Core.Screens
             switch (index)
             {
                 case 0:
-                    GameManager.Instance.ChangeGameState(GameManager.GameState.Playing);
+                    // Интро-брифинг (если есть), затем бой. Нет файла — сразу в бой.
+                    GameManager.Instance.PlayDialogue("intro", GameManager.GameState.Playing);
                     break;
                 case 1:
                     GameManager.Instance.ChangeGameState(GameManager.GameState.Settings);
@@ -75,7 +80,12 @@ namespace RiotGalaxy.Core.Screens
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            DrawCentered(spriteBatch, "-= Galaxy Riot! =-", ScreenH * 0.20f, Color.Orange, TitleScale);
+            DrawCentered(spriteBatch, Utils.Loc.T("menu.title"), ScreenH * 0.18f, Color.Orange, TitleScale);
+
+            if (Utils.SaveData.HighScore > 0)
+                DrawCentered(spriteBatch, Utils.Loc.F("menu.record", Utils.SaveData.HighScore), ScreenH * 0.29f, Color.LightGray, HintScale);
+            if (Utils.SaveData.Currency > 0)
+                DrawCentered(spriteBatch, Utils.Loc.F("menu.credits", Utils.SaveData.Currency), ScreenH * 0.34f, Color.Gold, HintScale);
 
             for (int i = 0; i < Items.Length; i++)
             {
@@ -84,8 +94,7 @@ namespace RiotGalaxy.Core.Screens
                 DrawCentered(spriteBatch, Items[i], StartY + i * SpacingY, color, ItemScale);
             }
 
-            DrawCentered(spriteBatch, "Тап по пункту · стрелки + Enter · Esc — выход",
-                ScreenH * 0.9f, Color.Gray, HintScale);
+            DrawCentered(spriteBatch, Utils.Loc.T("menu.hint"), ScreenH * 0.9f, Color.Gray, HintScale);
         }
     }
 }
