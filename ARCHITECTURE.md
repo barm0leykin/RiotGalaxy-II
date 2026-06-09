@@ -228,7 +228,8 @@ _spriteBatch.End();                     // 6. закрыть пакет → вс
   Пул фиксированного размера (1024), рисуется простой текстурой `SimpleTexture` (без ассетов).
   Обновляется в `UpdateGameplay`, рисуется в `DrawGameplay` поверх объектов, под HUD.
   Методы: `Explosion(...)` (разлёт при гибели врага, цвет — по `EnemyType`), `HitSpark(...)`
-  (искра попадания/урона), `Clear()` (смена уровня/состояния).
+  (искра попадания/урона), `Clear()` (смена уровня/состояния). Дульная вспышка — из
+  `Weapon.FireOnce` (`MuzzleFlash`), трассер-след — из `Shell.Update` (`ShellTrail`, снаряды игрока).
 - **Screenshake** — `GameManager.Shake(magnitude, duration)`. Смещение `_shakeOffset` (в
   виртуальных пикселях) подмешивается в `_renderMatrix` letterbox'а (× scale), затухает
   линейно в `UpdateScreenShake`. Слабая тряска не перебивает более сильную активную.
@@ -238,9 +239,15 @@ _spriteBatch.End();                     // 6. закрыть пакет → вс
   при уходе за край возвращаются сверху. Анимируется в `Update` (во всех состояниях),
   рисуется в `Draw` поверх задника, под сценой/UI. Тоже без ассетов (`SimpleTexture`).
 
-Все числовые параметры этих систем (число/скорость/размер частиц, амплитуды тряски, слои
-звёзд) задаются в [Content/Config/effects.yaml](RiotGalaxy.Content/Config/effects.yaml) и грузятся
-в `Utils.EffectsConfig` (дефолты в коде, фолбэк без файла). См. §16.
+- **Всплывающие числа** — [Effects/FloatingText.cs](RiotGalaxy.Core/Effects/FloatingText.cs)
+  (статический, в координатах мира): урон над врагом (`CollisionSystem`), очки над звездой
+  (`BonusStar.Apply`). Плывут вверх и затухают. В отличие от `MessageLog` (фикс. позиция внизу).
+  Обновляется в `UpdateGameplay`, рисуется в `DrawGameplay` поверх частиц, под HUD.
+
+Все числовые параметры этих систем (частицы, тряска, слои звёзд, дульная вспышка/трассер,
+рост снаряда по уровню `shellLevelScaleStep`, всплывающие числа `floatingText`) задаются в
+[Content/Config/effects.yaml](RiotGalaxy.Content/Config/effects.yaml) и грузятся в
+`Utils.EffectsConfig` (дефолты в коде, фолбэк без файла). См. §16. Оттенок спрайта — `GameObject.Tint`.
 
 ---
 
@@ -513,14 +520,18 @@ GREEN, RED, BOSS }`). Прежних подклассов (`EnemySmallBlue/Green
 
 Папка [Screens/](RiotGalaxy.Core/Screens/). **Все** игровые состояния — это экраны:
 
-- **`Screen`** (база) — сам читает клавиатуру/мышь (с защитой от ложного клика на 1-м кадре),
-  имеет хелпер центрированного текста.
+- **`Screen`** (база) — сам читает клавиатуру/мышь/тач (с защитой от ложного клика на 1-м кадре),
+  хелпер центрированного текста `DrawCentered(..., scale)` и **тач-дружелюбные** константы
+  масштаба (`TitleScale`/`ItemScale`/`HintScale`) + `CenteredItemRect(text, y, scale)` — крупная
+  зона нажатия (мин. высота `MinTouchHeight≈84` вирт.px), совпадающая с позицией текста.
+  Нужно, т.к. шрифт мелкий (14pt) и на телефоне в мелкие надписи трудно попадать.
 - **`ScreenSystem`** — хранит активный экран, проксирует Update/Draw.
 - Меню: **`SplashScreen`** (логотип + таймер → меню), **`MainMenuScreen`**
   (Начать/Настройки/Выход), **`SettingsScreen`** (громкость → `settings.yaml`),
   **`NextLevelScreen`** (между уровнями: номер/описание/очки).
 - Игровые: **`GameplayScreen`** (тонкая обёртка → `GameManager.UpdateGameplay/DrawGameplay`),
-  **`PausedScreen`** (замороженная игра + затемнение), **`GameOverScreen`**, **`VictoryScreen`**.
+  **`PausedScreen`** (замороженная игра + затемнение), **`GameOverScreen`**/**`VictoryScreen`**
+  (рестарт по **тапу**/Enter — на телефоне нет Space/Esc; «в меню» — Esc/кнопка «Назад»).
 
 `GameManager.Update/Draw` для ВСЕХ состояний делегируют в `ScreenSystem`; экран создаётся в
 `ChangeGameState`. Боевая петля и отрисовка боя остаются в `GameManager` (их вызывает

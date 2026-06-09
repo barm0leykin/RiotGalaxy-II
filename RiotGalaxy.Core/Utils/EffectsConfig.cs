@@ -38,6 +38,16 @@ namespace RiotGalaxy.Core.Utils
         public static Burst EnemyExplosion = new Burst { Count = 24, Speed = 220f, Size = 6f, Life = 0.55f };
         public static Burst BossExplosion  = new Burst { Count = 80, Speed = 320f, Size = 11f, Life = 0.9f };
         public static Burst HitSpark       = new Burst { Count = 6,  Speed = 140f, Size = 4f, Life = 0.25f };
+        public static Burst MuzzleFlash    = new Burst { Count = 8,  Speed = 90f,  Size = 5f, Life = 0.12f };
+        public static Burst ShellTrail     = new Burst { Count = 1,  Speed = 12f,  Size = 3f, Life = 0.18f };
+
+        /// <summary>Прирост размера снаряда за уровень оружия (0 — снаряды одинаковы).</summary>
+        public static float ShellLevelScaleStep = 0.12f;
+
+        // ── Всплывающие числа (урон/очки) ───────────────────────────────────
+        public static float FloatingTextRiseSpeed = 45f;
+        public static float FloatingTextLife = 0.7f;
+        public static float FloatingTextScale = 0.8f;
 
         // ── Тряска экрана ────────────────────────────────────────────────────
         public static Shake EnemyDeathShake = new Shake { Magnitude = 4f,  Duration = 0.18f };
@@ -65,6 +75,17 @@ namespace RiotGalaxy.Core.Utils
                 ApplyBurst(ref EnemyExplosion, data.Particles.EnemyExplosion);
                 ApplyBurst(ref BossExplosion,  data.Particles.BossExplosion);
                 ApplyBurst(ref HitSpark,       data.Particles.HitSpark);
+                ApplyBurst(ref MuzzleFlash,    data.Particles.MuzzleFlash);
+                ApplyBurst(ref ShellTrail,     data.Particles.ShellTrail);
+            }
+
+            ShellLevelScaleStep = data.ShellLevelScaleStep; // 0 = снаряды одинаковы на всех уровнях
+
+            if (data.FloatingText != null)
+            {
+                if (data.FloatingText.RiseSpeed > 0) FloatingTextRiseSpeed = data.FloatingText.RiseSpeed;
+                if (data.FloatingText.Life > 0)      FloatingTextLife = data.FloatingText.Life;
+                if (data.FloatingText.Scale > 0)     FloatingTextScale = data.FloatingText.Scale;
             }
 
             if (data.ScreenShake != null)
@@ -119,12 +140,16 @@ namespace RiotGalaxy.Core.Utils
             public ParticlesYaml Particles { get; set; }
             public ScreenShakeYaml ScreenShake { get; set; }
             public StarFieldYaml StarField { get; set; }
+            public float ShellLevelScaleStep { get; set; }
+            public FloatingTextYaml FloatingText { get; set; }
         }
         private class ParticlesYaml
         {
             public BurstYaml EnemyExplosion { get; set; }
             public BurstYaml BossExplosion { get; set; }
             public BurstYaml HitSpark { get; set; }
+            public BurstYaml MuzzleFlash { get; set; }
+            public BurstYaml ShellTrail { get; set; }
         }
         private class BurstYaml
         {
@@ -157,6 +182,12 @@ namespace RiotGalaxy.Core.Utils
             public float SizeMax { get; set; }
             public float BrightMin { get; set; }
             public float BrightMax { get; set; }
+        }
+        private class FloatingTextYaml
+        {
+            public float RiseSpeed { get; set; }
+            public float Life { get; set; }
+            public float Scale { get; set; }
         }
     }
 }

@@ -74,13 +74,34 @@ namespace RiotGalaxy.Core.Screens
         /// <summary>Позиция указателя в виртуальных координатах (1280x768).</summary>
         protected Point MousePoint => _ptrPos;
 
-        /// <summary>Текст по центру по горизонтали.</summary>
+        // Базовые масштабы UI (шрифт мелкий — 14pt; на телефоне нужно крупнее и с запасом под палец).
+        protected const float TitleScale = 2.2f;    // заголовки экранов
+        protected const float ItemScale = 1.6f;     // кликабельные пункты меню
+        protected const float HintScale = 1.1f;     // подсказки внизу
+        protected const float MinTouchHeight = 84f; // мин. высота тач-зоны (вирт. пиксели)
+
+        /// <summary>Текст по центру по горизонтали (y — верх текста).</summary>
         protected void DrawCentered(SpriteBatch sb, string text, float y, Color color, float scale = 1f)
         {
             if (Font == null) return;
             Vector2 size = Font.MeasureString(text) * scale;
             sb.DrawString(Font, text, new Vector2(ScreenW / 2f - size.X / 2f, y),
                 color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+        }
+
+        /// <summary>
+        /// Тач-зона для горизонтально-центрированного пункта меню: ширина по тексту с большим
+        /// запасом, высота — не меньше MinTouchHeight, полоса центрируется на тексте. Совпадает
+        /// с позицией DrawCentered (тот же y — верх текста), чтобы отрисовка и попадание не расходились.
+        /// </summary>
+        protected Rectangle CenteredItemRect(string text, float y, float scale)
+        {
+            Vector2 size = (Font != null ? Font.MeasureString(text) : new Vector2(160, 30)) * scale;
+            float w = size.X + 120f;
+            float h = MathHelper.Max(size.Y + 48f, MinTouchHeight);
+            float x = ScreenW / 2f - w / 2f;
+            float top = y + size.Y / 2f - h / 2f; // центрируем полосу на тексте
+            return new Rectangle((int)x, (int)top, (int)w, (int)h);
         }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using RiotGalaxy.Core.GameObjects;
 
 namespace RiotGalaxy.Core.Managers
@@ -74,6 +75,9 @@ namespace RiotGalaxy.Core.Managers
             // ProcessObjectRemoval добавит полноценный взрыв сверху).
             if (enemy.Hp > shell.Damage)
                 GameManager.Instance.Particles.HitSpark(shell.Position, enemy.ExplosionColor);
+
+            // Всплывающее число урона над врагом.
+            Effects.FloatingText.Add(shell.Damage.ToString(), enemy.Position, new Color(255, 240, 150));
 
             enemy.TakeDamage(shell.Damage);
             if (!shell.IsPiercing)

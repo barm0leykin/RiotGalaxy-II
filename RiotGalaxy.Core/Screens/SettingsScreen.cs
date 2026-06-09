@@ -13,19 +13,12 @@ namespace RiotGalaxy.Core.Screens
     public class SettingsScreen : Screen
     {
         private const float Step = 0.1f;
+        private const float BtnScale = 2.4f; // символы [-]/[+] крупно
 
-        private Rectangle MinusRect => new Rectangle((int)(ScreenW / 2f - 160), (int)(ScreenH * 0.45f), 48, 40);
-        private Rectangle PlusRect => new Rectangle((int)(ScreenW / 2f + 112), (int)(ScreenH * 0.45f), 48, 40);
-        private Rectangle BackRect
-        {
-            get
-            {
-                string t = "Назад";
-                Vector2 s = Font != null ? Font.MeasureString(t) : new Vector2(100, 30);
-                return new Rectangle((int)(ScreenW / 2f - s.X / 2f) - 12, (int)(ScreenH * 0.7f) - 6,
-                    (int)s.X + 24, (int)s.Y + 12);
-            }
-        }
+        // Крупные квадратные тач-зоны по бокам от значения громкости.
+        private Rectangle MinusRect => new Rectangle((int)(ScreenW / 2f - 240), (int)(ScreenH * 0.44f), 120, 100);
+        private Rectangle PlusRect => new Rectangle((int)(ScreenW / 2f + 120), (int)(ScreenH * 0.44f), 120, 100);
+        private Rectangle BackRect => CenteredItemRect("Назад", ScreenH * 0.7f, ItemScale);
 
         private void ChangeVolume(float delta)
         {
@@ -61,26 +54,30 @@ namespace RiotGalaxy.Core.Screens
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            DrawCentered(spriteBatch, "Настройки", ScreenH * 0.22f, Color.Orange);
+            DrawCentered(spriteBatch, "Настройки", ScreenH * 0.20f, Color.Orange, TitleScale);
 
             int percent = (int)System.Math.Round(AudioManager.Instance.EffectsVolume * 100);
-            DrawCentered(spriteBatch, $"Громкость эффектов: {percent}%", ScreenH * 0.35f, Color.White);
+            DrawCentered(spriteBatch, $"Громкость эффектов: {percent}%", ScreenH * 0.32f, Color.White, ItemScale);
 
-            if (Font != null)
-            {
-                bool minusHover = MinusRect.Contains(MousePoint);
-                bool plusHover = PlusRect.Contains(MousePoint);
-                spriteBatch.DrawString(Font, "[-]", new Vector2(MinusRect.X, MinusRect.Y),
-                    minusHover ? Color.Yellow : Color.White);
-                spriteBatch.DrawString(Font, "[+]", new Vector2(PlusRect.X, PlusRect.Y),
-                    plusHover ? Color.Yellow : Color.White);
-            }
+            bool minusHover = MinusRect.Contains(MousePoint);
+            bool plusHover = PlusRect.Contains(MousePoint);
+            DrawButton(spriteBatch, "[-]", MinusRect, minusHover);
+            DrawButton(spriteBatch, "[+]", PlusRect, plusHover);
 
             bool backHover = BackRect.Contains(MousePoint);
-            DrawCentered(spriteBatch, (backHover ? "> " : "  ") + "Назад", ScreenH * 0.7f,
-                backHover ? Color.Yellow : Color.White);
+            DrawCentered(spriteBatch, "Назад", ScreenH * 0.7f, backHover ? Color.Yellow : Color.White, ItemScale);
 
-            DrawCentered(spriteBatch, "Стрелки ←/→ — громкость, Esc — назад", ScreenH * 0.9f, Color.Gray);
+            DrawCentered(spriteBatch, "Тап [-]/[+] или стрелки ←/→ · Esc — назад", ScreenH * 0.9f, Color.Gray, HintScale);
+        }
+
+        /// <summary>Крупный символ-кнопка по центру тач-зоны (подсветка цветом при наведении).</summary>
+        private void DrawButton(SpriteBatch sb, string symbol, Rectangle rect, bool hover)
+        {
+            if (Font == null) return;
+            Vector2 sz = Font.MeasureString(symbol) * BtnScale;
+            var pos = new Vector2(rect.Center.X - sz.X / 2f, rect.Center.Y - sz.Y / 2f);
+            sb.DrawString(Font, symbol, pos, hover ? Color.Yellow : Color.White,
+                0f, Vector2.Zero, BtnScale, SpriteEffects.None, 0f);
         }
     }
 }

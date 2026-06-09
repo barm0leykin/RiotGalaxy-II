@@ -189,6 +189,7 @@ namespace RiotGalaxy.Core.GameObjects
             int score = Utils.BonusConfig.Current.StarScore;
             player.Score += score;
             Managers.MessageLog.Add($"+{score} очк.", Color.Gold);
+            Effects.FloatingText.Add($"+{score}", Position, Color.Gold); // число у места подбора
         }
     }
 }

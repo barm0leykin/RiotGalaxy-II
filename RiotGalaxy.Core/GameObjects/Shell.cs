@@ -18,6 +18,7 @@ namespace RiotGalaxy.Core.GameObjects
         public int Hp { get; set; } = 1;
         public bool PlayerSide { get; set; } = true;   // true = выпущен игроком (для отключения friendly-fire)
         public bool IsPiercing { get; set; } = false; // летит насквозь (лазер)
+        private bool _trailTick; // эмитим трассер через кадр (меньше частиц)
 
         /// <summary>
         /// Снаряд задаётся данными (спрайт + пробивание) — раньше были классы Bullet/Slug/Laser.
@@ -58,6 +59,14 @@ namespace RiotGalaxy.Core.GameObjects
 
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
             Position += Direction * Speed * dt;
+
+            // Трассер: тусклый след за снарядом игрока (через кадр, чтобы не плодить частицы).
+            _trailTick = !_trailTick;
+            if (PlayerSide && _trailTick)
+            {
+                Color trailColor = IsPiercing ? new Color(120, 230, 200) : new Color(150, 190, 255);
+                GameManager.Instance.Particles.Explosion(Position, trailColor, Utils.EffectsConfig.ShellTrail);
+            }
 
             var gm = GameManager.Instance;
             if (Position.Y < -Height || Position.Y > gm.ScreenHeight + Height ||

@@ -129,6 +129,18 @@ namespace RiotGalaxy.Core.Weapons
             shell.Rotation = angle;
             shell.PlayerSide = (_owner is PlayerShip); // сторона снаряда = сторона стрелка
 
+            // Дульная вспышка у ствола (цвет по стороне стрелка).
+            Color muzzleColor = (_owner is PlayerShip)
+                ? new Color(180, 220, 255)   // игрок — холодная вспышка
+                : new Color(255, 170, 120);  // враг — тёплая
+            GameManager.Instance.Particles.Explosion(spawn, muzzleColor, Utils.EffectsConfig.MuzzleFlash);
+
+            // Визуальный рост снаряда с уровнем оружия: крупнее + тёплое свечение.
+            float lvScale = 1f + Level * Utils.EffectsConfig.ShellLevelScaleStep;
+            shell.Scale = new Vector2(lvScale);
+            float glow = MathHelper.Clamp(Level * 0.22f, 0f, 0.8f);
+            shell.Tint = Color.Lerp(Color.White, new Color(255, 235, 150), glow);
+
             _fireCount++;
             GameManager.Instance.GameObjects.Add(shell);
         }

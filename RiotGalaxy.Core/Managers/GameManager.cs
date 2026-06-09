@@ -398,6 +398,7 @@ namespace RiotGalaxy.Core.Managers
             // Эффекты обновляем всегда (продолжают доигрывать даже на кадре завершения уровня).
             UpdateScreenShake(deltaTime);
             Particles.Update(deltaTime);
+            Effects.FloatingText.Update(deltaTime);
 
             // Проверка условий завершения игры (аналог GamePlay.cs)
             if (!CheckGameEndConditions())
@@ -493,6 +494,9 @@ namespace RiotGalaxy.Core.Managers
             if (SimpleTexture == null)
                 SimpleTexture = Utils.Textures.CreateSolid(GraphicsDevice, Color.White);
             Particles.Draw(_spriteBatch, SimpleTexture);
+
+            // Всплывающие числа (урон/очки) в координатах мира — поверх частиц, под HUD.
+            Effects.FloatingText.Draw(_spriteBatch, _defaultFont);
 
             // Рисуем HUD
             _hud.Draw(_spriteBatch, _defaultFont, SimpleTexture, Player, ScreenWidth);
@@ -723,6 +727,7 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             // Очистка ресурсов игрового процесса
             GameObjects.Clear();
             Particles.Clear();
+            Effects.FloatingText.Clear();
             InputManager.Instance.GuiButtons.Clear(); // убрать тестовые кнопки
             MessageLog.Clear();
             Player = null;

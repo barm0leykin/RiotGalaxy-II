@@ -25,9 +25,9 @@ namespace RiotGalaxy.Core.Screens
                     new Rectangle(0, 0, ScreenW, ScreenH), new Color(0, 0, 0, 150));
 
             // Меню паузы
-            DrawCentered(spriteBatch, "ПАУЗА", ScreenH / 2f - 40, Color.White);
-            DrawCentered(spriteBatch, "Esc / P — продолжить", ScreenH / 2f + 20, Color.Yellow);
-            DrawCentered(spriteBatch, "Q — выход в меню", ScreenH / 2f + 56, Color.Gray);
+            DrawCentered(spriteBatch, "ПАУЗА", ScreenH * 0.34f, Color.White, TitleScale);
+            DrawCentered(spriteBatch, "Esc / P — продолжить", ScreenH * 0.5f, Color.Yellow, ItemScale);
+            DrawCentered(spriteBatch, "Q — выход в меню", ScreenH * 0.58f, Color.Gray, ItemScale);
         }
     }
 }

@@ -20,15 +20,15 @@ namespace RiotGalaxy.Core.Screens
         public override void Draw(SpriteBatch spriteBatch)
         {
             var gm = GameManager.Instance;
-            DrawCentered(spriteBatch, $"Уровень {gm.CurrentLevel} из {gm.TotalLevels}", ScreenH * 0.3f, Color.Orange, 1.5f);
+            DrawCentered(spriteBatch, $"Уровень {gm.CurrentLevel} из {gm.TotalLevels}", ScreenH * 0.28f, Color.Orange, TitleScale);
 
             if (!string.IsNullOrWhiteSpace(gm.CurrentLevelDescription))
-                DrawCentered(spriteBatch, gm.CurrentLevelDescription, ScreenH * 0.45f, Color.White);
+                DrawCentered(spriteBatch, gm.CurrentLevelDescription, ScreenH * 0.45f, Color.White, ItemScale);
 
             if (gm.Player != null)
-                DrawCentered(spriteBatch, $"Очки: {gm.Player.Score}", ScreenH * 0.55f, Color.Yellow);
+                DrawCentered(spriteBatch, $"Очки: {gm.Player.Score}", ScreenH * 0.56f, Color.Yellow, ItemScale);
 
-            DrawCentered(spriteBatch, "Пробел / Enter — продолжить", ScreenH * 0.75f, Color.Gray);
+            DrawCentered(spriteBatch, "Тап / Пробел / Enter — продолжить", ScreenH * 0.8f, Color.Gray, HintScale);
         }
     }
 }
