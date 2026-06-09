@@ -1,0 +1,38 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+    <RollForward>Major</RollForward>
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <TieredCompilation>false</TieredCompilation>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- ApplicationIcon>icon.ico</ApplicationIcon -->
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MonoGame.Framework.DesktopGL" Version="3.8.1.303" />
+    <PackageReference Include="MonoGame.Content.Builder.Task" Version="3.8.1.303" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\RiotGalaxy.Core\RiotGalaxy.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <MonoGameContentReference Include="..\RiotGalaxy.Content\RiotGalaxy.Content.mgcb">
+      <ContentFolder>Content</ContentFolder>
+    </MonoGameContentReference>
+  </ItemGroup>
+
+  <!-- Текстовые/YAML-конфиги и уровни копируются в выход как есть (мимо Content Pipeline) -->
+  <ItemGroup>
+    <None Include="..\RiotGalaxy.Content\Config\*.yaml" Link="Content\Config\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\RiotGalaxy.Content\Levels\*.yaml" Link="Content\Levels\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="..\RiotGalaxy.Content\Routes\*.yaml" Link="Content\Routes\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

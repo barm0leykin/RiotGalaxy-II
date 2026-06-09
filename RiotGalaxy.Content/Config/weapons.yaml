@@ -1,0 +1,27 @@
+# Параметры оружия по уровням (перенесено из оригинального weapon.ini).
+# Поля: burst (выстрелов в очереди), burstInterval (сек между выстрелами),
+#       reloadSpeed (сек между очередями), damage (урон), shellSpeed (скорость снаряда)
+maxWeaponLevel: 3
+
+# Магнит — оборудование корабля: притягивает звёзды-очки.
+#   radius — радиус действия (px); pullSpeed — скорость притяжения звезды;
+#   turnSpeed — скорость доворота звезды на игрока (град/сек)
+magnet:
+  radius: 150
+  pullSpeed: 150
+  turnSpeed: 120
+
+cannon:
+  - { burst: 1, burstInterval: 0.25, reloadSpeed: 2.0,  damage: 10, shellSpeed: 250 }
+  - { burst: 1, burstInterval: 0.25, reloadSpeed: 1.5,  damage: 10, shellSpeed: 250 }
+  - { burst: 2, burstInterval: 0.25, reloadSpeed: 2.4,  damage: 10, shellSpeed: 250 }
+
+minigun:
+  - { burst: 3, burstInterval: 0.1,  reloadSpeed: 2.0,  damage: 4,  shellSpeed: 250 }
+  - { burst: 4, burstInterval: 0.1,  reloadSpeed: 2.0,  damage: 4,  shellSpeed: 275 }
+  - { burst: 4, burstInterval: 0.1,  reloadSpeed: 1.6,  damage: 4,  shellSpeed: 300 }
+
+laser:
+  - { burst: 1, burstInterval: 0.25, reloadSpeed: 2.65, damage: 10, shellSpeed: 400 }
+  - { burst: 1, burstInterval: 0.25, reloadSpeed: 2.0,  damage: 10, shellSpeed: 400 }
+  - { burst: 2, burstInterval: 0.25, reloadSpeed: 1.6,  damage: 10, shellSpeed: 400 }

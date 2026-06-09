@@ -1,0 +1,12 @@
+# Основные настройки игры (перенесено из оригинального options.ini).
+screen:
+  width: 1280
+  height: 768
+
+player:
+  name: "Nuke SkyRocker"
+  maxHp: 50
+  maxSpeed: 450
+  acceleration: 1500
+  brakeSpeed: 800
+  invulnTime: 2.0     # секунды неуязвимости после попадания

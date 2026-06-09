@@ -1,0 +1,63 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "build-desktopgl",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "build",
+                "${workspaceFolder}/RiotGalaxy.DesktopGL/RiotGalaxy.DesktopGL.csproj",
+                "/property:GenerateFullPaths=true",
+                "/consoleloggerparameters:NoSummary"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        },
+        {
+            "label": "run-desktopgl (log -> riot.log)",
+            "command": "dotnet",
+            "type": "process",
+            "args": [
+                "run",
+                "--project",
+                "${workspaceFolder}/RiotGalaxy.DesktopGL/RiotGalaxy.DesktopGL.csproj"
+            ],
+            "problemMatcher": "$msCompile",
+            "group": "test"
+        },
+        {
+            "label": "android: build APK (docker)",
+            "detail": "Собрать Android APK в Docker-образе (docker/build-apk.sh Debug)",
+            "command": "./docker/build-apk.sh",
+            "args": [ "Debug" ],
+            "type": "process",
+            "options": { "cwd": "${workspaceFolder}" },
+            "problemMatcher": "$msCompile",
+            "group": "build"
+        },
+        {
+            "label": "android: run on device (docker+adb)",
+            "detail": "Установить и запустить APK на USB-устройстве, снять logcat (docker/run-on-device.sh)",
+            "command": "./docker/run-on-device.sh",
+            "args": [ "Debug", "10" ],
+            "type": "process",
+            "options": { "cwd": "${workspaceFolder}" },
+            "problemMatcher": [],
+            "group": "test"
+        },
+        {
+            "label": "android: build image (docker, one-time)",
+            "detail": "Собрать сборочный Docker-образ (.NET9+JDK17+AndroidSDK+workload)",
+            "command": "./docker/build-image.sh",
+            "args": [],
+            "type": "process",
+            "options": { "cwd": "${workspaceFolder}" },
+            "problemMatcher": [],
+            "group": "build"
+        }
+    ]
+}
