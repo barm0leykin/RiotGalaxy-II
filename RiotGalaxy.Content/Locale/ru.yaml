@@ -9,22 +9,43 @@ splash.loading: "загрузка..."
 # Главное меню
 menu.title: "-= Galaxy Riot! =-"
 menu.start: "Начать игру"
+menu.shop: "Магазин"
 menu.settings: "Настройки"
 menu.exit: "Выход"
 menu.record: "Рекорд: {0}"
 menu.credits: "Кредиты: {0}"
 menu.hint: "Тап по пункту · стрелки + Enter · Esc — выход"
 
+# Магазин (апгрейды)
+shop.title: "Магазин"
+shop.credits: "Кредиты: {0}"
+shop.row: "{0}   ур.{1}/{2}   ·   {3}"
+shop.unlock: "Открыть «{0}» · {1}"
+shop.max: "МАКС"
+shop.back: "Готово"
+shop.section_upgrades: "— Апгрейды —"
+shop.section_weapons: "— Оружие —"
+shop.hint: "Тап — купить · ↑↓ — выбор · Esc — выход"
+
 # Настройки
 settings.title: "Настройки"
 settings.volume: "Громкость эффектов: {0}%"
+settings.language: "Язык: {0}"
 settings.back: "Назад"
-settings.hint: "Тап [-]/[+] или стрелки ←/→ · Esc — назад"
+settings.hint: "↑↓ — выбор · ←/→ — изменить · Enter/тап · Esc — назад"
+
+# Названия языков (для переключателя)
+lang.ru: "Русский"
+lang.en: "English"
 
 # Между уровнями
 nextlevel.title: "Уровень {0} из {1}"
 nextlevel.score: "Очки: {0}"
-nextlevel.hint: "Тап / Пробел / Enter — продолжить"
+nextlevel.credits: "Кредиты: {0}"
+nextlevel.shop: "Магазин"
+nextlevel.continue: "Продолжить"
+nextlevel.menu: "В главное меню"
+nextlevel.hint: "Тап / ↑↓ + Enter"
 
 # Пауза
 paused.title: "ПАУЗА"
@@ -44,6 +65,12 @@ hud.hp: "HP: {0}/{1}"
 hud.score: "Очки: {0}"
 hud.weapon: "Оружие: {0} (ур. {1})"
 hud.credits: "Кредиты: {0}"
+hud.buff: "{0} {1}с"
+
+# Короткие подписи временных баффов (HUD)
+buff.power: "Урон+"
+buff.rapid: "Темп+"
+buff.speed: "Скорость+"
 
 # Диалоги
 dialogue.hint: "{0}/{1}  ·  тап / пробел — далее · Esc — пропустить"

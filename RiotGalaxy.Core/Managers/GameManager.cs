@@ -34,7 +34,7 @@ namespace RiotGalaxy.Core.Managers
         private SpriteFont _defaultFont;
         
         // Базовые игровые состояния
-        public enum GameState { Splash, MainMenu, Settings, Playing, Paused, GameOver, Victory, NextLevel, Dialogue }
+        public enum GameState { Splash, MainMenu, Settings, Playing, Paused, GameOver, Victory, NextLevel, Dialogue, Shop }
         public GameState CurrentGameState { get; private set; }
 
         // Диалог (брифинг/сюжет) и состояние, в которое перейти после него.
@@ -47,6 +47,9 @@ namespace RiotGalaxy.Core.Managers
 
         private int _lastScore; // итоговый счёт для экранов GameOver/Victory
         public int LastScore => _lastScore;
+
+        // Окно сбора звёзд после зачистки уровня (сек до перехода); 0 — не активно.
+        private float _levelClearTimer;
 
         // Время текущего кадра (для DrawGameplay, вызываемого из GameplayScreen.Draw).
         private GameTime _drawTime = new GameTime();
@@ -242,14 +245,21 @@ namespace RiotGalaxy.Core.Managers
             }
 
             // Загружаем конфиги из YAML (оружие, враги, параметры игры) и сохранённые настройки
-            Utils.Loc.Load();              // локализация UI (Content/Locale/ru.yaml)
+            Utils.GameSettings.Load();           // в т.ч. выбранный язык
+            Utils.Loc.Load(Utils.GameSettings.Language); // локализация UI (Content/Locale/<lang>.yaml)
             Weapons.WeaponConfig.Load();
             Utils.EnemyConfig.Load();
             Utils.BonusConfig.Load();
             Utils.GameOptions.Load();
             Utils.EffectsConfig.Load();
-            Utils.GameSettings.Load();
-            Utils.SaveData.Load(); // профиль игрока: рекорд/прогресс/валюта
+            Utils.UpgradeConfig.Load();    // определения апгрейдов (магазин)
+            Utils.SkillsConfig.Load();     // активные навыки
+            Utils.SaveData.Load(); // профиль игрока: рекорд/прогресс/валюта/апгрейды/оружие
+
+            // Стартовое оружие всегда открыто (ур. 1+).
+            var starter = Weapons.WeaponConfig.Starter;
+            if (starter != null && Utils.SaveData.GetWeaponLevel(starter.Id) < 1)
+                Utils.SaveData.SetWeaponLevel(starter.Id, 1);
 
             // Параллакс-фон из звёзд (процедурный, без ассетов). Слои — из EffectsConfig,
             // поэтому создаём после загрузки конфигов.
@@ -390,6 +400,8 @@ namespace RiotGalaxy.Core.Managers
                     // Из паузы — продолжение; из NextLevel — уровень уже загружен.
                     if (oldState != GameState.Paused && oldState != GameState.NextLevel)
                         InitializeGameplay();
+                    else if (oldState == GameState.NextLevel)
+                        Player?.ApplyUpgrades(); // покупки из магазина между уровнями вступают в силу
                     Screens.Change(new Screens.GameplayScreen());
                     break;
                 case GameState.Paused:
@@ -403,6 +415,9 @@ namespace RiotGalaxy.Core.Managers
                     break;
                 case GameState.Dialogue:
                     Screens.Change(new Screens.DialogueScreen());
+                    break;
+                case GameState.Shop:
+                    Screens.Change(new Screens.ShopScreen());
                     break;
             }
         }
@@ -431,59 +446,59 @@ namespace RiotGalaxy.Core.Managers
             ChangeGameState(_dialogueNext);
         }
 
+        // Куда вернуться из магазина (меню или экран между уровнями).
+        private GameState _shopReturn = GameState.MainMenu;
+
+        /// <summary>Открыть магазин; по выходу вернуться в returnTo.</summary>
+        public void OpenShop(GameState returnTo)
+        {
+            _shopReturn = returnTo;
+            ChangeGameState(GameState.Shop);
+        }
+
+        /// <summary>Закрыть магазин — вернуться туда, откуда открыли.</summary>
+        public void CloseShop() => ChangeGameState(_shopReturn);
+
         public void UpdateGameplay(GameTime gameTime)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
-            // Эффекты обновляем всегда (продолжают доигрывать даже на кадре завершения уровня).
+            // Эффекты обновляем всегда.
             UpdateScreenShake(deltaTime);
             Particles.Update(deltaTime);
             Effects.FloatingText.Update(deltaTime);
 
-            // Проверка условий завершения игры (аналог GamePlay.cs)
-            if (!CheckGameEndConditions())
-            {
-                // Обрабатываем пользовательский ввод (аналог SceneGame.Activity)
-                if (userInputHandler != null)
-                {
-                    userInputHandler.Update();
-                    userInputHandler.HandleScGameInput();
-                }
-                
-                // Барражирование улья + спавн врагов по таймлайну (вынесено в LevelDirector)
-                _levels.Update(deltaTime);
-
-                // Всплывающие сообщения
-                MessageLog.Update(deltaTime);
-
-                // Аналог основного цикла из GamePlay.cs - обрабатываем все объекты
-                // (удаление мёртвых объектов встроено в ProcessGameObjects)
-                ProcessGameObjects(gameTime);
-            }
-        }
-
-        /// <summary>
-        /// Проверка условий завершения игры (победа или поражение)
-        /// Аналог проверок в GamePlay.cs строка 94-109
-        /// </summary>
-        private bool CheckGameEndConditions()
-        {
-            // Проверка поражения - игрок уничтожен
+            // Поражение — игрок уничтожен.
             if (Player != null && Player.Health <= 0)
             {
                 Utils.Log.Debug($"Game over: score={Player.Score}, level={_levels.CurrentLevel}");
                 ChangeGameState(GameState.GameOver);
-                return true;
+                return;
             }
 
-            // Уровень пройден: все враги уровня заспавнены и уничтожены
-            if (_levels.LevelComplete)
+            // Ввод и объекты работают всегда — в т.ч. в «окне сбора» после зачистки уровня
+            // (чтобы магнит/корабль успели собрать оставшиеся звёзды).
+            if (userInputHandler != null)
             {
-                AdvanceLevel();
-                return true;
+                userInputHandler.Update();
+                userInputHandler.HandleScGameInput();
             }
+            _levels.Update(deltaTime);
+            MessageLog.Update(deltaTime);
+            ProcessGameObjects(gameTime);
 
-            return false;
+            // Уровень зачищен → даём несколько секунд на сбор звёзд, затем переходим.
+            if (_levelClearTimer > 0f)
+            {
+                _levelClearTimer -= deltaTime;
+                if (_levelClearTimer <= 0f || !GameObjects.Exists(o => o is BonusStar))
+                    AdvanceLevel();
+            }
+            else if (_levels.LevelComplete)
+            {
+                _levelClearTimer = Utils.BonusConfig.Current.LevelClearCollectSeconds;
+                MessageLog.Add("Зона зачищена! Собирай звёзды…", Color.Gold);
+            }
         }
 
         /// <summary>
@@ -561,6 +576,7 @@ namespace RiotGalaxy.Core.Managers
             {
                 // Новая игра — с первого уровня
                 _levels.ResetToFirst();
+                _levelClearTimer = 0f;
 
                 // Инициализация игрового процесса
                 GameObjects.Clear();
@@ -586,8 +602,9 @@ namespace RiotGalaxy.Core.Managers
                 // Загружаем первый уровень (враги спавнятся по таймлайну в UpdateGameplay)
                 _levels.Load(_levels.CurrentLevel, ScreenWidth, ScreenHeight);
 
-                // Панель тестовых кнопок
+                // Панель тестовых кнопок + кнопки активных навыков (тач)
                 CreateDebugButtons();
+                CreateSkillButtons();
 
             }
             catch (Exception ex)
@@ -605,6 +622,21 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
         /// <summary>Перейти к следующему уровню или к финальной победе.</summary>
         private void AdvanceLevel()
         {
+            _levelClearTimer = 0f; // окно сбора закрыто, на следующем уровне начнём заново
+            // Бонус за прохождение уровня + заработанную валюту банкуем в профиль (можно потратить
+            // в магазине между уровнями). Сбрасываем, чтобы в конце партии не банкнуть повторно.
+            if (Player != null)
+            {
+                var bc = Utils.BonusConfig.Current;
+                int clearBonus = bc.LevelClearBonusBase + bc.LevelClearBonusPerLevel * _levels.CurrentLevel;
+                Player.Currency += clearBonus;
+                MessageLog.Add($"Уровень пройден: +{clearBonus}", Color.Gold);
+
+                Utils.SaveData.Currency += Player.Currency;
+                Player.Currency = 0;
+                Utils.SaveData.Save();
+            }
+
             if (!_levels.HasNextLevel)
             {
                 ChangeGameState(GameState.Victory); // все уровни пройдены
@@ -635,10 +667,11 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             const int size = 50, gap = 6;
             int y = ScreenHeight - size - 8;
             int x = 10;
-            AddDebugButton(new ButtonCannon(Vector2.Zero), "Images/btn_cannon", ref x, y, size, gap);
-            AddDebugButton(new ButtonMinigun(Vector2.Zero), "Images/btn_minigun", ref x, y, size, gap);
-            AddDebugButton(new ButtonLaser(Vector2.Zero), "Images/btn_laser", ref x, y, size, gap);
-            AddDebugButton(new ButtonUpgradeGun(Vector2.Zero), "Images/btn_BulletUp", ref x, y, size, gap);
+            // Кнопки смены оружия — по всем видам из реестра (иконки из WeaponDef.Icon).
+            // Переключение сработает только на открытое оружие (иначе подсказка).
+            foreach (var w in Weapons.WeaponConfig.All)
+                AddDebugButton(new Interface.ButtonChWeapon(Vector2.Zero, w.Id), w.Icon, ref x, y, size, gap);
+
             AddDebugButton(new ButtonHpUp(Vector2.Zero), "Images/btn_hp_up", ref x, y, size, gap);
             AddDebugButton(new ButtonKillAll(Vector2.Zero), "Images/btn_killall", ref x, y, size, gap);
             AddDebugButton(new ButtonNextLevel(Vector2.Zero), "Images/btn_win", ref x, y, size, gap);
@@ -652,6 +685,25 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
             catch (Exception ex) { Console.WriteLine($"=== Button sprite '{sprite}' load failed: {ex.Message} ==="); }
             InputManager.Instance.GuiButtons.Add(b);
             x += size + gap;
+        }
+
+        /// <summary>
+        /// Кнопки активных навыков (тач) — справа внизу, иконки и кулдаун из SkillsConfig/PlayerShip.
+        /// На десктопе навыки также активируются клавишами (InputManager).
+        /// </summary>
+        private void CreateSkillButtons()
+        {
+            const int size = 64, gap = 10;
+            float cy = ScreenHeight - 8 - size / 2f;
+            float cx = ScreenWidth - 8 - size / 2f; // первая кнопка у правого края, дальше влево
+            foreach (var s in Utils.SkillsConfig.All)
+            {
+                var b = new Interface.ButtonSkill(new Vector2(cx, cy), s.Id) { Width = size, Height = size };
+                try { b.sprite = _content.Load<Texture2D>(s.Icon); }
+                catch (Exception ex) { Console.WriteLine($"=== Skill icon '{s.Icon}' load failed: {ex.Message} ==="); }
+                InputManager.Instance.GuiButtons.Add(b);
+                cx -= size + gap;
+            }
         }
 
         /// <summary>
@@ -721,15 +773,15 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
                 var deathShake = isBoss ? Utils.EffectsConfig.BossDeathShake : Utils.EffectsConfig.EnemyDeathShake;
                 Shake(deathShake.Magnitude, deathShake.Duration);
 
-                // Награда-валюта за убийство (копится за партию, банкуется в профиль в конце).
+                // Очки за убийство (идут в рекорд). Кредиты игрок получит, собрав звезду.
                 if (Player != null)
-                    Player.Currency += enemy.Reward;
+                    Player.Score += enemy.Reward;
 
                 // Запускаем ивент смерти врага
                 TriggerEnemyDeathEvent(obj);
 
-                // Выпадение бонусов из убитого врага
-                SpawnBonusOnEnemyDeath(obj.Position);
+                // Выпадение бонусов: звезда несёт кредиты (= reward убитого врага).
+                SpawnBonusOnEnemyDeath(obj.Position, enemy.Reward);
             }
 
             // Выполняем базовое удаление объекта
@@ -742,12 +794,35 @@ Console.WriteLine($"Error initializing gameplay: {ex.Message}");
         /// Выпадение бонусов из убитого врага: всегда звезда (очки) + иногда усиление.
         /// Аналог CommandStarBonus + CommandSpawnRandomBonus из CocosSharp.
         /// </summary>
-        private void SpawnBonusOnEnemyDeath(Vector2 pos)
-        {
-            // Звезда выпадает всегда
-            GameObjects.Add(new BonusStar(pos));
+        private static readonly BonusType[] _buffTypes = { BonusType.POWER, BonusType.RAPID, BonusType.SPEED };
 
-            // С шансом 30% — случайное усиление
+        private void SpawnBonusOnEnemyDeath(Vector2 pos, int starCredits)
+        {
+            // Дробим награду на несколько звёзд: тяжёлые враги «выплёвывают» больше звёзд.
+            // Сумма номиналов = starCredits (остаток раскидываем по первым звёздам).
+            var bc = Utils.BonusConfig.Current;
+            int count = Math.Max(1, (int)Math.Round(starCredits / (float)Math.Max(1, bc.StarValue)));
+            count = Math.Min(count, Math.Max(1, bc.MaxStarsPerKill));
+            int baseVal = starCredits / count;
+            int rem = starCredits - baseVal * count;
+            for (int i = 0; i < count; i++)
+            {
+                int val = baseVal + (i < rem ? 1 : 0);
+                // Небольшой разлёт от точки гибели, чтобы звёзды не слипались.
+                var off = new Vector2((float)(_bonusRnd.NextDouble() * 2 - 1) * 26f,
+                                      (float)(_bonusRnd.NextDouble() * 2 - 1) * 26f);
+                GameObjects.Add(new BonusStar(pos + off, Math.Max(1, val)));
+            }
+
+            // Временный бафф — с шансом из конфига (поровну между баффами).
+            if (_bonusRnd.Next(100) < Utils.BonusConfig.Current.BuffDropChance)
+            {
+                var bt = _buffTypes[_bonusRnd.Next(_buffTypes.Length)];
+                GameObjects.Add(new Bonus(bt, pos));
+                return; // не сыпем ещё и усиление тем же убийством
+            }
+
+            // Иначе с шансом 30% — случайное усиление (хил/апгрейд/нюк)
             int roll = _bonusRnd.Next(100);
             if (roll < 30)
             {

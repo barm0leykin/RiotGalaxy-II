@@ -53,9 +53,25 @@ with.
         <Start>&#32;</Start>
         <End>&#126;</End>
       </CharacterRegion>
+      <!-- Latin-1 доп.: неразрывный пробел, « » · ° № и пр. -->
+      <CharacterRegion>
+        <Start>&#160;</Start>
+        <End>&#255;</End>
+      </CharacterRegion>
+      <!-- Кириллица -->
       <CharacterRegion>
         <Start>&#1024;</Start>
         <End>&#1279;</End>
+      </CharacterRegion>
+      <!-- General Punctuation: – — ‐ … (тире/дефисы/многоточие) -->
+      <CharacterRegion>
+        <Start>&#8208;</Start>
+        <End>&#8230;</End>
+      </CharacterRegion>
+      <!-- Стрелки: ← ↑ → ↓ -->
+      <CharacterRegion>
+        <Start>&#8592;</Start>
+        <End>&#8595;</End>
       </CharacterRegion>
     </CharacterRegions>
   </Asset>

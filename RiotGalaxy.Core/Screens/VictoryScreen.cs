@@ -19,6 +19,7 @@ namespace RiotGalaxy.Core.Screens
 
         public override void Draw(SpriteBatch spriteBatch)
         {
+            DrawDimmer(spriteBatch, 170);
             int score = GameManager.Instance.LastScore;
             DrawCentered(spriteBatch, Utils.Loc.T("victory.title"), ScreenH * 0.30f, Color.Gold, TitleScale);
             DrawCentered(spriteBatch, Utils.Loc.F("result.score", score), ScreenH * 0.46f, Color.White, ItemScale);

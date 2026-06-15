@@ -34,7 +34,7 @@ scout:
   shoot: none
   dirMin: 155
   dirMax: 205
-  reward: 1             # кредиты за убийство
+  reward: 10             # кредиты за убийство
 
 blue:
   hp: 10
@@ -46,7 +46,7 @@ blue:
   sprite: Images/enemyBlue
   ai: blue
   shoot: down
-  reward: 2
+  reward: 15
 
 green:
   hp: 10
@@ -61,7 +61,7 @@ green:
   wander: true
   dirMin: 135
   dirMax: 225
-  reward: 2
+  reward: 15
 
 red:
   hp: 20
@@ -73,7 +73,7 @@ red:
   sprite: Images/enemyRed
   ai: red
   shoot: aim
-  reward: 3
+  reward: 25
 
 boss:
   hp: 200
@@ -86,4 +86,4 @@ boss:
   shoot: aim
   dirMin: 135
   dirMax: 135
-  reward: 25
+  reward: 120

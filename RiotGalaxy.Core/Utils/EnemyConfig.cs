@@ -58,15 +58,15 @@ namespace RiotGalaxy.Core.Utils
         private static readonly Dictionary<EnemyType, Stats> _defaults = new Dictionary<EnemyType, Stats>
         {
             [EnemyType.BLUE]     = new Stats { Hp = 10, Damage = 10, Speed = 130, AttackSpeed = 200, ShootInterval = 3, Tactics = new List<string> { "snake", "ram" },
-                                               Sprite = "Images/enemyBlue", Ai = "blue", Shoot = "down", Reward = 2 },
+                                               Sprite = "Images/enemyBlue", Ai = "blue", Shoot = "down", Reward = 15 },
             [EnemyType.GREEN]    = new Stats { Hp = 10, Damage = 10, SpeedMin = 100, SpeedMax = 150, AttackSpeed = 200, ShootInterval = 3, Tactics = new List<string> { "random", "snake" },
-                                               Sprite = "Images/enemyGreen", Shoot = "down", Wander = true, DirMin = 135, DirMax = 225, Reward = 2 },
+                                               Sprite = "Images/enemyGreen", Shoot = "down", Wander = true, DirMin = 135, DirMax = 225, Reward = 15 },
             [EnemyType.RED]      = new Stats { Hp = 20, Damage = 10, Speed = 60, AttackSpeed = 160, ShootInterval = 3, Tactics = new List<string> { "ram", "ellipse" },
-                                               Sprite = "Images/enemyRed", Ai = "red", Shoot = "aim", Reward = 3 },
+                                               Sprite = "Images/enemyRed", Ai = "red", Shoot = "aim", Reward = 25 },
             [EnemyType.SM_SCOUT] = new Stats { Hp = 10, Damage = 5, SpeedMin = 60, SpeedMax = 100, AttackSpeed = 150, ShootInterval = 0, Tactics = new List<string> { "random" },
-                                               Sprite = "Images/enemySmallScout", Shoot = "none", DirMin = 155, DirMax = 205, Reward = 1 },
+                                               Sprite = "Images/enemySmallScout", Shoot = "none", DirMin = 155, DirMax = 205, Reward = 10 },
             [EnemyType.BOSS]     = new Stats { Hp = 200, Damage = 20, Speed = 50, ShootInterval = 1.2f,
-                                               Sprite = "Images/enemyRed", Scale = 2.5f, Shoot = "aim", DirMin = 135, DirMax = 135, Reward = 25 },
+                                               Sprite = "Images/enemyRed", Scale = 2.5f, Shoot = "aim", DirMin = 135, DirMax = 135, Reward = 120 },
         };
 
         private static Dictionary<EnemyType, Stats> _stats;

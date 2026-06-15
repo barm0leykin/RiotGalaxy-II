@@ -1,0 +1,75 @@
+# UI localization — English. Same keys as ru.yaml (reference locale).
+# {0}/{1} placeholders are filled via Loc.F(key, args). Missing keys fall back to the key itself.
+
+# Splash
+splash.title: "RIOT GALAXY"
+splash.loading: "loading..."
+
+# Main menu
+menu.title: "-= Galaxy Riot! =-"
+menu.start: "Start game"
+menu.shop: "Shop"
+menu.settings: "Settings"
+menu.exit: "Exit"
+menu.record: "Best: {0}"
+menu.credits: "Credits: {0}"
+menu.hint: "Tap an item · arrows + Enter · Esc — exit"
+
+# Shop (upgrades)
+shop.title: "Shop"
+shop.credits: "Credits: {0}"
+shop.row: "{0}   lv.{1}/{2}   ·   {3}"
+shop.unlock: "Unlock \"{0}\" · {1}"
+shop.max: "MAX"
+shop.back: "Done"
+shop.section_upgrades: "— Upgrades —"
+shop.section_weapons: "— Weapons —"
+shop.hint: "Tap to buy · ↑↓ — select · Esc — exit"
+
+# Settings
+settings.title: "Settings"
+settings.volume: "Effects volume: {0}%"
+settings.language: "Language: {0}"
+settings.back: "Back"
+settings.hint: "↑↓ — select · ←/→ — change · Enter/tap · Esc — back"
+
+# Language names (for the switcher)
+lang.ru: "Русский"
+lang.en: "English"
+
+# Between levels
+nextlevel.title: "Level {0} of {1}"
+nextlevel.score: "Score: {0}"
+nextlevel.credits: "Credits: {0}"
+nextlevel.shop: "Shop"
+nextlevel.continue: "Continue"
+nextlevel.menu: "Main menu"
+nextlevel.hint: "Tap / ↑↓ + Enter"
+
+# Pause
+paused.title: "PAUSED"
+paused.resume: "Esc / P — resume"
+paused.menu: "Q — quit to menu"
+
+# Defeat / Victory
+gameover.title: "GAME OVER"
+victory.title: "VICTORY!"
+result.score: "Score: {0}"
+result.record: "Best: {0}"
+result.newrecord: "New record!"
+result.hint: "Tap / Space — retry · Esc — menu"
+
+# HUD (in battle)
+hud.hp: "HP: {0}/{1}"
+hud.score: "Score: {0}"
+hud.weapon: "Weapon: {0} (lv. {1})"
+hud.credits: "Credits: {0}"
+hud.buff: "{0} {1}s"
+
+# Short buff labels (HUD)
+buff.power: "Dmg+"
+buff.rapid: "Rate+"
+buff.speed: "Speed+"
+
+# Dialogue
+dialogue.hint: "{0}/{1}  ·  tap / space — next · Esc — skip"

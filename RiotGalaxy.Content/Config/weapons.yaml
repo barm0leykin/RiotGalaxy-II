@@ -1,27 +1,90 @@
-# Параметры оружия по уровням (перенесено из оригинального weapon.ini).
-# Поля: burst (выстрелов в очереди), burstInterval (сек между выстрелами),
-#       reloadSpeed (сек между очередями), damage (урон), shellSpeed (скорость снаряда)
-maxWeaponLevel: 3
+# Оружие (data-driven реестр). Стартовое — с unlockCost: 0; остальные открываются в магазине,
+# у каждого свои уровни (покупаются в магазине, индивидуальная прокачка).
+#
+# Поля оружия:
+#   id/name      — ключ и подпись
+#   sprite       — спрайт снаряда (Images/...)
+#   icon         — иконка кнопки/магазина
+#   key          — клавиша выбора на десктопе (D1..D5)
+#   piercing     — снаряд летит насквозь (лазер)
+#   jitterDeg    — разброс ±град (пулемёт); 0 — нет
+#   fanCount     — снарядов в веере на 1-м уровне (>1 — веер); fanPerLevel — +за уровень; fanStepDeg — угол
+#   unlockCost   — цена разблокировки (0 — доступно с начала)
+#   baseCost/costGrowth — цена улучшения ур.1→2 и рост за уровень
+#   levels[]     — параметры по уровням: burst, burstInterval, reloadSpeed, damage, shellSpeed
+weapons:
+  - id: blaster
+    name: "Бластер"
+    sprite: Images/bullet
+    icon: Images/btn_auto_cannon
+    key: D1
+    unlockCost: 0
+    baseCost: 200
+    costGrowth: 1.6
+    levels:
+      - { burst: 1, burstInterval: 0.10, reloadSpeed: 0.14, damage: 3, shellSpeed: 360 }
+      - { burst: 1, burstInterval: 0.10, reloadSpeed: 0.12, damage: 4, shellSpeed: 380 }
+      - { burst: 2, burstInterval: 0.08, reloadSpeed: 0.18, damage: 4, shellSpeed: 400 }
+
+  - id: cannon
+    name: "Пушка"
+    sprite: Images/bullet
+    icon: Images/btn_cannon
+    key: D2
+    unlockCost: 400
+    baseCost: 350
+    costGrowth: 1.6
+    levels:
+      - { burst: 1, burstInterval: 0.25, reloadSpeed: 0.80, damage: 16, shellSpeed: 280 }
+      - { burst: 1, burstInterval: 0.25, reloadSpeed: 0.65, damage: 20, shellSpeed: 300 }
+      - { burst: 2, burstInterval: 0.20, reloadSpeed: 0.90, damage: 22, shellSpeed: 320 }
+
+  - id: minigun
+    name: "Пулемёт"
+    sprite: Images/slug
+    icon: Images/btn_minigun
+    key: D3
+    jitterDeg: 6
+    unlockCost: 600
+    baseCost: 350
+    costGrowth: 1.6
+    levels:
+      - { burst: 3, burstInterval: 0.08, reloadSpeed: 0.70, damage: 4, shellSpeed: 320 }
+      - { burst: 4, burstInterval: 0.08, reloadSpeed: 0.60, damage: 4, shellSpeed: 340 }
+      - { burst: 5, burstInterval: 0.07, reloadSpeed: 0.55, damage: 5, shellSpeed: 360 }
+
+  - id: laser
+    name: "Лазер"
+    sprite: Images/laser
+    icon: Images/btn_laser
+    key: D4
+    piercing: true
+    unlockCost: 1000
+    baseCost: 450
+    costGrowth: 1.6
+    levels:
+      - { burst: 1, burstInterval: 0.25, reloadSpeed: 0.60, damage: 10, shellSpeed: 460 }
+      - { burst: 1, burstInterval: 0.20, reloadSpeed: 0.50, damage: 13, shellSpeed: 480 }
+      - { burst: 2, burstInterval: 0.20, reloadSpeed: 0.55, damage: 14, shellSpeed: 500 }
+
+  - id: spread
+    name: "Разлёт"
+    sprite: Images/bullet
+    icon: Images/btn_BulletUp
+    key: D5
+    fanCount: 3
+    fanPerLevel: 1
+    fanStepDeg: 12
+    unlockCost: 750
+    baseCost: 450
+    costGrowth: 1.6
+    levels:
+      - { burst: 1, burstInterval: 0.25, reloadSpeed: 0.70, damage: 6, shellSpeed: 280 }
+      - { burst: 1, burstInterval: 0.25, reloadSpeed: 0.60, damage: 7, shellSpeed: 300 }
+      - { burst: 1, burstInterval: 0.25, reloadSpeed: 0.55, damage: 7, shellSpeed: 320 }
 
 # Магнит — оборудование корабля: притягивает звёзды-очки.
-#   radius — радиус действия (px); pullSpeed — скорость притяжения звезды;
-#   turnSpeed — скорость доворота звезды на игрока (град/сек)
 magnet:
   radius: 150
   pullSpeed: 150
   turnSpeed: 120
-
-cannon:
-  - { burst: 1, burstInterval: 0.25, reloadSpeed: 2.0,  damage: 10, shellSpeed: 250 }
-  - { burst: 1, burstInterval: 0.25, reloadSpeed: 1.5,  damage: 10, shellSpeed: 250 }
-  - { burst: 2, burstInterval: 0.25, reloadSpeed: 2.4,  damage: 10, shellSpeed: 250 }
-
-minigun:
-  - { burst: 3, burstInterval: 0.1,  reloadSpeed: 2.0,  damage: 4,  shellSpeed: 250 }
-  - { burst: 4, burstInterval: 0.1,  reloadSpeed: 2.0,  damage: 4,  shellSpeed: 275 }
-  - { burst: 4, burstInterval: 0.1,  reloadSpeed: 1.6,  damage: 4,  shellSpeed: 300 }
-
-laser:
-  - { burst: 1, burstInterval: 0.25, reloadSpeed: 2.65, damage: 10, shellSpeed: 400 }
-  - { burst: 1, burstInterval: 0.25, reloadSpeed: 2.0,  damage: 10, shellSpeed: 400 }
-  - { burst: 2, burstInterval: 0.25, reloadSpeed: 1.6,  damage: 10, shellSpeed: 400 }

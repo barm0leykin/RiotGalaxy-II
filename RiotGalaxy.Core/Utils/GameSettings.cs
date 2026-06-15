@@ -12,19 +12,28 @@ namespace RiotGalaxy.Core.Utils
     {
         private static string FilePath => Path.Combine(AppContext.BaseDirectory, "settings.yaml");
 
+        /// <summary>Выбранный язык интерфейса (код локали: "ru"/"en").</summary>
+        public static string Language { get; set; } = "ru";
+
         public static void Load()
         {
             var data = Yaml.LoadFile<SettingsYaml>(FilePath);
             if (data == null)
                 return;
             AudioManager.Instance.EffectsVolume = MathHelper.Clamp(data.EffectsVolume, 0f, 1f);
+            if (!string.IsNullOrWhiteSpace(data.Language))
+                Language = data.Language;
         }
 
         public static void Save()
         {
             try
             {
-                var data = new SettingsYaml { EffectsVolume = AudioManager.Instance.EffectsVolume };
+                var data = new SettingsYaml
+                {
+                    EffectsVolume = AudioManager.Instance.EffectsVolume,
+                    Language = Language,
+                };
                 File.WriteAllText(FilePath, Yaml.Serializer.Serialize(data));
             }
             catch (Exception ex)
@@ -33,10 +42,11 @@ namespace RiotGalaxy.Core.Utils
             }
         }
 
-        // POCO для settings.yaml (ключ effectsVolume)
+        // POCO для settings.yaml
         public class SettingsYaml
         {
             public float EffectsVolume { get; set; } = 0.1f;
+            public string Language { get; set; } = "ru";
         }
     }
 }

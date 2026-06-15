@@ -103,5 +103,46 @@ namespace RiotGalaxy.Core.Screens
             float top = y + size.Y / 2f - h / 2f; // центрируем полосу на тексте
             return new Rectangle((int)x, (int)top, (int)w, (int)h);
         }
+
+        // ── Оформление меню (без ассетов, через SimpleTexture) ───────────────
+
+        /// <summary>Полупрозрачное затемнение всего экрана — фон/звёзды не мешают читать меню.</summary>
+        protected void DrawDimmer(SpriteBatch sb, int alpha = 150)
+        {
+            var px = GameManager.Instance.SimpleTexture;
+            if (px != null) sb.Draw(px, new Rectangle(0, 0, ScreenW, ScreenH), new Color(0, 0, 0, alpha));
+        }
+
+        /// <summary>Тёмная панель с рамкой-акцентом — рамка вокруг контента меню.</summary>
+        protected void DrawPanel(SpriteBatch sb, Rectangle r)
+        {
+            var px = GameManager.Instance.SimpleTexture;
+            if (px == null) return;
+            sb.Draw(px, r, new Color(12, 18, 38, 215));        // тёмная заливка
+            var border = new Color(90, 130, 210, 210);          // синеватая рамка-акцент
+            const int t = 2;
+            sb.Draw(px, new Rectangle(r.X, r.Y, r.Width, t), border);
+            sb.Draw(px, new Rectangle(r.X, r.Bottom - t, r.Width, t), border);
+            sb.Draw(px, new Rectangle(r.X, r.Y, t, r.Height), border);
+            sb.Draw(px, new Rectangle(r.Right - t, r.Y, t, r.Height), border);
+        }
+
+        /// <summary>Центрированная панель в долях экрана (0..1).</summary>
+        protected Rectangle PanelRect(float widthFrac, float topFrac, float bottomFrac)
+        {
+            int w = (int)(ScreenW * widthFrac);
+            int x = (ScreenW - w) / 2;
+            int top = (int)(ScreenH * topFrac);
+            int bottom = (int)(ScreenH * bottomFrac);
+            return new Rectangle(x, top, w, bottom - top);
+        }
+
+        /// <summary>Текст пункта меню: выбранный — жёлтый и в маркерах «» », прочие — белые.</summary>
+        protected void DrawMenuItem(SpriteBatch sb, string text, float y, bool selected, float scale = 0f)
+        {
+            if (scale <= 0f) scale = ItemScale;
+            string label = selected ? "» " + text + " «" : text;
+            DrawCentered(sb, label, y, selected ? Color.Yellow : Color.White, scale);
+        }
     }
 }

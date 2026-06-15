@@ -68,9 +68,11 @@
       параметры `floatingText` в effects.yaml.
 - [x] **Тач-дружелюбный UI** — крупный текст меню/итогов (`TitleScale`/`ItemScale` в
       [Screen.cs](RiotGalaxy.Core/Screens/Screen.cs)), большие зоны нажатия (`CenteredItemRect`,
-      мин. высота ~84px) с подсветкой, крупные кнопки `[-]/[+]` в настройках, рестарт по тапу
-      на GameOver/Victory. *(Шрифт пока 14pt и масштабируется — при желании можно поднять базовый
-      размер в TestFont.spritefont для чёткости.)*
+      мин. высота ~84px), крупные кнопки `[-]/[+]` в настройках, рестарт по тапу на GameOver/Victory.
+- [x] **Оформление меню** — затемнение фона + тёмная панель с рамкой (`DrawDimmer`/`DrawPanel`),
+      выбор пункта маркерами `« »` (без белых прямоугольников), навигация ↑↓ во всех меню;
+      на экране между миссиями добавлен пункт «В главное меню». *(шрифт 14pt масштабируется — при
+      желании поднять базовый размер в TestFont.spritefont для чёткости).*
 
 ## Этап 2 — Фундамент (системы, разблокирующие остальное) — ✅ ГОТОВО
 
@@ -78,21 +80,24 @@
       (`save.yaml`, кросс-платформенно как `settings.yaml`): рекорд, самый дальний уровень, валюта.
       Грузится при старте, пишется в конце партии и при загрузке уровня. Рекорд показан в меню/итогах.
       *(купленные апгрейды добавим вместе с магазином — этап 3).*
-- [x] **HUD-класс** — отрисовка HP/очков/оружия вынесена из `GameManager` в
-      [Interface/HudRenderer.cs](RiotGalaxy.Core/Interface/HudRenderer.cs) (рефакторинг 2026-06-09).
-      *(добавить валюту — когда появится система валюты ниже).*
-- [x] **Система валюты** — `PlayerShip.Currency` (кредиты за партию), начисление за убийства
-      (`reward` по типу в enemies.yaml), показ в HUD; в конце партии банкуется в `SaveData.Currency`.
-      Всего кредитов видно в меню. *(трата — в магазине, этап 3).*
+- [x] **HUD** — [Interface/HudRenderer.cs](RiotGalaxy.Core/Interface/HudRenderer.cs): полоса HP с рамкой
+      и числом (цвет по %), оружие+уровень и баффы слева, очки/кредиты справа (выровнены, крупнее).
+- [x] **Система валюты** — `PlayerShip.Currency` (кредиты за партию), показ в HUD; банкуется в
+      `SaveData.Currency`, тратится в магазине. **Роли разведены:** очки (`Score`) — за убийства,
+      идут в рекорд; кредиты — за **сбор звёзд** (звезда несёт `reward` врага) + бонус за уровень.
+      Магнит влияет на сбор кредитов. См. [ARCHITECTURE.md](ARCHITECTURE.md) §13.
 - [x] **Диалоговая система (движок)** — [Screens/DialogueScreen.cs](RiotGalaxy.Core/Screens/DialogueScreen.cs)
       + модель/загрузчик [Utils/Dialogue.cs](RiotGalaxy.Core/Utils/Dialogue.cs) из YAML
       (`Content/Dialogues/*.yaml`): имя, текст (перенос по словам), опц. портрет, последовательность,
       тап/пробел — далее, Esc — пропустить. Запуск — `GameManager.PlayDialogue(name, next)` →
       по завершении переход в `next` (`GameState.Dialogue`/`EndDialogue`). Демо: интро перед 1-м уровнем.
       Переиспользуется этапом 4.
-- [x] **Локализация-каркас** — [Utils/Loc.cs](RiotGalaxy.Core/Utils/Loc.cs) + строки в
-      [Content/Locale/ru.yaml](RiotGalaxy.Content/Locale/ru.yaml) (ru — эталон). UI меню/настроек/итогов/
-      паузы/HUD/диалога переведён на ключи (`Loc.T`/`Loc.F`). Новая локаль — копия `ru.yaml` (напр. `en.yaml`).
+- [x] **Локализация** — [Utils/Loc.cs](RiotGalaxy.Core/Utils/Loc.cs) + строки в
+      [Content/Locale/ru.yaml](RiotGalaxy.Content/Locale/ru.yaml) (эталон) и
+      [en.yaml](RiotGalaxy.Content/Locale/en.yaml). UI переведён на ключи (`Loc.T`/`Loc.F`).
+      **Выбор языка** (ru↔en) в настройках — применяется сразу, сохраняется в `settings.yaml`
+      (`GameSettings.Language`), грузится при старте. *(имена оружия и часть боевых сообщений пока
+      захардкожены — локализовать при необходимости).*
 - [x] **Техдолг (разблокирующий):** namespace приведён к `RiotGalaxy.Core.*`; `GameManager`
       разгружен (1170→759 строк): выделены `CollisionSystem`/`LevelDirector`/`HudRenderer`,
       состояния → `Screens/*Screen`, убран мёртвый код, враги/бонусы/снаряды переведены на данные
@@ -100,19 +105,38 @@
 
 ## Этап 3 — Прогрессия и магазин (гибрид)
 
-- [ ] **Экран магазина** между уровнями (`Screens/ShopScreen.cs`): список апгрейдов, цены,
-      покупка за валюту, текущий уровень апгрейда.
-- [ ] **Постоянные апгрейды** (данные в `Content/Config/upgrades.yaml`): урон, скорострельность,
-      макс. HP, скорость корабля, сила щита, радиус магнита, доп. слот оружия. Многоуровневые, дорожающие.
-- [ ] **Применение апгрейдов** к [PlayerShip.cs](RiotGalaxy.Core/GameObjects/PlayerShip.cs) /
-      [Weapon.cs](RiotGalaxy.Core/Weapons/Weapon.cs) из сохранённого профиля при старте уровня.
-- [ ] **Навыки/спецспособности** (активные): напр. «нюк», замедление времени, временный щит,
-      дрон-помощник. Кулдаун, кнопка/тач, иконка в HUD.
-- [ ] **Новое оружие/модификаторы** как покупки (расширить [weapons.yaml](RiotGalaxy.Content/Config/weapons.yaml)):
-      самонаводящиеся ракеты, разлёт, рикошет, цепная молния.
-- [ ] **Временные подборы в бою** — развить нынешние бонусы ([Bonus.cs](RiotGalaxy.Core/GameObjects/Bonus.cs)):
-      x2 урон, авто-щит, ускорение, мультивыстрел — действуют до конца забега.
-- [ ] **Экономика** — баланс начислений/цен, чтобы прокачка ощущалась, но не ломала кривую.
+- [x] **Экран магазина** [Screens/ShopScreen.cs](RiotGalaxy.Core/Screens/ShopScreen.cs): список
+      апгрейдов с уровнем/ценой, покупка за валюту (тап по строке), сохранение в профиль.
+      Вход — пункт «Магазин» в меню. *(показ между уровнями — отдельной задачей ниже).*
+- [x] **Постоянные апгрейды** [Content/Config/upgrades.yaml](RiotGalaxy.Content/Config/upgrades.yaml)
+      + [Utils/UpgradeConfig.cs](RiotGalaxy.Core/Utils/UpgradeConfig.cs): урон, скорострельность,
+      макс. HP, скорость, радиус магнита. Многоуровневые, дорожающие (`costGrowth`).
+      *(щит/доп. слот оружия — позже).*
+- [x] **Применение апгрейдов** — в конструкторе [PlayerShip.cs](RiotGalaxy.Core/GameObjects/PlayerShip.cs)
+      (HP/скорость/множители урона и темпа для [Weapon.cs](RiotGalaxy.Core/Weapons/Weapon.cs)) и в магните
+      ([Bonus.cs](RiotGalaxy.Core/GameObjects/Bonus.cs)) из профиля `SaveData.Upgrades`.
+- [x] **Магазин между уровнями** — на экране `NextLevelScreen` кнопка «Магазин» (+ накопленные кредиты);
+      валюта банкуется в профиль при завершении уровня, покупки применяются к живому кораблю
+      (`PlayerShip.ApplyUpgrades`) при «Продолжить». Магазин с возвратом — `GameManager.OpenShop/CloseShop`.
+- [x] **Навыки/спецспособности** (активные) — система с кулдауном, данные в
+      [skills.yaml](RiotGalaxy.Content/Config/skills.yaml) ([SkillsConfig](RiotGalaxy.Core/Utils/SkillsConfig.cs)),
+      рантайм в [PlayerShip](RiotGalaxy.Core/GameObjects/PlayerShip.cs) (`UseSkill`/кулдаун).
+      Активация: клавиша (десктоп) + тач-кнопка `ButtonSkill` с индикатором кулдауна. Стартовые:
+      **щит** (временная неуязвимость) и **бомба** (убить всех). *(новые навыки — добавить id в yaml + эффект в `UseSkill`).*
+- [x] **Система оружия переосмыслена** (data-driven, [weapons.yaml](RiotGalaxy.Content/Config/weapons.yaml)):
+      единый класс `Weapon` + реестр `WeaponConfig` (поведение из `WeaponDef`). Старт — **бластер**
+      (слабый, скорострельный); пушка/пулемёт/лазер/разлёт **открываются** в магазине, у каждого **свои
+      уровни** (персистентно в `SaveData.WeaponLevels`). Магазин — прокручиваемый список (апгрейды + оружие).
+      Переключение — клавиши `WeaponDef.Key` (D1..D5) / тач-кнопки. См. [ARCHITECTURE.md](ARCHITECTURE.md) §11.
+- [ ] **Новые модификаторы оружия** (расширять `weapons.yaml`/`Weapon`): самонаведение, рикошет, цепная молния.
+- [x] **Временные подборы в бою** — баффы с таймером ([Bonus.cs](RiotGalaxy.Core/GameObjects/Bonus.cs) →
+      `PlayerShip.ApplyBuff`): **power** (×2 урон), **rapid** (темп), **speed** (скорость). Падают из врагов
+      (`buffDropChance`), множители/длительность — в [bonuses.yaml](RiotGalaxy.Content/Config/bonuses.yaml),
+      показываются в HUD с обратным отсчётом. Оружие читает `EffectiveDamageMult/EffectiveFireRateMult`
+      (апгрейд × бафф). *(авто-щит/мультивыстрел — можно добавить тем же механизмом).*
+- [x] **Экономика** — крупные награды (scout 10 … boss 120) + **бонус за прохождение уровня**
+      (`levelClearBonusBase/PerLevel` в bonuses.yaml). Цены ×5 (апгрейды 200–300, оружие 400–1000).
+      Полный забег ≈ ~1955 кредитов, весь арсенал ≈ ~15000 ≈ **8 забегов** (средний темп). Числа — в YAML.
 
 ## Этап 4 — Сюжет и диалоги (Radiant-стиль)
 

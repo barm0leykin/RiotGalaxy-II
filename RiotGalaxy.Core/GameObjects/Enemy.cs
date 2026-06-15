@@ -69,7 +69,7 @@ namespace RiotGalaxy.Core.GameObjects
         /// </summary>
         public Enemy(EnemyType type, Vector2 position) : base(position, new Vector2(45, 45))
         {
-            Gun = new WeaponCannon(this);
+            Gun = new Weapon(this); // у врага простое оружие (дефолтные параметры)
             ApplyStats(type); // hp/damage/скорости/интервал стрельбы (+ рандом из конфига)
 
             var s = Utils.EnemyConfig.Get(type);

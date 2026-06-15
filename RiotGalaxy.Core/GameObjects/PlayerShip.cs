@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -7,16 +8,6 @@ using RiotGalaxy.Core.Weapons;
 
 namespace RiotGalaxy.Core.GameObjects
 {
-    /// <summary>
-    /// Типы оружия
-    /// </summary>
-    public enum WeaponType
-    {
-        Cannon,
-        MachineGun,
-        Laser
-    }
-
     /// <summary>
     /// Класс корабля игрока
     /// Аналог PlayerShip из CocosSharp для MonoGame
@@ -48,10 +39,21 @@ namespace RiotGalaxy.Core.GameObjects
         // Параметры движения
         public float Speed { get; set; }
 
-        // Параметры оружия
-        public WeaponType CurrentWeapon { get; set; }
+        // Параметры оружия (id текущего оружия — см. WeaponConfig).
+        public string CurrentWeaponId { get; private set; }
         public float FireRate { get; set; }
         private float _timeSinceLastShot = 0f;
+
+        // Множители от постоянных апгрейдов (магазин). Оружие читает их при выстреле.
+        public float DamageMult { get; set; } = 1f;
+        public float FireRateMult { get; set; } = 1f;
+
+        // Активные навыки: оставшийся кулдаун по id (см. SkillsConfig). 0/нет — готов.
+        private readonly Dictionary<string, float> _skillCd = new Dictionary<string, float>();
+
+        // Временные баффы-подборы: id → оставшееся время (см. BonusConfig.Buffs).
+        private readonly Dictionary<string, float> _buffs = new Dictionary<string, float>();
+        public IReadOnlyDictionary<string, float> ActiveBuffs => _buffs;
 
         // Текущее оружие (аналог playerShip.gun из CocosSharp)
         public Weapon Gun { get; private set; }
@@ -61,9 +63,6 @@ namespace RiotGalaxy.Core.GameObjects
 
         // Валюта (кредиты), заработанная за текущую партию; в конце игры идёт в профиль (SaveData).
         public int Currency { get; set; }
-
-        // Сохранённые уровни прокачки по типам оружия (индекс = (int)WeaponType)
-        private readonly int[] _weaponLevels = new int[3];
 
         // Параметры неуязвимости (аналог GodMode в CocosSharp)
         public bool IsInvulnerable { get; private set; }
@@ -79,11 +78,10 @@ namespace RiotGalaxy.Core.GameObjects
 
         public PlayerShip(Vector2 position) : base(position, new Vector2(60, 60))
         {
-            // Параметры игрока из options.yaml (Utils.GameOptions)
+            // Базовые параметры из options.yaml (апгрейды наложит ApplyUpgrades ниже).
             MaxHealth = Utils.GameOptions.PlayerMaxHp;
             Health = MaxHealth;
             Speed = Utils.GameOptions.PlayerMaxSpeed;
-            CurrentWeapon = WeaponType.Cannon;
             FireRate = 2f; // выстрелов в секунду
             IsAlive = true;
 
@@ -95,13 +93,116 @@ namespace RiotGalaxy.Core.GameObjects
             Shooting = new PlayerShootingComponent(this);
             Collision = new PlayerCollisionComponent(this);
 
-            // Оружие по умолчанию — пушка (аналог CocosSharp)
-            Gun = new WeaponCannon(this);
-            
-            // Убедимся, что компоненты правильно инициализированы
+            // Стартовое оружие — стартер из реестра (бластер: слабый, скорострельный).
+            Gun = new Weapon(this);
+            EquipWeapon(WeaponConfig.Starter?.Id);
+
+            // Наложить постоянные апгрейды из профиля (HP/скорость/множители).
+            ApplyUpgrades();
 
             // Текстура загружается в LoadContent (спрайт "Images/ship")
             Texture = null;
+        }
+
+        /// <summary>
+        /// Применить постоянные апгрейды из профиля ([[SaveData]].Upgrades → UpgradeConfig).
+        /// Вызывается в конструкторе и при продолжении между уровнями (после магазина) —
+        /// чтобы покупки сразу влияли на живой корабль. Множители урона/темпа читает Weapon.
+        /// </summary>
+        public void ApplyUpgrades()
+        {
+            int newMax = Utils.GameOptions.PlayerMaxHp + Utils.UpgradeConfig.MaxHpBonus;
+            int delta = newMax - MaxHealth;
+            MaxHealth = newMax;
+            if (delta > 0) Health += delta; // прирост макс. HP даём как бонус-хил
+
+            Speed = Utils.GameOptions.PlayerMaxSpeed * Utils.UpgradeConfig.SpeedMult;
+            if (Movement is PlayerMovementComponent pm) pm.MaxSpeed = Speed;
+
+            DamageMult = Utils.UpgradeConfig.DamageMult;
+            FireRateMult = Utils.UpgradeConfig.FireRateMult;
+
+            // Переэкипировать текущее оружие — подхватить уровень, купленный в магазине.
+            if (!string.IsNullOrEmpty(CurrentWeaponId))
+                EquipWeapon(CurrentWeaponId);
+        }
+
+        // ── Активные навыки ──────────────────────────────────────────────────
+
+        /// <summary>Готов ли навык (кулдаун истёк).</summary>
+        public bool SkillReady(string id) => SkillCooldownRemaining(id) <= 0f;
+
+        public float SkillCooldownRemaining(string id)
+            => _skillCd.TryGetValue(id, out var v) ? v : 0f;
+
+        /// <summary>Доля оставшегося кулдауна 1→0 (для индикатора на кнопке).</summary>
+        public float SkillCooldownFraction(string id)
+        {
+            var s = Utils.SkillsConfig.Get(id);
+            if (s == null || s.Cooldown <= 0f) return 0f;
+            return MathHelper.Clamp(SkillCooldownRemaining(id) / s.Cooldown, 0f, 1f);
+        }
+
+        /// <summary>Активировать навык по id (если готов): применить эффект и запустить кулдаун.</summary>
+        public void UseSkill(string id)
+        {
+            var s = Utils.SkillsConfig.Get(id);
+            if (s == null || !SkillReady(id))
+                return;
+
+            switch (id)
+            {
+                case "shield":
+                    ActivateInvulnerability(s.Duration);
+                    break;
+                case "nuke":
+                    Managers.GameManager.Instance.KillAllEnemies();
+                    break;
+                // новые навыки — добавлять сюда (эффект) + в skills.yaml (данные)
+            }
+
+            _skillCd[id] = s.Cooldown;
+            Managers.MessageLog.Add(s.Name, Color.Cyan);
+        }
+
+        private void TickSkillCooldowns(float dt)
+        {
+            if (_skillCd.Count == 0) return;
+            // Снимок ключей: меняем значения, не структуру.
+            var ids = new List<string>(_skillCd.Keys);
+            foreach (var id in ids)
+                if (_skillCd[id] > 0f)
+                    _skillCd[id] = Math.Max(0f, _skillCd[id] - dt);
+        }
+
+        // ── Временные баффы-подборы ──────────────────────────────────────────
+
+        /// <summary>Подобрать/продлить временный бафф по id (power/rapid/speed — см. BonusConfig).</summary>
+        public void ApplyBuff(string id)
+        {
+            var b = Utils.BonusConfig.Buff(id);
+            if (b == null) return;
+            float cur = _buffs.TryGetValue(id, out var v) ? v : 0f;
+            _buffs[id] = Math.Max(cur, b.Duration); // повторный подбор продлевает до полной длительности
+        }
+
+        /// <summary>Множитель активного баффа (1, если не активен).</summary>
+        private float BuffMult(string id)
+            => _buffs.TryGetValue(id, out var v) && v > 0f ? (Utils.BonusConfig.Buff(id)?.Mult ?? 1f) : 1f;
+
+        /// <summary>Итоговые множители для оружия: апгрейд × активный бафф.</summary>
+        public float EffectiveDamageMult => DamageMult * BuffMult("power");
+        public float EffectiveFireRateMult => FireRateMult * BuffMult("rapid");
+
+        private void TickBuffs(float dt)
+        {
+            if (_buffs.Count == 0) return;
+            var ids = new List<string>(_buffs.Keys);
+            foreach (var id in ids)
+            {
+                _buffs[id] -= dt;
+                if (_buffs[id] <= 0f) _buffs.Remove(id);
+            }
         }
 
         /// <summary>
@@ -131,6 +232,13 @@ namespace RiotGalaxy.Core.GameObjects
                     DeactivateInvulnerability();
                 }
             }
+
+            // Кулдауны навыков и таймеры временных баффов
+            TickSkillCooldowns(deltaTime);
+            TickBuffs(deltaTime);
+            // Бафф скорости влияет на максимальную скорость движения.
+            if (Movement is PlayerMovementComponent pm)
+                pm.MaxSpeed = Speed * BuffMult("speed");
 
             // Обновляем оружие (очереди/перезарядка)
             Gun?.Update(gameTime);
@@ -273,54 +381,29 @@ namespace RiotGalaxy.Core.GameObjects
         }
 
         /// <summary>
-        /// Смена оружия
+        /// Сменить оружие по id, если оно открыто (есть в профиле). С сообщением для игрока.
         /// </summary>
-        public void ChangeWeapon(WeaponType weaponType)
+        public void ChangeWeapon(string id)
         {
-            CurrentWeapon = weaponType;
-
-            // Пересоздаём оружие соответствующего типа с сохранённым уровнем прокачки
-            int lvl = _weaponLevels[(int)weaponType];
-            switch (weaponType)
+            if (string.IsNullOrEmpty(id)) return;
+            if (!Utils.SaveData.IsWeaponOwned(id))
             {
-                case WeaponType.Cannon:
-                    Gun = new WeaponCannon(this, lvl);
-                    break;
-                case WeaponType.MachineGun:
-                    Gun = new WeaponMinigun(this, lvl);
-                    break;
-                case WeaponType.Laser:
-                    Gun = new WeaponLaser(this, lvl);
-                    break;
-            }
-            Managers.MessageLog.Add("Оружие: " + WeaponName(weaponType), Color.Cyan);
-        }
-
-        private static string WeaponName(WeaponType t)
-        {
-            switch (t)
-            {
-                case WeaponType.Cannon: return "пушка";
-                case WeaponType.MachineGun: return "пулемёт";
-                case WeaponType.Laser: return "лазер";
-                default: return t.ToString();
-            }
-        }
-
-        /// <summary>
-        /// Повысить уровень текущего оружия (бонус BulletUp). Уровень сохраняется по типу.
-        /// </summary>
-        public void UpgradeWeapon()
-        {
-            if (Gun == null)
+                var d = WeaponConfig.Get(id);
+                Managers.MessageLog.Add($"{d?.Name ?? id}: не открыто (магазин)", Color.Gray);
                 return;
-            int before = Gun.Level;
-            Gun.Upgrade();
-            _weaponLevels[(int)CurrentWeapon] = Gun.Level;
-            if (Gun.Level > before)
-                Managers.MessageLog.Add($"Оружие улучшено (ур. {Gun.Level + 1})", Color.Lime);
-            else
-                Managers.MessageLog.Add("Оружие на максимуме", Color.Gray);
+            }
+            EquipWeapon(id);
+            Managers.MessageLog.Add("Оружие: " + (WeaponConfig.Get(id)?.Name ?? id), Color.Cyan);
+        }
+
+        /// <summary>Экипировать оружие по id с уровнем из профиля (без сообщения). null — стартер.</summary>
+        public void EquipWeapon(string id)
+        {
+            var def = WeaponConfig.Get(id) ?? WeaponConfig.Starter;
+            if (def == null) return;
+            CurrentWeaponId = def.Id;
+            int lvl = System.Math.Max(1, Utils.SaveData.GetWeaponLevel(def.Id)); // стартер всегда ур.1+
+            Gun.SetWeapon(def, lvl);
         }
 
         /// <summary>

@@ -16,7 +16,7 @@ namespace RiotGalaxy.Core.Screens
         // Пункты берутся из локализации (Loc загружается до показа меню).
         private static string[] Items => new[]
         {
-            Utils.Loc.T("menu.start"), Utils.Loc.T("menu.settings"), Utils.Loc.T("menu.exit")
+            Utils.Loc.T("menu.start"), Utils.Loc.T("menu.shop"), Utils.Loc.T("menu.settings"), Utils.Loc.T("menu.exit")
         };
         private const float SpacingY = 100f; // крупные пункты + запас под палец
         private int _selected;
@@ -58,7 +58,7 @@ namespace RiotGalaxy.Core.Screens
             if (KeyPressed(Keys.Space))
                 Activate(0); // начать игру
             if (KeyPressed(Keys.Escape))
-                Activate(2); // выход
+                Activate(Items.Length - 1); // выход (последний пункт)
         }
 
         private void Activate(int index)
@@ -70,9 +70,12 @@ namespace RiotGalaxy.Core.Screens
                     GameManager.Instance.PlayDialogue("intro", GameManager.GameState.Playing);
                     break;
                 case 1:
-                    GameManager.Instance.ChangeGameState(GameManager.GameState.Settings);
+                    GameManager.Instance.OpenShop(GameManager.GameState.MainMenu);
                     break;
                 case 2:
+                    GameManager.Instance.ChangeGameState(GameManager.GameState.Settings);
+                    break;
+                case 3:
                     Game1.Instance.Exit();
                     break;
             }
@@ -80,6 +83,9 @@ namespace RiotGalaxy.Core.Screens
 
         public override void Draw(SpriteBatch spriteBatch)
         {
+            DrawDimmer(spriteBatch);
+            DrawPanel(spriteBatch, PanelRect(0.62f, 0.12f, 0.95f));
+
             DrawCentered(spriteBatch, Utils.Loc.T("menu.title"), ScreenH * 0.18f, Color.Orange, TitleScale);
 
             if (Utils.SaveData.HighScore > 0)
@@ -90,8 +96,7 @@ namespace RiotGalaxy.Core.Screens
             for (int i = 0; i < Items.Length; i++)
             {
                 bool active = (i == _hover) || (i == _selected);
-                Color color = active ? Color.Yellow : Color.White;
-                DrawCentered(spriteBatch, Items[i], StartY + i * SpacingY, color, ItemScale);
+                DrawMenuItem(spriteBatch, Items[i], StartY + i * SpacingY, active);
             }
 
             DrawCentered(spriteBatch, Utils.Loc.T("menu.hint"), ScreenH * 0.9f, Color.Gray, HintScale);

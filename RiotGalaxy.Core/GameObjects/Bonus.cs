@@ -8,7 +8,7 @@ namespace RiotGalaxy.Core.GameObjects
     /// <summary>
     /// Типы бонусов (как в CocosSharp).
     /// </summary>
-    public enum BonusType { BULLET_UP = 0, HP_UP, NUKE_BOMB, STAR }
+    public enum BonusType { BULLET_UP = 0, HP_UP, NUKE_BOMB, STAR, POWER, RAPID, SPEED }
 
     /// <summary>
     /// Базовый бонус. Падает вниз, при подборе игроком применяет эффект.
@@ -39,6 +39,9 @@ namespace RiotGalaxy.Core.GameObjects
                 BonusType.HP_UP     => "Images/bonusHPUp",
                 BonusType.BULLET_UP => "Images/bonusBulletUp",
                 BonusType.NUKE_BOMB => "Images/bonusNukeBomb",
+                BonusType.POWER     => "Images/btn_BulletUp",   // ×2 урон (временно)
+                BonusType.RAPID     => "Images/btn_minigun",    // быстрее стрельба
+                BonusType.SPEED     => "Images/btn_auto_cannon",// быстрее корабль
                 _                   => null,
             };
             if (sprite != null)
@@ -100,31 +103,47 @@ namespace RiotGalaxy.Core.GameObjects
                     Managers.MessageLog.Add(gained > 0 ? $"+{gained} HP" : "HP полное", Color.Lime);
                     break;
                 case BonusType.BULLET_UP:
-                    player.UpgradeWeapon();
+                    // Оружие качается в магазине; этот подбор даёт временное усиление урона.
+                    player.ApplyBuff("power");
+                    Managers.MessageLog.Add("Усиленный урон!", Color.OrangeRed);
                     break;
                 case BonusType.NUKE_BOMB:
                     GameManager.Instance.KillAllEnemies();
                     Managers.MessageLog.Add("Бомба! Всех в труху", Color.Orange);
+                    break;
+                case BonusType.POWER:
+                    player.ApplyBuff("power");
+                    Managers.MessageLog.Add("Усиленный урон!", Color.OrangeRed);
+                    break;
+                case BonusType.RAPID:
+                    player.ApplyBuff("rapid");
+                    Managers.MessageLog.Add("Скорострельность!", Color.Cyan);
+                    break;
+                case BonusType.SPEED:
+                    player.ApplyBuff("speed");
+                    Managers.MessageLog.Add("Ускорение!", Color.LightGreen);
                     break;
             }
         }
     }
 
     /// <summary>
-    /// Звезда: даёт очки, притягивается к игроку в радиусе магнита, вращается.
-    /// Адаптация BonusStar из CocosSharp.
+    /// Звезда: даёт КРЕДИТЫ (на магазин), притягивается к игроку в радиусе магнита, вращается.
+    /// Номинал кредитов несёт сама звезда (обычно = reward убитого врага). Адаптация BonusStar.
     /// </summary>
     public class BonusStar : Bonus
     {
         private const float FallSpeed = 70f;    // скорость падения вне зоны магнита
         private float _angleDeg = 180f;          // текущий курс (град); 180 = вниз
         private readonly float _rotateSpeed;
+        private readonly int _credits;           // кредиты при подборе
 
         private static readonly Random Rnd = new Random();
 
-        public BonusStar(Vector2 pos) : base(pos)
+        public BonusStar(Vector2 pos, int credits = 0) : base(pos)
         {
             Type = BonusType.STAR;
+            _credits = credits > 0 ? credits : Utils.BonusConfig.Current.StarCredits;
             CurrentSpeed = FallSpeed;
             LoadSprite("Images/bonusStar");
             SetDirection(_angleDeg); // по умолчанию падает вниз
@@ -142,9 +161,10 @@ namespace RiotGalaxy.Core.GameObjects
             if (player != null)
             {
                 var magnet = Weapons.WeaponConfig.Magnet; // оборудование корабля (weapons.yaml)
+                float radius = magnet.Radius * Utils.UpgradeConfig.MagnetMult; // апгрейд магнита
                 Vector2 d = player.Position - Position;
                 float target;
-                if (d.LengthSquared() < magnet.Radius * magnet.Radius)
+                if (d.LengthSquared() < radius * radius)
                 {
                     // в зоне магнита — плавно доворачиваем КУРС на игрока и ускоряемся
                     CurrentSpeed = magnet.PullSpeed;
@@ -186,10 +206,8 @@ namespace RiotGalaxy.Core.GameObjects
 
         public override void Apply(PlayerShip player)
         {
-            int score = Utils.BonusConfig.Current.StarScore;
-            player.Score += score;
-            Managers.MessageLog.Add($"+{score} очк.", Color.Gold);
-            Effects.FloatingText.Add($"+{score}", Position, Color.Gold); // число у места подбора
+            player.Currency += _credits; // звезда = кредиты (на магазин)
+            Effects.FloatingText.Add($"+{_credits}", Position, Color.Gold); // число у места подбора
         }
     }
 }

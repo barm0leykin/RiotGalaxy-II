@@ -1,0 +1,11 @@
+# Активные навыки игрока (кнопка/тач + кулдаун). Эффект по id реализован в PlayerShip.UseSkill.
+# Поля:
+#   id        — ключ навыка (используется в коде: shield/nuke/...)
+#   name      — подпись (всплывает при активации)
+#   icon      — спрайт кнопки (Images/...)
+#   key       — клавиша активации на десктопе (имя из Keys: Q/E/F/...)
+#   cooldown  — перезарядка, сек
+#   duration  — длительность эффекта, сек (для щита; для мгновенных — 0)
+skills:
+  - { id: shield, name: "Щит",   icon: "Images/btn_god",     key: Q, cooldown: 15, duration: 4 }
+  - { id: nuke,   name: "Бомба", icon: "Images/btn_killall", key: E, cooldown: 25, duration: 0 }

@@ -240,9 +240,19 @@ namespace RiotGalaxy.Core.Managers
             // Смена оружия: 1 — пушка, 2 — пулемёт, 3 — лазер
             if (player != null)
             {
-                if (IsKeyJustPressed(Keys.D1)) player.ChangeWeapon(WeaponType.Cannon);
-                else if (IsKeyJustPressed(Keys.D2)) player.ChangeWeapon(WeaponType.MachineGun);
-                else if (IsKeyJustPressed(Keys.D3)) player.ChangeWeapon(WeaponType.Laser);
+                // Клавиша выбора оружия — из WeaponDef.Key (D1..D5).
+                foreach (var w in Weapons.WeaponConfig.All)
+                    if (!string.IsNullOrEmpty(w.Key)
+                        && Enum.TryParse<Keys>(w.Key, true, out var wk)
+                        && IsKeyJustPressed(wk))
+                        player.ChangeWeapon(w.Id);
+
+                // Активные навыки по клавишам из SkillsConfig (десктоп; на телефоне — тач-кнопки).
+                foreach (var s in Utils.SkillsConfig.All)
+                    if (!string.IsNullOrEmpty(s.Key)
+                        && Enum.TryParse<Keys>(s.Key, true, out var skillKey)
+                        && IsKeyJustPressed(skillKey))
+                        player.UseSkill(s.Id);
             }
             
             // Обработка клавиатурного ввода для движения

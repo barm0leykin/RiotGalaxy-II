@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RiotGalaxy.Core.Commands;
 using RiotGalaxy.Core.GameObjects;
+using RiotGalaxy.Core.Managers;
 
 namespace RiotGalaxy.Core.Interface
 {
@@ -77,6 +78,38 @@ namespace RiotGalaxy.Core.Interface
                 // Рисуем по тому же прямоугольнику, что и проверка клика (GetRect)
                 spriteBatch.Draw(textureToDraw, GetRect(), Color.White);
             }
+        }
+    }
+
+    /// <summary>
+    /// Кнопка активного навыка: активирует навык по id, рисует затемнение-оверлей пропорционально
+    /// оставшемуся кулдауну (заполняется снизу вверх). Иконку (sprite) задаёт создатель кнопки.
+    /// </summary>
+    public class ButtonSkill : MyButton
+    {
+        private readonly string _id;
+
+        public ButtonSkill(Vector2 pos, string skillId) : base(pos)
+        {
+            _id = skillId;
+            name = "skill_" + skillId;
+            cmd = new CommandUseSkill(skillId);
+        }
+
+        public override void Draw(SpriteBatch spriteBatch, Texture2D defaultTexture)
+        {
+            base.Draw(spriteBatch, defaultTexture);
+
+            var player = GameManager.Instance.Player;
+            if (player == null || defaultTexture == null) return;
+
+            float frac = player.SkillCooldownFraction(_id); // 1 → только что использован, 0 → готов
+            if (frac <= 0f) return;
+
+            // Затемнение, "вытекающее" сверху вниз по мере перезарядки.
+            Rectangle r = GetRect();
+            int h = (int)(r.Height * frac);
+            spriteBatch.Draw(defaultTexture, new Rectangle(r.X, r.Y, r.Width, h), new Color(0, 0, 0, 170));
         }
     }
 
@@ -200,18 +233,25 @@ namespace RiotGalaxy.Core.Interface
         }
     }
 
-    /// <summary>
-    /// Кнопка улучшения оружия
-    /// </summary>
-    public class ButtonUpgradeGun : MyButton
+    /// <summary>Кнопка выбора оружия «разлёт» (доступно после покупки в магазине).</summary>
+    public class ButtonSpread : MyButton
     {
-        public ButtonUpgradeGun(Vector2 pos) : base(pos)
+        public ButtonSpread(Vector2 pos) : base(pos)
         {
-            name = "btn_upgrade_gun";
+            name = "btn_spread";
             Width = 64;
             Height = 64;
-            
-            cmd = new CommandUpgradeGun();
+            cmd = new CommandChWeaponSpread();
+        }
+    }
+
+    /// <summary>Кнопка смены оружия по id (см. WeaponConfig). Иконку задаёт создатель кнопки.</summary>
+    public class ButtonChWeapon : MyButton
+    {
+        public ButtonChWeapon(Vector2 pos, string weaponId) : base(pos)
+        {
+            name = "btn_weapon_" + weaponId;
+            cmd = new CommandChWeapon(weaponId);
         }
     }
 

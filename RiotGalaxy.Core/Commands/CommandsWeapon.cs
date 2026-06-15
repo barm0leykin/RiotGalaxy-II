@@ -7,37 +7,20 @@ namespace RiotGalaxy.Core.Commands
     /// Команды для управления оружием (адаптировано из CocosSharp CommandsWeapon.cs).
     /// </summary>
 
-    public class CommandUpgradeGun : ICommand
+    /// <summary>Сменить оружие игрока по id (см. WeaponConfig).</summary>
+    public class CommandChWeapon : ICommand
     {
-        public void Execute()
-        {
-            GameManager.Instance.Player?.UpgradeWeapon();
-        }
+        private readonly string _id;
+        public CommandChWeapon(string id) { _id = id; }
+        public void Execute() => GameManager.Instance.Player?.ChangeWeapon(_id);
     }
 
-    public class CommandChWeaponCannon : ICommand
-    {
-        public void Execute()
-        {
-            GameManager.Instance.Player?.ChangeWeapon(WeaponType.Cannon);
-        }
-    }
-
-    public class CommandChWeaponMinigun : ICommand
-    {
-        public void Execute()
-        {
-            GameManager.Instance.Player?.ChangeWeapon(WeaponType.MachineGun);
-        }
-    }
-
-    public class CommandChWeaponLaser : ICommand
-    {
-        public void Execute()
-        {
-            GameManager.Instance.Player?.ChangeWeapon(WeaponType.Laser);
-        }
-    }
+    // Совместимые команды-обёртки под конкретные id (для существующих кнопок).
+    public class CommandChWeaponBlaster : CommandChWeapon { public CommandChWeaponBlaster() : base("blaster") { } }
+    public class CommandChWeaponCannon  : CommandChWeapon { public CommandChWeaponCannon()  : base("cannon")  { } }
+    public class CommandChWeaponMinigun : CommandChWeapon { public CommandChWeaponMinigun() : base("minigun") { } }
+    public class CommandChWeaponLaser   : CommandChWeapon { public CommandChWeaponLaser()   : base("laser")   { } }
+    public class CommandChWeaponSpread  : CommandChWeapon { public CommandChWeaponSpread()  : base("spread")  { } }
 
     /// <summary>Тестовая команда: перейти к следующему уровню.</summary>
     public class CommandNextLevel : ICommand
@@ -47,5 +30,13 @@ namespace RiotGalaxy.Core.Commands
             MessageLog.Add("Следующий уровень", Microsoft.Xna.Framework.Color.Yellow);
             GameManager.Instance.DebugNextLevel();
         }
+    }
+
+    /// <summary>Активировать активный навык игрока по id (см. SkillsConfig / PlayerShip.UseSkill).</summary>
+    public class CommandUseSkill : ICommand
+    {
+        private readonly string _id;
+        public CommandUseSkill(string id) { _id = id; }
+        public void Execute() => GameManager.Instance.Player?.UseSkill(_id);
     }
 }

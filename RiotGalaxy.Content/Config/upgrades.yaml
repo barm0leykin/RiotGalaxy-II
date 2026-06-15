@@ -1,0 +1,22 @@
+# Постоянные апгрейды корабля (покупаются за кредиты в магазине, сохраняются в профиле save.yaml).
+# Поля каждого апгрейда:
+#   id         — ключ (используется в коде и в SaveData)
+#   name/desc  — текст в магазине (позже можно вынести в локализацию)
+#   maxLevel   — сколько уровней можно купить
+#   baseCost   — цена 1-го уровня (кредиты)
+#   costGrowth — множитель цены за следующий уровень (цена = baseCost * costGrowth^уровень)
+#   perLevel   — прибавка эффекта за уровень (смысл зависит от id, см. ниже)
+#
+# Смысл perLevel по id:
+#   damage   — +доля к урону (множитель): итог = базовый * (1 + perLevel*level)
+#   firerate — +доля к темпу стрельбы (множитель)
+#   maxhp    — +HP (абсолют) за уровень
+#   speed    — +доля к скорости корабля (множитель)
+#   magnet   — +доля к радиусу магнита (множитель)
+upgrades:
+  - { id: damage,   name: "Урон",            desc: "Снаряды бьют сильнее",        maxLevel: 5, baseCost: 250, costGrowth: 1.6, perLevel: 0.15 }
+  - { id: firerate, name: "Скорострельность", desc: "Стреляешь чаще",              maxLevel: 5, baseCost: 250, costGrowth: 1.6, perLevel: 0.12 }
+  - { id: maxhp,    name: "Прочность",        desc: "+HP к максимуму здоровья",    maxLevel: 5, baseCost: 200, costGrowth: 1.5, perLevel: 10 }
+  - { id: speed,    name: "Манёвренность",    desc: "Корабль быстрее",             maxLevel: 3, baseCost: 300, costGrowth: 1.7, perLevel: 0.10 }
+  - { id: magnet,   name: "Магнит",           desc: "Звёзды притягиваются дальше", maxLevel: 3, baseCost: 200, costGrowth: 1.6, perLevel: 0.35 }
+# Оружие открывается/качается в магазине отдельной секцией (см. weapons.yaml).

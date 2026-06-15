@@ -6,71 +6,53 @@ using RiotGalaxy.Core.Managers;
 namespace RiotGalaxy.Core.Weapons
 {
     /// <summary>
-    /// Базовый класс оружия. Адаптация Weapon из CocosSharp.
-    /// Стреляет очередями (burst) с интервалом burstInterval, между очередями —
-    /// перезарядка reloadSpeed. Создаёт снаряды и добавляет их в список объектов игры.
+    /// Оружие — единый настраиваемый класс (data-driven). Поведение задаётся <see cref="WeaponDef"/>:
+    /// спрайт/пробивание снаряда, разброс (jitter), веер (fan), параметры по уровням. Подклассов нет.
+    /// Стреляет очередями (burst) с интервалом, между очередями — перезарядка. У врагов оружие без
+    /// Def — простой одиночный снаряд (дефолтные Options).
     /// </summary>
     public class Weapon
     {
-        // Тип оружия — единый enum RiotGalaxy.Core.GameObjects.WeaponType (Cannon/MachineGun/Laser).
+        private static readonly Random _rnd = new Random();
 
-        public int WeaponTypeId;
-        public WeaponOptions Options;
-        public bool Safe { get; set; } // предохранитель
-
-        // Уровень прокачки и таблица параметров по уровням
-        public int Level { get; protected set; }
-        protected WeaponOptions[] _levels;
+        public WeaponDef Def { get; private set; }   // null у врагов
+        public int Level { get; private set; } = 1;   // 1-based уровень оружия
+        public WeaponOptions Options { get; private set; }
+        public bool Safe { get; set; }                // предохранитель
 
         protected GameObject _owner;
-        protected int _fireCount = 0;
-
-        // Прицеливание
-        protected float _aimAngle = 0f;            // базовый угол прицеливания, рад (0 = строго вверх)
-
-        // Очередь и перезарядка
+        private float _aimAngle = 0f;                  // базовый угол прицеливания (0 = вверх)
         private int _burstRemaining = 0;
         private float _burstTimer = 0f;
         private float _reloadTimer = 0f;
 
+        // Множители игрока (апгрейды × временные баффы; у врагов — 1).
+        private float OwnerDamageMult => (_owner is PlayerShip ps) ? ps.EffectiveDamageMult : 1f;
+        private float OwnerFireRateMult => (_owner is PlayerShip ps) ? ps.EffectiveFireRateMult : 1f;
+
         public Weapon(GameObject owner)
         {
             _owner = owner;
-            Safe = false;
+            Options = new WeaponOptions(1, 0.25f, 1.2f, 10f, 250f); // дефолт для врагов
         }
 
-        public void LoadWeaponOptions(WeaponOptions opt) => Options = opt;
-
-        /// <summary>Привязать таблицу уровней и выставить стартовый уровень.</summary>
-        protected void InitLevel(WeaponOptions[] levels, int lvl)
+        /// <summary>Настроить оружие игрока по описанию и (1-based) уровню.</summary>
+        public void SetWeapon(WeaponDef def, int level)
         {
-            _levels = levels;
-            Level = Math.Clamp(lvl, 0, levels.Length - 1);
-            Options = levels[Level];
+            Def = def;
+            Level = def.MaxLevel > 0 ? Math.Clamp(level, 1, def.MaxLevel) : 1;
+            Options = def.OptionsForLevel(Level);
         }
 
-        /// <summary>
-        /// Задать БАЗОВЫЙ угол прицеливания (рад, 0 = вверх). Разброс (minigun) добавляется
-        /// поверх него на каждый выстрел, не меняя базу.
-        /// </summary>
-        public void Aim(float angleRad)
-        {
-            _aimAngle = angleRad;
-        }
+        public void Aim(float angleRad) => _aimAngle = angleRad;
 
-        /// <summary>Единичный вектор направления для угла (0 = вверх; в MonoGame Y вниз).</summary>
-        private static Vector2 DirFromAngle(float angleRad) =>
-            new Vector2((float)Math.Sin(angleRad), -(float)Math.Cos(angleRad));
+        private static Vector2 DirFromAngle(float a) =>
+            new Vector2((float)Math.Sin(a), -(float)Math.Cos(a));
 
-        /// <summary>
-        /// Покадровое обновление: проигрывание очереди и отсчёт перезарядки.
-        /// </summary>
         public void Update(GameTime gameTime)
         {
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-
-            if (_reloadTimer > 0f)
-                _reloadTimer -= dt;
+            if (_reloadTimer > 0f) _reloadTimer -= dt;
 
             if (_burstRemaining > 0)
             {
@@ -84,129 +66,65 @@ namespace RiotGalaxy.Core.Weapons
             }
         }
 
-        /// <summary>
-        /// Запрос на выстрел. Начинает новую очередь, если оружие не на перезарядке
-        /// и предыдущая очередь завершена. Аналог Weapon.Fire из CocosSharp.
-        /// </summary>
         public void Fire()
         {
-            if (Safe || Options == null)
-                return;
-            if (_reloadTimer > 0f || _burstRemaining > 0)
-                return; // идёт перезарядка или ещё стреляет текущая очередь
+            if (Safe || Options == null) return;
+            if (_reloadTimer > 0f || _burstRemaining > 0) return;
 
             _burstRemaining = Math.Max(1, Options.burst);
-            _reloadTimer = Options.reloadSpeed;
+            _reloadTimer = Options.reloadSpeed / OwnerFireRateMult; // апгрейд/бафф темпа — короче перезарядка
             if (_owner is PlayerShip)
-                AudioManager.Instance.PlayEffect("fire1"); // звук только у игрока
+                AudioManager.Instance.PlayEffect("fire1");
 
-            // первый выстрел очереди — сразу
             FireOnce();
             _burstRemaining--;
             _burstTimer = Options.burstInterval;
         }
 
-        /// <summary>Угол текущего выстрела (минигатлинг переопределяет для разброса).</summary>
-        protected virtual float GetFireAngle() => _aimAngle;
-
-        /// <summary>Создание снаряда (наследники задают спрайт/пробивание данными).</summary>
-        protected virtual Shell CreateShell(Vector2 position) => new Shell(position, "Images/bullet");
-
-        /// <summary>
-        /// Одиночный выстрел: создаёт снаряд, задаёт ему параметры и добавляет в игру.
-        /// Аналог Weapon.FireOnce из CocosSharp.
-        /// </summary>
-        protected void FireOnce()
+        /// <summary>Один «тик» стрельбы: веер (если задан) или одиночный снаряд (с разбросом).</summary>
+        private void FireOnce()
         {
-            float angle = GetFireAngle();             // база + разброс (для конкретного выстрела)
-            Vector2 dir = DirFromAngle(angle);
-            Vector2 spawn = _owner.Position + dir * (_owner.Height * 0.5f); // не появляться внутри стрелка
-
-            Shell shell = CreateShell(spawn);
-            shell.Speed = Options.shellSpeed;
-            shell.Damage = (int)Options.damage;
-            shell.Direction = dir;
-            shell.Rotation = angle;
-            shell.PlayerSide = (_owner is PlayerShip); // сторона снаряда = сторона стрелка
-
-            // Дульная вспышка у ствола (цвет по стороне стрелка).
-            Color muzzleColor = (_owner is PlayerShip)
-                ? new Color(180, 220, 255)   // игрок — холодная вспышка
-                : new Color(255, 170, 120);  // враг — тёплая
-            GameManager.Instance.Particles.Explosion(spawn, muzzleColor, Utils.EffectsConfig.MuzzleFlash);
-
-            // Визуальный рост снаряда с уровнем оружия: крупнее + тёплое свечение.
-            float lvScale = 1f + Level * Utils.EffectsConfig.ShellLevelScaleStep;
-            shell.Scale = new Vector2(lvScale);
-            float glow = MathHelper.Clamp(Level * 0.22f, 0f, 0.8f);
-            shell.Tint = Color.Lerp(Color.White, new Color(255, 235, 150), glow);
-
-            _fireCount++;
-            GameManager.Instance.GameObjects.Add(shell);
-        }
-
-        /// <summary>Повысить уровень оружия (перезагрузить параметры следующего уровня).</summary>
-        public virtual void Upgrade()
-        {
-            if (_levels != null && Level + 1 < _levels.Length)
+            if (Def != null && Def.FanCount > 1)
             {
-                Level++;
-                Options = _levels[Level];
+                int pellets = Def.FanCount + (Level - 1) * Def.FanPerLevel;
+                float step = MathHelper.ToRadians(Def.FanStepDeg);
+                float start = _aimAngle - step * (pellets - 1) / 2f;
+                for (int i = 0; i < pellets; i++)
+                    SpawnShell(start + step * i);
+            }
+            else
+            {
+                float angle = _aimAngle;
+                int jitter = Def?.JitterDeg ?? 0;
+                if (jitter > 0)
+                    angle += MathHelper.ToRadians(_rnd.Next(-jitter, jitter + 1));
+                SpawnShell(angle);
             }
         }
-    }
 
-    /// <summary>Пушка: одиночные мощные снаряды (Bullet).</summary>
-    public class WeaponCannon : Weapon
-    {
-        public WeaponCannon(GameObject owner, int lvl = 0) : base(owner)
+        private void SpawnShell(float angle)
         {
-            WeaponTypeId = (int)WeaponType.Cannon;
-            InitLevel(WeaponConfig.Cannons, lvl);
-        }
+            Vector2 dir = DirFromAngle(angle);
+            Vector2 spawn = _owner.Position + dir * (_owner.Height * 0.5f);
 
-        protected override Shell CreateShell(Vector2 position) => new Shell(position, "Images/bullet");
-    }
+            Shell shell = new Shell(spawn, Def?.Sprite ?? "Images/bullet", Def?.Piercing ?? false);
+            shell.Speed = Options.shellSpeed;
+            shell.Damage = (int)(Options.damage * OwnerDamageMult);
+            shell.Direction = dir;
+            shell.Rotation = angle;
+            shell.PlayerSide = (_owner is PlayerShip);
 
-    /// <summary>Пулемёт: быстрые очереди слабых снарядов (Slug) с разбросом ±5°.</summary>
-    public class WeaponMinigun : Weapon
-    {
-        private static readonly Random _rnd = new Random();
+            // Дульная вспышка (цвет по стороне стрелка).
+            Color muzzleColor = (_owner is PlayerShip) ? new Color(180, 220, 255) : new Color(255, 170, 120);
+            GameManager.Instance.Particles.Explosion(spawn, muzzleColor, Utils.EffectsConfig.MuzzleFlash);
 
-        public WeaponMinigun(GameObject owner, int lvl = 0) : base(owner)
-        {
-            WeaponTypeId = (int)WeaponType.MachineGun;
-            InitLevel(WeaponConfig.Miniguns, lvl);
-        }
+            // Визуальный рост снаряда с уровнем оружия.
+            float lvScale = 1f + (Level - 1) * Utils.EffectsConfig.ShellLevelScaleStep;
+            shell.Scale = new Vector2(lvScale);
+            float glow = MathHelper.Clamp((Level - 1) * 0.22f, 0f, 0.8f);
+            shell.Tint = Color.Lerp(Color.White, new Color(255, 235, 150), glow);
 
-        protected override float GetFireAngle()
-        {
-            // разброс ±5 градусов, как в оригинале (CCRandom.GetRandomInt(-5,5))
-            float spreadDeg = _rnd.Next(-5, 6);
-            return _aimAngle + MathHelper.ToRadians(spreadDeg);
-        }
-
-        protected override Shell CreateShell(Vector2 position) => new Shell(position, "Images/slug");
-    }
-
-    /// <summary>Лазер: быстрые пробивающие снаряды (Laser).</summary>
-    public class WeaponLaser : Weapon
-    {
-        public WeaponLaser(GameObject owner, int lvl = 0) : base(owner)
-        {
-            WeaponTypeId = (int)WeaponType.Laser;
-            InitLevel(WeaponConfig.Lasers, lvl);
-        }
-
-        protected override Shell CreateShell(Vector2 position) => new Shell(position, "Images/laser", piercing: true);
-    }
-
-    /// <summary>Отсутствие оружия (Null Object). Аналог NoWeapon из CocosSharp.</summary>
-    public class NoWeapon : Weapon
-    {
-        public NoWeapon(GameObject owner) : base(owner)
-        {
-            Safe = true;
+            GameManager.Instance.GameObjects.Add(shell);
         }
     }
 }
