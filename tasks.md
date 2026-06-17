@@ -151,6 +151,11 @@
 
 ## Этап 5 — Контент (враги, поведение, формации, миры)
 
+- [x] **Спрайты врагов** — нарезаны из `art/units.png`/`art/units-middle.png` (5×6 каждый),
+      фон убран в прозрачность, 60 шт. в [Images/Enemies/](RiotGalaxy.Content/Images/Enemies/)
+      (`thin/fat_<color>_1..6`), зарегистрированы в `.mgcb` (обе платформы). Текущие враги и босс
+      переведены на новые спрайты в [enemies.yaml](RiotGalaxy.Content/Config/enemies.yaml); остальные
+      — готовый ростер для новых типов.
 - [ ] **Новые типы врагов** с уникальными паттернами (минер/ставит мины, щитоносец, делящийся,
       камикадзе, стрелок-снайпер). Параметры в [enemies.yaml](RiotGalaxy.Content/Config/enemies.yaml).
 - [ ] **Новые тактики пике** ([SortieMovement.cs](RiotGalaxy.Core/Components/SortieMovement.cs)):

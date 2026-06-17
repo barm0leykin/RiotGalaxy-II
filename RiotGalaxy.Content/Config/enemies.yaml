@@ -30,7 +30,7 @@ scout:
   speedMax: 100
   shootInterval: 0      # разведчик не стреляет
   tactics: [random]
-  sprite: Images/enemySmallScout
+  sprite: Images/Enemies/thin_green_1
   shoot: none
   dirMin: 155
   dirMax: 205
@@ -43,7 +43,7 @@ blue:
   attackSpeed: 200
   shootInterval: 4
   tactics: [snake, ram]
-  sprite: Images/enemyBlue
+  sprite: Images/Enemies/thin_blue_1
   ai: blue
   shoot: down
   reward: 15
@@ -56,7 +56,7 @@ green:
   attackSpeed: 200
   shootInterval: 4
   tactics: [random, snake]
-  sprite: Images/enemyGreen
+  sprite: Images/Enemies/fat_green_1
   shoot: down
   wander: true
   dirMin: 135
@@ -70,7 +70,7 @@ red:
   attackSpeed: 160
   shootInterval: 6
   tactics: [ram, ellipse]
-  sprite: Images/enemyRed
+  sprite: Images/Enemies/fat_red_1
   ai: red
   shoot: aim
   reward: 25
@@ -81,7 +81,7 @@ boss:
   speed: 50
   shootInterval: 1.2
   tactics: []
-  sprite: Images/enemyRed   # отдельного спрайта босса нет — крупный enemyRed
+  sprite: Images/Enemies/fat_purple_1   # крупный «толстый» фиолетовый — отличает босса визуально
   scale: 2.5
   shoot: aim
   dirMin: 135

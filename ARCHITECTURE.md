@@ -322,8 +322,12 @@ ship.png  ──[ MGCB / dotnet-mgcb ]──►  ship.xnb  ──[ Content.Load<
 ```text
 RiotGalaxy.Content/
 ├── RiotGalaxy.Content.mgcb     # рецепт сборки (.xnb): Images, Backgrounds, Sounds, шрифт
-├── Images/                     # спрайты (26 шт., нарезаны из старого атласа images.png)
-│   ├── ship.png, enemyBlue.png, bullet.png, shield.png …
+├── Images/                     # спрайты (нарезаны из старого атласа images.png)
+│   ├── ship.png, bullet.png, shield.png …
+│   └── Enemies/                # 60 спрайтов врагов (нарезаны из art/units*.png):
+│       │                       #   thin_<color>_1..6 и fat_<color>_1..6 (6 силуэтов на цвет)
+│       │                       #   thin: green/blue/pink/yellow/red; fat: green/blue/purple/orange/red
+│       └── …                   # фон убран в прозрачность; на тип врага вешаются через enemies.yaml `sprite:`
 ├── Backgrounds/                # фоны: background_blue (1280×768), background, SCConvoy_0
 ├── Sounds/                     # звуки: fire1.wav, explode1.wav
 ├── TestFont.spritefont         # шрифт DejaVu Sans Mono: ASCII + Latin-1 + кириллица + тире/стрелки
