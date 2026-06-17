@@ -1,0 +1,7 @@
+# Брифинг перед миссией 1 «Пивоварск». Тон — Radiant: пафос + бытовуха.
+lines:
+  - { speaker: "Кардиган", text: "Пилот! Шахтёры Пивоварска подняли мятеж. Причина — стратегическая!", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Люк", text: "Дайте угадаю. Пиво.", portrait: "Images/portrait_luke" }
+  - { speaker: "Кардиган", text: "Полгода без поставок пенного! Лети и наведи порядок. Решительно!", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Рейдер", text: "Странно лишь одно: пиво не исчезает само. Кто-то его уводит.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "То есть я опять разгребаю чужие схемы. Как обычно.", portrait: "Images/portrait_luke" }

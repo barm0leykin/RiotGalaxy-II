@@ -1,0 +1,8 @@
+# Пивоварск — главный ствол (красные-крепыши).
+description: "Пивоварск — главный ствол"
+spawnInterval: 0.8
+events:
+  - { enemy: blue, count: 3 }
+  - { wait: 1 }
+  - { enemy: red, count: 2 }
+  - { enemy: green, count: 4 }

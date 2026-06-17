@@ -71,7 +71,8 @@ RiotGalaxy.Core/
 ├── Managers/                # глобальные системы (синглтоны)
 │   ├── GameManager.cs       #   состояния, список объектов, игровой цикл, отрисовка
 │   ├── CollisionSystem.cs   #   разрешение столкновений (вынесено из GameManager)
-│   ├── LevelDirector.cs     #   уровни: World/Hive, спавн врагов, прогрессия, счётчики
+│   ├── LevelDirector.cs     #   ОДИН бой: World/Hive, спавн врагов по таймлайну, счётчики
+│   ├── MissionDirector.cs   #   кампания: миссия = цепочка брифингов/боёв/босса/магазина
 │   ├── InputManager.cs      #   ввод (клавиатура/мышь), GUI-кнопки
 │   └── AudioManager.cs      #   загрузка/проигрывание звуков
 ├── GameObjects/             # всё, что живёт на экране
@@ -201,8 +202,13 @@ Victory): Esc/P — пауза и снятие, Space — рестарт на э
 - **Список игровых объектов** — `List<GameObject> GameObjects`. В `Playing` каждый кадр:
   спавн врагов по таймлайну уровня (`LevelDirector`), `Update` каждого объекта, разрешение
   столкновений (`CollisionSystem`, O(n²/2)), удаление «мёртвых» (`ProcessObjectRemoval`).
-- **Уровни/прогрессия** — вынесено в [LevelDirector.cs](RiotGalaxy.Core/Managers/LevelDirector.cs)
-  (World/Hive, спавн, счётчики, переход; см. §15). `GameManager` хранит делегирующие свойства.
+- **Уровни/прогрессия** — два уровня оркестрации:
+  [LevelDirector.cs](RiotGalaxy.Core/Managers/LevelDirector.cs) гоняет ОДИН бой (World/Hive, спавн,
+  счётчики), а [MissionDirector.cs](RiotGalaxy.Core/Managers/MissionDirector.cs) ведёт кампанию:
+  **миссия = последовательность шагов** (брифинг → бой → … → босс → брифинг → магазин).
+  Поток шагов в `GameManager`: `StartCampaign` → `RunNextStep` (диспетчер) → `EnterBattle` /
+  брифинг (`PlayDialogueThen`) / магазин (`OpenShopThen`); по зачистке боя — `OnBattleCleared`
+  → следующий шаг; конец кампании — `FinishCampaign` → Victory. См. §15.
 - **Столкновения** — вынесено в [CollisionSystem.cs](RiotGalaxy.Core/Managers/CollisionSystem.cs).
 - **Отрисовку** — держит `SpriteBatch`, рисует фон/параллакс; объекты, HUD и кнопки рисует
   `GameplayScreen` → `DrawGameplay` (HUD — [Interface/HudRenderer.cs](RiotGalaxy.Core/Interface/HudRenderer.cs)).
@@ -332,7 +338,9 @@ RiotGalaxy.Content/
 ├── Sounds/                     # звуки: fire1.wav, explode1.wav
 ├── TestFont.spritefont         # шрифт DejaVu Sans Mono: ASCII + Latin-1 + кириллица + тире/стрелки
 ├── Config/                     # YAML-конфиги (НЕ через MGCB): weapons.yaml, options.yaml
-└── Levels/                     # уровни: level1..5.yaml (НЕ через MGCB)
+├── Levels/                     # бои: level1..5.yaml + m1_b*/m1_boss.yaml (НЕ через MGCB)
+├── Dialogues/                  # брифинги/диалоги (speaker/text/portrait)
+└── Missions/                   # кампания: campaign.yaml + m<id>.yaml (шаги миссии)
 ```
 
 > Важная тонкость: пути в `.mgcb` отсчитываются от папки самого `.mgcb`, поэтому
@@ -575,9 +583,12 @@ GREEN, RED, BOSS }`). Прежних подклассов (`EnemySmallBlue/Green
 [Utils/Level.cs](RiotGalaxy.Core/Utils/Level.cs) грузит `Content/Levels/level{N}.yaml`
 и разворачивает события в таймлайн спавна. [LevelDirector](RiotGalaxy.Core/Managers/LevelDirector.cs)
 спавнит врагов по `Level.Tick(dt)`, ведёт `EnemiesRemaining`/`CurrentLevel` (а `GameManager`
-отдаёт их делегирующими свойствами). Когда все враги уровня заспавнены и убиты — переход на
-следующий (`NextLevel` экран) или, если уровней больше нет, — `Victory`. Игрок и счёт
-переносятся между уровнями. Поражение (`GameOver`) и победа показывают очки и **рекорд** и
+отдаёт их делегирующими свойствами). Когда все враги боя заспавнены и убиты — `OnBattleCleared`
+(окно сбора звёзд → бонус/банк) спрашивает [MissionDirector](RiotGalaxy.Core/Managers/MissionDirector.cs)
+следующий шаг: брифинг / следующий бой / босс / магазин (`Content/Missions/<id>.yaml`). Бои внутри
+миссии идут без экрана-проставки (`EnterBattle` грузит бой по имени и остаётся в `Playing`),
+магазин — в конце миссии; когда миссии в `campaign.yaml` закончились — `Victory`. Игрок и счёт
+переносятся между боями. Поражение (`GameOver`) и победа показывают очки и **рекорд** и
 предлагают рестарт. Рекорд/прогресс/валюта/апгрейды сохраняются в профиле ([Utils/SaveData.cs](RiotGalaxy.Core/Utils/SaveData.cs),
 `save.yaml`): грузится при старте (`GameManager.LoadContent`), пишется в конце партии
 (`ChangeGameState`) и при загрузке уровня (`LevelDirector.Load`). См. §16.

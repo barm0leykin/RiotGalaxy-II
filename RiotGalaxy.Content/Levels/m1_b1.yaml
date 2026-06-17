@@ -1,0 +1,7 @@
+# Пивоварск — забой A (мягкий вход).
+description: "Пивоварск — забой A"
+spawnInterval: 1.0
+events:
+  - { enemy: scout, count: 4 }
+  - { wait: 1 }
+  - { enemy: green, count: 3 }

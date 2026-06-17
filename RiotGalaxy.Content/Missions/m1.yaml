@@ -1,0 +1,17 @@
+# Миссия 1 — «Пивоварск» (Акт I). Миссия = цепочка коротких боёв + брифинги + босс.
+# Шаги выполняются по порядку (см. MissionDirector):
+#   { briefing: <Dialogues/имя> } — диалог с портретами
+#   { battle:   <Levels/имя> }    — короткий бой
+#   { boss:     <Levels/имя> }    — бой-босс
+#   { shop: true }                — магазин между боями/миссиями
+id: m1
+title: "Пивоварск"
+steps:
+  - { briefing: m1_intro }
+  - { battle:   m1_b1 }
+  - { battle:   m1_b2 }
+  - { briefing: m1_mid }
+  - { battle:   m1_b3 }
+  - { boss:     m1_boss }
+  - { briefing: m1_outro }
+  - { shop: true }

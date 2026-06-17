@@ -83,19 +83,23 @@ namespace RiotGalaxy.Core.Screens
             base.Update(gameTime);
             var rows = BuildRows();
             int n = rows.Count;
-            if (n == 0) { if (KeyPressed(Keys.Escape)) Back(); return; }
+            int back = n; // «Назад» — отдельный навигируемый пункт сразу после строк
 
-            // Наведение мышью на видимую строку.
+            // Наведение мышью: на видимую строку или на «Назад».
             for (int vis = 0; vis < Visible && _scroll + vis < n; vis++)
                 if (CenteredItemRect(rows[_scroll + vis].Label, RowY(vis), RowScale).Contains(MousePoint))
                     _selected = _scroll + vis;
+            if (BackRect.Contains(MousePoint)) _selected = back;
 
-            if (KeyPressed(Keys.Down) || KeyPressed(Keys.S)) _selected = Math.Min(n - 1, _selected + 1);
+            if (KeyPressed(Keys.Down) || KeyPressed(Keys.S)) _selected = Math.Min(back, _selected + 1);
             if (KeyPressed(Keys.Up) || KeyPressed(Keys.W)) _selected = Math.Max(0, _selected - 1);
 
-            // Держим выбранную строку в окне прокрутки.
-            if (_selected < _scroll) _scroll = _selected;
-            if (_selected >= _scroll + Visible) _scroll = _selected - Visible + 1;
+            // Держим выбранную строку в окне прокрутки (для «Назад» прокрутку не трогаем).
+            if (_selected < n)
+            {
+                if (_selected < _scroll) _scroll = _selected;
+                if (_selected >= _scroll + Visible) _scroll = _selected - Visible + 1;
+            }
 
             if (MouseClicked())
             {
@@ -105,7 +109,12 @@ namespace RiotGalaxy.Core.Screens
                     { TryBuy(rows, _scroll + vis); return; }
             }
 
-            if (KeyPressed(Keys.Enter) || KeyPressed(Keys.Space)) TryBuy(rows, _selected);
+            // Enter/Space: «Назад» — выход, иначе покупка выбранной строки.
+            if (KeyPressed(Keys.Enter) || KeyPressed(Keys.Space))
+            {
+                if (_selected == back) { Back(); return; }
+                TryBuy(rows, _selected);
+            }
             if (KeyPressed(Keys.Escape)) Back();
         }
 
@@ -147,7 +156,8 @@ namespace RiotGalaxy.Core.Screens
             if (_scroll + Visible < rows.Count)
                 DrawCentered(spriteBatch, "v", ScreenH * 0.83f, Color.Gray, HintScale);
 
-            DrawMenuItem(spriteBatch, Loc.T("shop.back"), BackY, BackRect.Contains(MousePoint));
+            bool backSelected = _selected == rows.Count || BackRect.Contains(MousePoint);
+            DrawMenuItem(spriteBatch, Loc.T("shop.back"), BackY, backSelected);
             DrawCentered(spriteBatch, Loc.T("shop.hint"), ScreenH * 0.95f, Color.Gray, HintScale);
         }
     }

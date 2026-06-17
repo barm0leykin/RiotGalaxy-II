@@ -1,0 +1,9 @@
+# Пивоварск — забой B (плотнее, появляются синие).
+description: "Пивоварск — забой B"
+spawnInterval: 0.9
+events:
+  - { enemy: green, count: 4 }
+  - { interval: 0.7 }
+  - { enemy: scout, count: 4 }
+  - { wait: 1 }
+  - { enemy: blue, count: 2 }

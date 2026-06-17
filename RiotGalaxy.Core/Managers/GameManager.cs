@@ -40,10 +40,15 @@ namespace RiotGalaxy.Core.Managers
         // Диалог (брифинг/сюжет) и состояние, в которое перейти после него.
         private Utils.Dialogue _dialogue;
         private GameState _dialogueNext;
+        private System.Action _dialogueThen; // если задано — вызвать вместо перехода в _dialogueNext
         public Utils.Dialogue CurrentDialogue => _dialogue;
 
-        // Оркестратор уровней (World/Hive, спавн, прогрессия, счётчики врагов).
+        // Оркестратор уровней (World/Hive, спавн, прогрессия, счётчики врагов) — гоняет один бой.
         private readonly LevelDirector _levels = new LevelDirector();
+
+        // Оркестратор кампании: миссия = цепочка брифингов/боёв/босса/магазина.
+        private readonly MissionDirector _mission = new MissionDirector();
+        private System.Action _shopThen;     // продолжение после закрытия магазина (поток миссии)
 
         private int _lastScore; // итоговый счёт для экранов GameOver/Victory
         public int LastScore => _lastScore;
@@ -396,12 +401,9 @@ namespace RiotGalaxy.Core.Managers
                     Screens.Change(new Screens.NextLevelScreen());
                     break;
                 case GameState.Playing:
-                    // Новая партия — только если пришли из меню/конца игры.
-                    // Из паузы — продолжение; из NextLevel — уровень уже загружен.
-                    if (oldState != GameState.Paused && oldState != GameState.NextLevel)
-                        InitializeGameplay();
-                    else if (oldState == GameState.NextLevel)
-                        Player?.ApplyUpgrades(); // покупки из магазина между уровнями вступают в силу
+                    // Бой загружается явно через поток миссии (EnterBattle); здесь только показываем
+                    // игровой экран. Сюда приходим из паузы (продолжение), из брифинга/магазина
+                    // (бой уже загружен EnterBattle) — переинициализация партии тут не нужна.
                     Screens.Change(new Screens.GameplayScreen());
                     break;
                 case GameState.Paused:
@@ -436,14 +438,34 @@ namespace RiotGalaxy.Core.Managers
             }
             _dialogue = d;
             _dialogueNext = next;
+            _dialogueThen = null;
             ChangeGameState(GameState.Dialogue);
         }
 
-        /// <summary>Завершить диалог и перейти в заранее заданное состояние.</summary>
+        /// <summary>Показать диалог; по завершении вызвать продолжение (поток миссии). Нет диалога — сразу продолжение.</summary>
+        public void PlayDialogueThen(string name, System.Action then)
+        {
+            var d = Utils.Dialogue.Load(name);
+            if (d == null) { then?.Invoke(); return; }
+            _dialogue = d;
+            _dialogueThen = then;
+            ChangeGameState(GameState.Dialogue);
+        }
+
+        /// <summary>Завершить диалог: либо продолжение миссии, либо переход в заранее заданное состояние.</summary>
         public void EndDialogue()
         {
             _dialogue = null;
-            ChangeGameState(_dialogueNext);
+            if (_dialogueThen != null)
+            {
+                var then = _dialogueThen;
+                _dialogueThen = null;
+                then();
+            }
+            else
+            {
+                ChangeGameState(_dialogueNext);
+            }
         }
 
         // Куда вернуться из магазина (меню или экран между уровнями).
@@ -453,11 +475,31 @@ namespace RiotGalaxy.Core.Managers
         public void OpenShop(GameState returnTo)
         {
             _shopReturn = returnTo;
+            _shopThen = null;
             ChangeGameState(GameState.Shop);
         }
 
-        /// <summary>Закрыть магазин — вернуться туда, откуда открыли.</summary>
-        public void CloseShop() => ChangeGameState(_shopReturn);
+        /// <summary>Открыть магазин (шаг миссии); по выходу вызвать продолжение.</summary>
+        public void OpenShopThen(System.Action then)
+        {
+            _shopThen = then;
+            ChangeGameState(GameState.Shop);
+        }
+
+        /// <summary>Закрыть магазин — продолжение миссии или возврат туда, откуда открыли.</summary>
+        public void CloseShop()
+        {
+            if (_shopThen != null)
+            {
+                var then = _shopThen;
+                _shopThen = null;
+                then();
+            }
+            else
+            {
+                ChangeGameState(_shopReturn);
+            }
+        }
 
         public void UpdateGameplay(GameTime gameTime)
         {
@@ -487,12 +529,12 @@ namespace RiotGalaxy.Core.Managers
             MessageLog.Update(deltaTime);
             ProcessGameObjects(gameTime);
 
-            // Уровень зачищен → даём несколько секунд на сбор звёзд, затем переходим.
+            // Бой зачищен → даём несколько секунд на сбор звёзд, затем следующий шаг миссии.
             if (_levelClearTimer > 0f)
             {
                 _levelClearTimer -= deltaTime;
                 if (_levelClearTimer <= 0f || !GameObjects.Exists(o => o is BonusStar))
-                    AdvanceLevel();
+                    OnBattleCleared();
             }
             else if (_levels.LevelComplete)
             {
@@ -570,91 +612,135 @@ namespace RiotGalaxy.Core.Managers
 
         #region Вспомогательные методы
 
-        private void InitializeGameplay()
+        /// <summary>
+        /// Начать кампанию с начала: создать игрока, сбросить кампанию и запустить первый шаг
+        /// миссии (брифинг/бой). Вызывается из меню и при рестарте (GameOver/Victory).
+        /// </summary>
+        public void StartCampaign()
         {
             try
             {
-                // Новая игра — с первого уровня
-                _levels.ResetToFirst();
-                _levelClearTimer = 0f;
-
-                // Инициализация игрового процесса
-                GameObjects.Clear();
-                
-                // Создаем игрока (аналог GamePlay.cs строка 49-58)
-                Player = new PlayerShip(new Vector2(ScreenWidth / 2, ScreenHeight - 100));
-                Player.SetGraphicsDevice(GraphicsDevice);
-                Player.LoadContent(_content); // Загружаем реальный спрайт корабля "Images/ship"
-                Player.Health = Player.MaxHealth; // Сбрасываем здоровье игрока до максимума
-                Player.Score = 0;
-                
-                // Устанавливаем границы движения для компонента движения игрока
-                if (Player.Movement is PlayerMovementComponent playerMovement)
-                {
-                    playerMovement.SetBounds(0, ScreenWidth, 0, ScreenHeight);
-                }
-                
-                // Подписываемся на события игрока
-                SubscribeToPlayerEvents();
-                
-                GameObjects.Add(Player);
-
-                // Загружаем первый уровень (враги спавнятся по таймлайну в UpdateGameplay)
-                _levels.Load(_levels.CurrentLevel, ScreenWidth, ScreenHeight);
-
-                // Панель тестовых кнопок + кнопки активных навыков (тач)
-                CreateDebugButtons();
-                CreateSkillButtons();
-
+                SetupNewPlayer();
+                _mission.StartCampaign();
+                RunNextStep();
             }
             catch (Exception ex)
             {
-Console.WriteLine($"Error initializing gameplay: {ex.Message}");
+                Console.WriteLine($"Error starting campaign: {ex.Message}");
             }
         }
 
-        /// <summary>Удалить все объекты кроме игрока (между уровнями).</summary>
+        /// <summary>Создать свежего игрока и очистить сцену (бой ещё не загружается).</summary>
+        private void SetupNewPlayer()
+        {
+            _levelClearTimer = 0f;
+            GameObjects.Clear();
+
+            Player = new PlayerShip(new Vector2(ScreenWidth / 2, ScreenHeight - 100));
+            Player.SetGraphicsDevice(GraphicsDevice);
+            Player.LoadContent(_content);            // спрайт корабля "Images/ship"
+            Player.Health = Player.MaxHealth;
+            Player.Score = 0;
+            Player.Currency = 0;
+
+            if (Player.Movement is PlayerMovementComponent playerMovement)
+                playerMovement.SetBounds(0, ScreenWidth, 0, ScreenHeight);
+
+            SubscribeToPlayerEvents();
+            GameObjects.Add(Player);
+
+            CreateDebugButtons();
+            CreateSkillButtons();
+        }
+
+        /// <summary>
+        /// Выполнить следующий шаг миссии: брифинг → диалог, бой/босс → загрузить и играть,
+        /// магазин → открыть. Конец кампании → Victory.
+        /// </summary>
+        private void RunNextStep()
+        {
+            var step = _mission.Advance(out _);
+            if (step == null)
+            {
+                FinishCampaign(); // кампания пройдена
+                return;
+            }
+
+            switch (step.Kind)
+            {
+                case StepKind.Briefing:
+                    PlayDialogueThen(step.Arg, RunNextStep); // после брифинга — следующий шаг
+                    break;
+                case StepKind.Battle:
+                case StepKind.Boss:
+                    EnterBattle(step.Arg);
+                    break;
+                case StepKind.Shop:
+                    BankCurrency();                 // зафиксировать заработок перед тратой
+                    OpenShopThen(RunNextStep);
+                    break;
+            }
+        }
+
+        /// <summary>Загрузить и начать бой миссии (общий путь для battle/boss-шагов).</summary>
+        private void EnterBattle(string battleName)
+        {
+            ClearNonPlayerObjects();
+            Player?.ApplyUpgrades();                 // покупки из магазина вступают в силу
+            _levels.LoadBattle(battleName, ScreenWidth, ScreenHeight);
+            _levelClearTimer = 0f;
+            if (CurrentGameState != GameState.Playing)
+                ChangeGameState(GameState.Playing);  // из брифинга/магазина — показать игровой экран
+        }
+
+        /// <summary>Кампания пройдена: зафиксировать счёт/рекорд и кредиты, показать экран победы.</summary>
+        private void FinishCampaign()
+        {
+            if (Player != null)
+                _lastScore = Player.Score;
+            BankCurrency();                        // кредиты уже забанкованы в shop-шаге; на всякий случай
+            Utils.SaveData.ReportScore(_lastScore);
+            Utils.SaveData.Save();
+            ChangeGameState(GameState.Victory);
+        }
+
+        /// <summary>Бой зачищен: начислить бонус, забанковать кредиты, перейти к следующему шагу.</summary>
+        private void OnBattleCleared()
+        {
+            _levelClearTimer = 0f;
+            if (Player != null)
+            {
+                var bc = Utils.BonusConfig.Current;
+                int clearBonus = bc.LevelClearBonusBase + bc.LevelClearBonusPerLevel * _levels.CurrentBattle;
+                Player.Currency += clearBonus;
+                MessageLog.Add($"Зона зачищена: +{clearBonus}", Color.Gold);
+            }
+            BankCurrency();
+            RunNextStep();
+        }
+
+        /// <summary>Перевести заработанные кредиты игрока в профиль (для магазина/сейва).</summary>
+        private void BankCurrency()
+        {
+            if (Player == null) return;
+            Utils.SaveData.Currency += Player.Currency;
+            Player.Currency = 0;
+            Utils.SaveData.Save();
+        }
+
+        /// <summary>Удалить все объекты кроме игрока (между боями).</summary>
         private void ClearNonPlayerObjects()
         {
             GameObjects.RemoveAll(o => !(o is PlayerShip));
         }
 
-        /// <summary>Перейти к следующему уровню или к финальной победе.</summary>
-        private void AdvanceLevel()
-        {
-            _levelClearTimer = 0f; // окно сбора закрыто, на следующем уровне начнём заново
-            // Бонус за прохождение уровня + заработанную валюту банкуем в профиль (можно потратить
-            // в магазине между уровнями). Сбрасываем, чтобы в конце партии не банкнуть повторно.
-            if (Player != null)
-            {
-                var bc = Utils.BonusConfig.Current;
-                int clearBonus = bc.LevelClearBonusBase + bc.LevelClearBonusPerLevel * _levels.CurrentLevel;
-                Player.Currency += clearBonus;
-                MessageLog.Add($"Уровень пройден: +{clearBonus}", Color.Gold);
-
-                Utils.SaveData.Currency += Player.Currency;
-                Player.Currency = 0;
-                Utils.SaveData.Save();
-            }
-
-            if (!_levels.HasNextLevel)
-            {
-                ChangeGameState(GameState.Victory); // все уровни пройдены
-            }
-            else
-            {
-                _levels.GoToNextLevel(ScreenWidth, ScreenHeight); // подготовить следующий уровень
-                ChangeGameState(GameState.NextLevel);             // показать экран между уровнями
-            }
-        }
-
         // LoadLevel/SpawnEnemy/ParseRouteEnd вынесены в LevelDirector.
 
-        /// <summary>Тестовый переход на следующий уровень (кнопка/команда).</summary>
+        /// <summary>Тестовый переход на следующий бой (кнопка/команда): засчитать текущий бой пройденным.</summary>
         public void DebugNextLevel()
         {
             if (CurrentGameState == GameState.Playing)
-                AdvanceLevel();
+                OnBattleCleared();
         }
 
         /// <summary>

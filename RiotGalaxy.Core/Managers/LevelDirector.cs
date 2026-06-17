@@ -21,6 +21,7 @@ namespace RiotGalaxy.Core.Managers
 
         public int CurrentLevel { get; private set; } = 1;
         public int TotalLevels { get; private set; } = 1;
+        public int CurrentBattle { get; private set; } = 0; // счётчик боёв в текущем забеге (для лога/HUD)
         public string CurrentLevelDescription => _level?.Description ?? "";
 
         public int EnemiesKilled { get; private set; }
@@ -66,19 +67,40 @@ namespace RiotGalaxy.Core.Managers
                 EnemiesRemaining = 0;
                 return;
             }
-            EnemiesKilled = 0;
-            EnemiesRemaining = _level.TotalEnemies;
-            Utils.Log.Debug($"Level {CurrentLevel} loaded: \"{_level.Description}\", enemies={_level.TotalEnemies}");
-
-            // Прогресс кампании (самый дальний уровень) — в профиль.
             Utils.SaveData.ReportLevelReached(CurrentLevel);
             Utils.SaveData.Save();
+            AfterLoad(screenW, screenH);
+        }
 
-            // Мир и улей (формации) — пересоздаём на каждый уровень (сброс занятых ячеек)
+        /// <summary>
+        /// Загрузить один бой миссии по имени файла (Content/Levels/&lt;name&gt;.yaml).
+        /// Не трогает нумерацию кампании (прогресс миссий ведёт MissionDirector).
+        /// </summary>
+        public void LoadBattle(string battleName, int screenW, int screenH)
+        {
+            CurrentBattle++;
+            _level = new Utils.Level();
+            if (!_level.LoadFile(battleName))
+            {
+                Console.WriteLine($"=== Battle '{battleName}' not loaded ===");
+                EnemiesRemaining = 0;
+                return;
+            }
+            AfterLoad(screenW, screenH);
+        }
+
+        /// <summary>Общая часть загрузки боя: счётчики врагов + пересоздание мира/улья.</summary>
+        private void AfterLoad(int screenW, int screenH)
+        {
+            EnemiesKilled = 0;
+            EnemiesRemaining = _level.TotalEnemies;
+            Utils.Log.Debug($"Battle loaded: \"{_level.Description}\", enemies={_level.TotalEnemies}");
+
+            // Мир и улей (формации) — пересоздаём на каждый бой (сброс занятых ячеек)
             _world = new World(screenW, screenH);
             _hive = new Hive(_world, 4, 1, 8, 2); // 8×2 у верхней кромки
 
-            // Вылеты из улья (Galaga) — если включены в описании уровня
+            // Вылеты из улья (Galaga) — если включены в описании боя
             if (_level.Sortie)
                 _hive.EnableSortie(_level.SortieInterval, _level.SortieCount);
         }

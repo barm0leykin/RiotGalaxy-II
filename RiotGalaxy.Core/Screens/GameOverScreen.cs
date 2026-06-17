@@ -15,7 +15,7 @@ namespace RiotGalaxy.Core.Screens
             base.Update(gameTime);
             // Тап/Enter — рестарт (на телефоне нет Space/Esc).
             if (MouseClicked() || KeyPressed(Keys.Enter))
-                GameManager.Instance.ChangeGameState(GameManager.GameState.Playing);
+                GameManager.Instance.StartCampaign(); // рестарт кампании с миссии 1
         }
 
         public override void Draw(SpriteBatch spriteBatch)

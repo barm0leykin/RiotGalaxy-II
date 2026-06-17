@@ -1,0 +1,8 @@
+# Итог миссии 1: имя за дефицитом — наместник Зональный. Зацепка к следующей миссии.
+lines:
+  - { speaker: "Рейдер", text: "Бур замолчал. Но за дефицитом стоит имя — наместник Зональный.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "Наконец-то злодей с лицом.", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Не обольщайся. У кошельков не бывает лица — только хозяин.", portrait: "Images/portrait_raider" }
+  - { speaker: "Кардиган", text: "Блестящая операция! Медаль за отвагу получает… Агдам ДоДыров!", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Агдам", text: "Я был рядом. Морально. Это главное.", portrait: "Images/portrait_agdam" }
+  - { speaker: "Люк", text: "День пятый без дома. Надеюсь, соседка кормит Ниблера…", portrait: "Images/portrait_luke" }

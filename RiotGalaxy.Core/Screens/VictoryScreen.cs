@@ -14,7 +14,7 @@ namespace RiotGalaxy.Core.Screens
         {
             base.Update(gameTime);
             if (MouseClicked() || KeyPressed(Keys.Enter))
-                GameManager.Instance.ChangeGameState(GameManager.GameState.Playing);
+                GameManager.Instance.StartCampaign(); // сыграть кампанию заново
         }
 
         public override void Draw(SpriteBatch spriteBatch)

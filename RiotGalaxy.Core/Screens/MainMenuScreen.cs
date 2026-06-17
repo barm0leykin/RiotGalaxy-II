@@ -66,8 +66,8 @@ namespace RiotGalaxy.Core.Screens
             switch (index)
             {
                 case 0:
-                    // Интро-брифинг (если есть), затем бой. Нет файла — сразу в бой.
-                    GameManager.Instance.PlayDialogue("intro", GameManager.GameState.Playing);
+                    // Начать кампанию: миссия 1 ведёт через брифинги/бои (см. MissionDirector).
+                    GameManager.Instance.StartCampaign();
                     break;
                 case 1:
                     GameManager.Instance.OpenShop(GameManager.GameState.MainMenu);

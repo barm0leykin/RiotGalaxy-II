@@ -64,6 +64,9 @@ namespace RiotGalaxy.Core.Utils
 
         public static string LevelAsset(int n) => $"Content/Levels/level{n}.yaml";
 
+        /// <summary>Путь к файлу боя по имени (для миссий: battle/boss-шаги ссылаются по имени).</summary>
+        public static string BattleAsset(string name) => $"Content/Levels/{name}.yaml";
+
         /// <summary>Сколько уровней доступно (по наличию файлов level1.yaml, level2.yaml, ...).</summary>
         public static int CountLevels()
         {
@@ -76,11 +79,22 @@ namespace RiotGalaxy.Core.Utils
         public bool Load(int number)
         {
             Number = number;
+            return LoadData(Yaml.LoadAsset<LevelYaml>(LevelAsset(number)));
+        }
+
+        /// <summary>Загрузить бой по имени файла (Content/Levels/&lt;name&gt;.yaml) — для миссий.</summary>
+        public bool LoadFile(string name)
+        {
+            Number = 0;
+            return LoadData(Yaml.LoadAsset<LevelYaml>(BattleAsset(name)));
+        }
+
+        private bool LoadData(LevelYaml data)
+        {
             _active.Clear();
             _main = null;
             TotalEnemies = 0;
 
-            var data = Yaml.LoadAsset<LevelYaml>(LevelAsset(number));
             if (data == null)
                 return false;
 

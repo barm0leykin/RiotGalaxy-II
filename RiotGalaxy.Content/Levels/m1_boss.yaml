@@ -1,0 +1,7 @@
+# Пивоварск — босс: буровая платформа «ХмельМаш».
+description: "Платформа «ХмельМаш»"
+spawnInterval: 1.2
+events:
+  - { enemy: green, count: 4 }
+  - { wait: 2 }
+  - { enemy: boss, count: 1 }

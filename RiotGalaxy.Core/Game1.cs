@@ -110,10 +110,10 @@ namespace RiotGalaxy.Core
                     break;
                     
                 case GameManager.GameState.GameOver:
-                    // В экране Game Over - Пробел для перезапуска, ESC для выхода в меню
+                    // В экране Game Over - Пробел для перезапуска кампании, ESC для выхода в меню
                     if (keyboardState.IsKeyDown(Keys.Space) && !_previousKeyboardState.IsKeyDown(Keys.Space))
                     {
-                        _gameManager.ChangeGameState(GameManager.GameState.Playing);
+                        _gameManager.StartCampaign();
                     }
                     else if (keyboardState.IsKeyDown(Keys.Escape) && !_previousKeyboardState.IsKeyDown(Keys.Escape))
                     {
@@ -122,10 +122,10 @@ namespace RiotGalaxy.Core
                     break;
 
                 case GameManager.GameState.Victory:
-                    // На экране победы - Space перезапуск, Esc в меню
+                    // На экране победы - Space перезапуск кампании, Esc в меню
                     if (keyboardState.IsKeyDown(Keys.Space) && !_previousKeyboardState.IsKeyDown(Keys.Space))
                     {
-                        _gameManager.ChangeGameState(GameManager.GameState.Playing);
+                        _gameManager.StartCampaign();
                     }
                     else if (keyboardState.IsKeyDown(Keys.Escape) && !_previousKeyboardState.IsKeyDown(Keys.Escape))
                     {

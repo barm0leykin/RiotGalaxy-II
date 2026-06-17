@@ -1,0 +1,6 @@
+# Сюжетная вставка посреди миссии 1: первая улика (логотип ZonalLogistic).
+lines:
+  - { speaker: "Бригадир Гаечка", text: "Полгода всухую! Лучше вакуум, чем такая жизнь!", portrait: "Images/portrait_gaechka" }
+  - { speaker: "Люк", text: "В вакууме пиво вскипает. Поверь, проверял.", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Смотри на ящики, пилот. Логотип «ZonalLogistic». Везде один и тот же.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "Значит, пиво не потерялось. Его уводят организованно.", portrait: "Images/portrait_luke" }
