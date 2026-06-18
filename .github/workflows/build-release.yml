@@ -121,10 +121,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Скачать артефакты сборки
+      # Качаем по имени отдельными шагами — надёжнее, чем режим "скачать все сразу"
+      # (у download-artifact@v4 в download-all бывают флапы "failed after N retries").
+      - name: Скачать desktop linux-x64
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          name: desktop-linux-x64
+          path: artifacts/linux
+      - name: Скачать desktop win-x64
+        uses: actions/download-artifact@v4
+        with:
+          name: desktop-win-x64
+          path: artifacts/win
+      - name: Скачать android APK
+        uses: actions/download-artifact@v4
+        with:
+          name: android-apk
+          path: artifacts/android
 
       - name: Опубликовать релиз
         env:
