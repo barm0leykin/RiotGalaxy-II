@@ -1,0 +1,7 @@
+# Гефест — ангар 1. ВВОДИМ ФОРМАЦИИ: враги встают строем в улье (formation: true).
+description: "Гефест — ангар 1"
+spawnInterval: 0.9
+events:
+  - { enemy: green, count: 8, formation: true }   # первая формация — строй у верхней кромки
+  - { wait: 1 }
+  - { enemy: scout, count: 4 }

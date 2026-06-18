@@ -1,0 +1,8 @@
+# Гефест — ангар 2. Формация плотнее + свободные красные снизу давят.
+description: "Гефест — ангар 2"
+spawnInterval: 0.8
+events:
+  - { enemy: green, count: 6, formation: true }
+  - { enemy: blue, count: 4, formation: true }
+  - { wait: 1 }
+  - { enemy: red, count: 3 }

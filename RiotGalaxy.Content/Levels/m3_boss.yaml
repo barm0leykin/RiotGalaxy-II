@@ -1,0 +1,10 @@
+# Панацея — босс: мед-дрон «Доктор Хаус» (прикрытие из пикирующей формации + босс).
+description: "Мед-дрон «Доктор Хаус»"
+spawnInterval: 0.9
+sortie: true
+sortieInterval: 3
+sortieCount: 1
+events:
+  - { enemy: blue, count: 6, formation: true }
+  - { wait: 2 }
+  - { enemy: boss, count: 1 }

@@ -1,0 +1,11 @@
+# Зональск — пляжи. КУЛЬМИНАЦИЯ: заходы по маршрутам + пикирующий улей одновременно.
+description: "Зональск — пляжи"
+spawnInterval: 0.35
+sortie: true
+sortieInterval: 2.5
+sortieCount: 2
+events:
+  - parallel:
+      - - { enemy: green, count: 5, route: zmeyka1-left, after: scatter }
+      - - { enemy: green, count: 5, route: zmeyka1-right, after: scatter }
+  - { enemy: blue, count: 8, formation: true }

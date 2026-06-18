@@ -1,0 +1,11 @@
+# Панацея — реанимация. Вылеты чаще + свободные красные.
+description: "Панацея — реанимация"
+spawnInterval: 0.6
+sortie: true
+sortieInterval: 3.5
+sortieCount: 1
+events:
+  - { enemy: blue, count: 8, formation: true }
+  - { enemy: green, count: 4, formation: true }
+  - { wait: 2 }
+  - { enemy: red, count: 3 }

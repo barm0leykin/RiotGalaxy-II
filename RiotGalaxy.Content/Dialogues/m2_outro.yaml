@@ -1,0 +1,6 @@
+# Итог миссии 2: премиальный фонд увели наверх.
+lines:
+  - { speaker: "Брандмайор Огнев", text: "Нет пожаров — нет премии! А премию… кто-то уже потушил.", portrait: "Images/portrait_ognev" }
+  - { speaker: "Люк", text: "Деньги испарились быстрее, чем пена из вашего насоса.", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Фонд ушёл на «представительские расходы наместника». Сходится, пилот.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "Каждый бунт ведёт к одному кошельку. Скоро постучимся к нему лично.", portrait: "Images/portrait_luke" }

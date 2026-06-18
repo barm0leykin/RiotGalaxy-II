@@ -1,0 +1,11 @@
+# Пятёрочка — касса №1. Маршруты + пикирующий улей красных (sortie).
+description: "Пятёрочка — касса №1"
+spawnInterval: 0.4
+sortie: true
+sortieInterval: 3
+sortieCount: 2
+events:
+  - parallel:
+      - - { enemy: green, count: 4, route: zmeyka1-left, after: scatter }
+      - - { enemy: green, count: 4, route: zmeyka1-right, after: scatter }
+  - { enemy: red, count: 6, formation: true }

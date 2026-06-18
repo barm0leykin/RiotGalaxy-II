@@ -1,0 +1,9 @@
+# Панацея — операционная. Вылеты по двое, плотный улей красных и синих.
+description: "Панацея — операционная"
+spawnInterval: 0.6
+sortie: true
+sortieInterval: 3
+sortieCount: 2
+events:
+  - { enemy: red, count: 6, formation: true }
+  - { enemy: blue, count: 6, formation: true }

@@ -1,0 +1,11 @@
+# Зональск — казино. Двойной улей (красные+синие) с частыми вылетами + свободные красные.
+description: "Зональск — казино"
+spawnInterval: 0.35
+sortie: true
+sortieInterval: 2.2
+sortieCount: 2
+events:
+  - { enemy: red, count: 8, formation: true }
+  - { enemy: blue, count: 6, formation: true }
+  - { wait: 2 }
+  - { enemy: red, count: 4 }

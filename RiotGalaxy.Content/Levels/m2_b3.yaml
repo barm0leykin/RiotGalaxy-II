@@ -1,0 +1,9 @@
+# Гефест — главный пост. Большая формация синих + волна красных/зелёных.
+description: "Гефест — главный пост"
+spawnInterval: 0.7
+events:
+  - { enemy: blue, count: 8, formation: true }
+  - { wait: 1 }
+  - { interval: 0.8 }
+  - { enemy: red, count: 4 }
+  - { enemy: green, count: 4 }

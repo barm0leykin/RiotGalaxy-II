@@ -1,0 +1,11 @@
+# Миссия 2 — «Гефест» (Акт I). Фича: формации (строй в улье).
+id: m2
+title: "Гефест"
+steps:
+  - { briefing: m2_intro }
+  - { battle:   m2_b1 }
+  - { battle:   m2_b2 }
+  - { battle:   m2_b3 }
+  - { boss:     m2_boss }
+  - { briefing: m2_outro }
+  - { shop: true }

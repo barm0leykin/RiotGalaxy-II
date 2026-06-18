@@ -1,0 +1,6 @@
+# Итог миссии 3: дрон обезврежен, цепочка ведёт к курорту Зональска.
+lines:
+  - { speaker: "Рейдер", text: "Дрон «Доктор Хаус» отключён. Врачи получат настоящие бинты.", portrait: "Images/portrait_raider" }
+  - { speaker: "Главврач Сердюк", text: "И премию? …Ладно, ладно, хотя бы бинты.", portrait: "Images/portrait_serdyuk" }
+  - { speaker: "Люк", text: "Куда теперь, командир?", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Туда, где всё это оседает. Курорт Зональска. Но сперва — его охрана.", portrait: "Images/portrait_raider" }

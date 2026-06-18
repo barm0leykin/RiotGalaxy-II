@@ -1,0 +1,7 @@
+# Гефест — босс: автонасос «Брандспойт-9000» (формация прикрытия + босс).
+description: "Автонасос «Брандспойт-9000»"
+spawnInterval: 1.0
+events:
+  - { enemy: red, count: 6, formation: true }
+  - { wait: 2 }
+  - { enemy: boss, count: 1 }

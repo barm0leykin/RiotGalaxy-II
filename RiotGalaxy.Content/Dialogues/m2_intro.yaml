@@ -1,0 +1,7 @@
+# Брифинг перед миссией 2 «Гефест» (пожарные).
+lines:
+  - { speaker: "Кардиган", text: "Пилот! Пожарные станции Гефест взбунтовались. Чрезвычайная ситуация!", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Люк", text: "Что горит на этот раз?", portrait: "Images/portrait_luke" }
+  - { speaker: "Кардиган", text: "В том и дело — ничего! План по тушению есть, а пожаров нет. Они в ярости.", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Рейдер", text: "И снова урезанная надбавка. И снова — фирма-прокладка. Тот же почерк.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "Дайте угадаю: «ZonalLogistic». Опять.", portrait: "Images/portrait_luke" }

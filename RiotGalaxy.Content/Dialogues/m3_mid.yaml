@@ -1,0 +1,7 @@
+# Середина миссии 3: прямые документы — имя наместника подтверждается.
+lines:
+  - { speaker: "Главврач Сердюк", text: "Нам прислали один бинт. ОДИН! На кольцо в три миллиона коек!", portrait: "Images/portrait_serdyuk" }
+  - { speaker: "ИИ-Подорожник", text: "Приложите подорожник. Если пациент умер — приложите ещё раз.", portrait: "Images/portrait_podorozhnik" }
+  - { speaker: "Люк", text: "Гениальная медицина. А где деньги, доктор?", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Вот платёжки. Получатель — личный счёт наместника Зонального. Теперь у нас есть доказательства.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "Значит, едем к нему. Надеюсь, у него есть бинты.", portrait: "Images/portrait_luke" }

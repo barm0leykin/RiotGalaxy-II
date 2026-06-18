@@ -22,9 +22,12 @@ weapons:
     baseCost: 200
     costGrowth: 1.6
     levels:
-      - { burst: 1, burstInterval: 0.10, reloadSpeed: 0.14, damage: 3, shellSpeed: 360 }
-      - { burst: 1, burstInterval: 0.10, reloadSpeed: 0.12, damage: 4, shellSpeed: 380 }
-      - { burst: 2, burstInterval: 0.08, reloadSpeed: 0.18, damage: 4, shellSpeed: 400 }
+      - { burst: 1, burstInterval: 0.10, reloadSpeed: 0.30, damage: 3, shellSpeed: 360 }
+      - { burst: 1, burstInterval: 0.10, reloadSpeed: 0.25, damage: 3, shellSpeed: 360 }
+      - { burst: 1, burstInterval: 0.10, reloadSpeed: 0.20, damage: 3, shellSpeed: 360 }
+      # - { burst: 1, burstInterval: 0.10, reloadSpeed: 0.14, damage: 3, shellSpeed: 360 }
+      # - { burst: 1, burstInterval: 0.10, reloadSpeed: 0.12, damage: 4, shellSpeed: 380 }
+      # - { burst: 2, burstInterval: 0.08, reloadSpeed: 0.18, damage: 4, shellSpeed: 400 }
 
   - id: cannon
     name: "Пушка"

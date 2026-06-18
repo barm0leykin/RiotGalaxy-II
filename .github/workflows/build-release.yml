@@ -1,0 +1,153 @@
+name: Build & Release
+
+# Сборка под все платформы по коммиту + выкладка в GitHub Releases.
+#  - push в master      → катящийся пререлиз "nightly" (обновляется каждым коммитом)
+#  - push тега v*       → стабильный релиз с этим тегом
+#  - pull_request       → только сборка (без релиза), для проверки
+on:
+  push:
+    branches: [master]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write          # нужно для создания релизов и заливки артефактов
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ─────────────────────────────────────────────────────────────
+  # Десктоп: self-contained сборка под Linux и Windows.
+  # DesktopGL таргетит net6.0, а локальный tool mgcb требует рантайм .NET 6 —
+  # поэтому ставим оба SDK (6 и 9). MGCB рендерит spritefont → нужны шрифты DejaVu.
+  # ─────────────────────────────────────────────────────────────
+  desktop:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        rid: [linux-x64, win-x64]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET (6 + 9)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            6.0.x
+            9.0.x
+
+      - name: Зависимости MGCB (шрифты/freetype для spritefont)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            fontconfig fonts-dejavu-core libfreetype6
+          sudo fc-cache -f
+
+      - name: Restore tools (mgcb)
+        run: dotnet tool restore
+
+      - name: Publish (${{ matrix.rid }})
+        run: |
+          dotnet publish RiotGalaxy.DesktopGL/RiotGalaxy.DesktopGL.csproj \
+            -c Release -r ${{ matrix.rid }} --self-contained true \
+            -p:PublishReadyToRun=false \
+            -o publish/${{ matrix.rid }}
+
+      - name: Упаковать в zip
+        run: |
+          mkdir -p dist
+          cd publish/${{ matrix.rid }}
+          zip -r "../../dist/RiotGalaxy-${{ matrix.rid }}.zip" .
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.rid }}
+          path: dist/*.zip
+          if-no-files-found: error
+
+  # ─────────────────────────────────────────────────────────────
+  # Android: APK собирается ТОЛЬКО в Docker-образе (политика проекта).
+  # Образ кэшируется слоями через GHA-кэш — после первого прогона быстро.
+  # ─────────────────────────────────────────────────────────────
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Собрать сборочный образ Android
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile.android
+          tags: riotgalaxy-android-build:ci
+          load: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Собрать APK в контейнере (Release, debug-подпись)
+        run: |
+          docker run --rm -v "$PWD:/src" -w /src riotgalaxy-android-build:ci \
+            bash -c "dotnet build RiotGalaxy.Android/RiotGalaxy.Android.csproj -c Release -p:AndroidKeyStore=false"
+
+      - name: Забрать APK
+        run: |
+          mkdir -p dist
+          APK="$(find RiotGalaxy.Android/bin/Release -name '*-Signed.apk' | head -1)"
+          [ -z "$APK" ] && APK="$(find RiotGalaxy.Android/bin/Release -name '*.apk' | head -1)"
+          if [ -z "$APK" ]; then echo "APK не найден"; find RiotGalaxy.Android/bin -name '*.apk'; exit 1; fi
+          cp "$APK" "dist/RiotGalaxy.apk"
+          echo "APK: $APK"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: dist/*.apk
+          if-no-files-found: error
+
+  # ─────────────────────────────────────────────────────────────
+  # Релиз: собрать артефакты всех платформ и выложить в GitHub Releases.
+  # Только для push (не для pull_request).
+  # ─────────────────────────────────────────────────────────────
+  release:
+    needs: [desktop, android]
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Скачать артефакты сборки
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Опубликовать релиз
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -e
+          mapfile -t FILES < <(find artifacts -type f \( -name '*.zip' -o -name '*.apk' \))
+          echo "Файлы релиза:"; printf '  %s\n' "${FILES[@]}"
+
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+            echo ">> Стабильный релиз $TAG"
+            gh release create "$TAG" "${FILES[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "$TAG" --generate-notes \
+            || gh release upload "$TAG" "${FILES[@]}" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            SHORT="$(git rev-parse --short HEAD)"
+            echo ">> Катящийся пререлиз nightly ($SHORT)"
+            gh release delete nightly --yes --cleanup-tag --repo "$GITHUB_REPOSITORY" || true
+            gh release create nightly "${FILES[@]}" \
+              --repo "$GITHUB_REPOSITORY" \
+              --prerelease --target "$GITHUB_SHA" \
+              --title "Nightly ($SHORT)" \
+              --notes "Автосборка из master. Коммит \`$GITHUB_SHA\`. Desktop (Linux/Windows) + Android APK (debug-подпись)."
+          fi

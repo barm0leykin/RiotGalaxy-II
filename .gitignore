@@ -54,6 +54,11 @@ __pycache__/
 # Пользовательский HOME/кэш контейнера (NuGet, dotnet) — см. docker/*.sh
 docker/.home/
 
+# ===== Выход CI-сборок/публикаций (создаётся пайплайном и при локальном publish) =====
+publish/
+dist/
+/artifacts/
+
 # ===== Логи и временные файлы =====
 *.log
 logs/

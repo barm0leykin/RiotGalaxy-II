@@ -1,0 +1,10 @@
+# Пятёрочка — босс: турникет-страж «Контролёр» (пикирующее прикрытие + босс).
+description: "Турникет-страж «Контролёр»"
+spawnInterval: 0.8
+sortie: true
+sortieInterval: 3
+sortieCount: 1
+events:
+  - { enemy: blue, count: 6, formation: true }
+  - { wait: 2 }
+  - { enemy: boss, count: 1 }

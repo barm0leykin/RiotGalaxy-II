@@ -1,0 +1,7 @@
+# Брифинг перед миссией 5 «Зональск» — финал Акта I.
+lines:
+  - { speaker: "Кардиган", text: "Пилот! Курорт Зональска. Золото, пальмы, фонтаны из шампанского. И мятеж гвардии.", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Люк", text: "Дайте угадаю — гвардии тоже урезали премию?", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Нет. Гвардия как раз сыта. Она защищает того, кто всех обобрал — наместника Зонального.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "Пять миссий ради одного жадного чиновника. Ниблер бы мной гордился.", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Пробейся к его яхте. Пора закрыть этот кошелёк.", portrait: "Images/portrait_raider" }

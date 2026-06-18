@@ -1,0 +1,12 @@
+# Миссия 3 — «Панацея» (Акт I). Фича: вылеты из улья (sortie). + сюжетная вставка-улика.
+id: m3
+title: "Панацея"
+steps:
+  - { briefing: m3_intro }
+  - { battle:   m3_b1 }
+  - { battle:   m3_b2 }
+  - { briefing: m3_mid }
+  - { battle:   m3_b3 }
+  - { boss:     m3_boss }
+  - { briefing: m3_outro }
+  - { shop: true }

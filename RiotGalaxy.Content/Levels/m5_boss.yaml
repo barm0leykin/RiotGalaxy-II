@@ -1,0 +1,11 @@
+# Зональск — ФИНАЛ Акта I: яхта-крепость «Нажива». Прикрытие + волна + босс.
+description: "Яхта-крепость «Нажива»"
+spawnInterval: 0.8
+sortie: true
+sortieInterval: 2
+sortieCount: 2
+events:
+  - { enemy: red, count: 6, formation: true }
+  - { wait: 2 }
+  - { enemy: green, count: 6 }
+  - { enemy: boss, count: 1 }

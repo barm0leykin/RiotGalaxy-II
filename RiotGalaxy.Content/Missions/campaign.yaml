@@ -1,2 +1,2 @@
-# Порядок миссий кампании. Каждая миссия — Content/Missions/<id>.yaml.
-missions: [m1]
+# Порядок миссий кампании (Акт I). Каждая миссия — Content/Missions/<id>.yaml.
+missions: [m1, m2, m3, m4, m5]

@@ -1,0 +1,7 @@
+# Пятёрочка — торговый зал. ВВОДИМ МАРШРУТЫ: враги влетают по змейке слева и справа.
+description: "Пятёрочка — торговый зал"
+spawnInterval: 0.5
+events:
+  - { enemy: green, count: 5, route: zmeyka1-left, after: scatter }
+  - { wait: 1 }
+  - { enemy: green, count: 5, route: zmeyka1-right, after: scatter }

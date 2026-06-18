@@ -1,0 +1,11 @@
+# Миссия 4 — «Пятёрочка-Орбитальная» (Акт I). Фича: маршруты (routes) + parallel-заходы.
+id: m4
+title: "Пятёрочка-Орбитальная"
+steps:
+  - { briefing: m4_intro }
+  - { battle:   m4_b1 }
+  - { battle:   m4_b2 }
+  - { battle:   m4_b3 }
+  - { boss:     m4_boss }
+  - { briefing: m4_outro }
+  - { shop: true }

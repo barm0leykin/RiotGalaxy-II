@@ -1,0 +1,6 @@
+# Брифинг перед миссией 3 «Панацея» (медики).
+lines:
+  - { speaker: "Кардиган", text: "Пилот! Госпиталь-кольцо «Панацея» в осаде. Восстали… врачи.", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Люк", text: "Врачи. С чем — со скальпелями наперевес?", portrait: "Images/portrait_luke" }
+  - { speaker: "Кардиган", text: "Их «оптимизировали». Теперь лечит ИИ. Решительно лечит!", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Рейдер", text: "Куда-то делся весь бюджет госпиталя. Найди концы, пилот.", portrait: "Images/portrait_raider" }

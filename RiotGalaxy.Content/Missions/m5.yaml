@@ -1,0 +1,13 @@
+# Миссия 5 — «Зональск», финал Акта I. Фича: всё вместе (формации+вылеты+маршруты).
+# Магазин ПЕРЕД финальной связкой (mid-брифинг + босс) — дать прокачаться к боссу.
+id: m5
+title: "Зональск"
+steps:
+  - { briefing: m5_intro }
+  - { battle:   m5_b1 }
+  - { battle:   m5_b2 }
+  - { battle:   m5_b3 }
+  - { shop: true }
+  - { briefing: m5_mid }
+  - { boss:     m5_boss }
+  - { briefing: m5_outro }

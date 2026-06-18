@@ -1,0 +1,9 @@
+# Панацея — приёмное. ВВОДИМ ВЫЛЕТЫ: формация периодически пикирует на игрока (sortie).
+description: "Панацея — приёмное"
+spawnInterval: 0.7
+sortie: true
+sortieInterval: 4
+sortieCount: 1
+events:
+  - { enemy: green, count: 8, formation: true }
+  - { enemy: blue, count: 4, formation: true }

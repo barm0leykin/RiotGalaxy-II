@@ -1,0 +1,6 @@
+# Перед боссом миссии 5: выход Зонального на яхте «Нажива».
+lines:
+  - { speaker: "Зональный", text: "Ты не понимаешь! Я не злодей — я менеджер среднего звена зла!", portrait: "Images/portrait_zonalny" }
+  - { speaker: "Люк", text: "У плазмопушки нет среднего звена.", portrait: "Images/portrait_luke" }
+  - { speaker: "Зональный", text: "У меня иммунитет, яхта и очень хороший адвокат!", portrait: "Images/portrait_zonalny" }
+  - { speaker: "Люк", text: "А у меня — плохое настроение и полный боезапас. Поговорим.", portrait: "Images/portrait_luke" }
