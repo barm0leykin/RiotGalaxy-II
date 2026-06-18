@@ -8,13 +8,25 @@ splash.loading: "загрузка..."
 
 # Главное меню
 menu.title: "-= Galaxy Riot! =-"
+menu.continue: "Продолжить"
 menu.start: "Начать игру"
 menu.shop: "Магазин"
 menu.settings: "Настройки"
+menu.profile: "Сменить профиль"
 menu.exit: "Выход"
 menu.record: "Рекорд: {0}"
 menu.credits: "Кредиты: {0}"
+menu.profile_label: "Профиль {0}"
 menu.hint: "Тап по пункту · стрелки + Enter · Esc — выход"
+
+# Экран выбора профиля
+profile.title: "Выбор профиля"
+profile.slot: "Профиль {0}"
+profile.summary: "рекорд {0} · кредиты {1}"
+profile.empty: "пусто"
+profile.reset: "Сбросить профиль {0}"
+profile.reset_confirm: "Стереть прогресс профиля {0}? Enter — да, Esc — нет"
+profile.hint: "Стрелки + Enter — играть · R — сбросить · Esc — в меню"
 
 # Магазин (апгрейды)
 shop.title: "Магазин"

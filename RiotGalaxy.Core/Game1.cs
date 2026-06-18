@@ -110,10 +110,10 @@ namespace RiotGalaxy.Core
                     break;
                     
                 case GameManager.GameState.GameOver:
-                    // В экране Game Over - Пробел для перезапуска кампании, ESC для выхода в меню
+                    // В экране Game Over - Пробел для рестарта текущей миссии, ESC для выхода в меню
                     if (keyboardState.IsKeyDown(Keys.Space) && !_previousKeyboardState.IsKeyDown(Keys.Space))
                     {
-                        _gameManager.StartCampaign();
+                        _gameManager.RestartMission();
                     }
                     else if (keyboardState.IsKeyDown(Keys.Escape) && !_previousKeyboardState.IsKeyDown(Keys.Escape))
                     {

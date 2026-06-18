@@ -34,7 +34,7 @@ namespace RiotGalaxy.Core.Managers
         private SpriteFont _defaultFont;
         
         // Базовые игровые состояния
-        public enum GameState { Splash, MainMenu, Settings, Playing, Paused, GameOver, Victory, NextLevel, Dialogue, Shop }
+        public enum GameState { Splash, Profile, MainMenu, Settings, Playing, Paused, GameOver, Victory, NextLevel, Dialogue, Shop }
         public GameState CurrentGameState { get; private set; }
 
         // Диалог (брифинг/сюжет) и состояние, в которое перейти после него.
@@ -259,6 +259,7 @@ namespace RiotGalaxy.Core.Managers
             Utils.EffectsConfig.Load();
             Utils.UpgradeConfig.Load();    // определения апгрейдов (магазин)
             Utils.SkillsConfig.Load();     // активные навыки
+            Utils.SaveData.CurrentProfile = Utils.GameSettings.LastProfile; // последний выбранный слот
             Utils.SaveData.Load(); // профиль игрока: рекорд/прогресс/валюта/апгрейды/оружие
 
             // Стартовое оружие всегда открыто (ур. 1+).
@@ -388,6 +389,9 @@ namespace RiotGalaxy.Core.Managers
             {
                 case GameState.Splash:
                     Screens.Change(new Screens.SplashScreen());
+                    break;
+                case GameState.Profile:
+                    Screens.Change(new Screens.ProfileScreen());
                     break;
                 case GameState.MainMenu:
                     Screens.Change(new Screens.MainMenuScreen());
@@ -620,6 +624,7 @@ namespace RiotGalaxy.Core.Managers
         {
             try
             {
+                Utils.SaveData.ClearCheckpoint(); // новая игра с начала — старый чекпоинт не нужен
                 SetupNewPlayer();
                 _mission.StartCampaign();
                 RunNextStep();
@@ -627,6 +632,50 @@ namespace RiotGalaxy.Core.Managers
             catch (Exception ex)
             {
                 Console.WriteLine($"Error starting campaign: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Продолжить кампанию с сохранённой позиции (миссия/волна) — после выхода в меню.
+        /// Если чекпоинта нет/он битый — старт с начала.
+        /// </summary>
+        public void ContinueCampaign()
+        {
+            try
+            {
+                SetupNewPlayer();
+                if (Utils.SaveData.HasCheckpoint &&
+                    _mission.ResumeAt(Utils.SaveData.CampaignMission, Utils.SaveData.CampaignStep))
+                {
+                    if (Player != null) Player.Score = Utils.SaveData.CampaignScore;
+                }
+                else
+                {
+                    _mission.StartCampaign();
+                }
+                RunNextStep();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error continuing campaign: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Рестарт ТЕКУЩЕЙ миссии с начала (после гибели игрока): свежий корабль, та же миссия
+        /// с первого шага. Мета-прогресс (кредиты/апгрейды/оружие) остаётся в профиле.
+        /// </summary>
+        public void RestartMission()
+        {
+            try
+            {
+                SetupNewPlayer();
+                _mission.RestartMission();
+                RunNextStep();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error restarting mission: {ex.Message}");
             }
         }
 
@@ -689,6 +738,10 @@ namespace RiotGalaxy.Core.Managers
             Player?.ApplyUpgrades();                 // покупки из магазина вступают в силу
             _levels.LoadBattle(battleName, ScreenWidth, ScreenHeight);
             _levelClearTimer = 0f;
+
+            // Чекпоинт «последней волны» — чтобы «Продолжить» возобновляло именно этот бой.
+            Utils.SaveData.SetCheckpoint(_mission.MissionIndex, _mission.StepIndex, Player?.Score ?? 0);
+
             if (CurrentGameState != GameState.Playing)
                 ChangeGameState(GameState.Playing);  // из брифинга/магазина — показать игровой экран
         }
@@ -700,7 +753,7 @@ namespace RiotGalaxy.Core.Managers
                 _lastScore = Player.Score;
             BankCurrency();                        // кредиты уже забанкованы в shop-шаге; на всякий случай
             Utils.SaveData.ReportScore(_lastScore);
-            Utils.SaveData.Save();
+            Utils.SaveData.ClearCheckpoint();      // кампания пройдена — «Продолжить» больше не нужно (Save внутри)
             ChangeGameState(GameState.Victory);
         }
 

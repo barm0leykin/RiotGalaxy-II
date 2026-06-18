@@ -194,7 +194,8 @@ Victory): Esc/P — пауза и снятие, Space — рестарт на э
 (синглтон `GameManager.Instance`). Отвечает за:
 
 - **Состояния игры** (паттерн State) —
-  `enum GameState { Splash, MainMenu, Settings, Playing, Paused, GameOver, Victory, NextLevel }`.
+  `enum GameState { Splash, Profile, MainMenu, Settings, Playing, Paused, GameOver, Victory, NextLevel, Dialogue, Shop }`.
+  После заставки — экран **выбора профиля** (`Profile` → [ProfileScreen](RiotGalaxy.Core/Screens/ProfileScreen.cs)).
   **Все** состояния — экраны: `Update`/`Draw` целиком делегируются в `ScreenSystem` (см. §14),
   без `switch`. Переходы — через `ChangeGameState`, который заводит нужный `Screen` и решает,
   что чистить/инициализировать (новая партия, пауза = сохранить, между уровнями = сохранить игрока).
@@ -588,9 +589,16 @@ GREEN, RED, BOSS }`). Прежних подклассов (`EnemySmallBlue/Green
 следующий шаг: брифинг / следующий бой / босс / магазин (`Content/Missions/<id>.yaml`). Бои внутри
 миссии идут без экрана-проставки (`EnterBattle` грузит бой по имени и остаётся в `Playing`),
 магазин — в конце миссии; когда миссии в `campaign.yaml` закончились — `Victory`. Игрок и счёт
-переносятся между боями. Поражение (`GameOver`) и победа показывают очки и **рекорд** и
-предлагают рестарт. Рекорд/прогресс/валюта/апгрейды сохраняются в профиле ([Utils/SaveData.cs](RiotGalaxy.Core/Utils/SaveData.cs),
-`save.yaml`): грузится при старте (`GameManager.LoadContent`), пишется в конце партии
+переносятся между боями. **Гибель → рестарт текущей миссии** с её начала (`RestartMission`,
+не вся кампания и не текущая волна); мета-прогресс (кредиты/апгрейды/оружие) остаётся в профиле.
+**Чекпоинт/«Продолжить»:** при входе в каждый бой `EnterBattle` пишет позицию (миссия/волна/счёт)
+в профиль (`SaveData.SetCheckpoint`); пункт меню **«Продолжить»** (`ContinueCampaign`→`MissionDirector.ResumeAt`)
+виден при наличии чекпоинта и возобновляет с той волны; чекпоинт стирается по завершении кампании
+(`FinishCampaign`) и при «Начать игру». **Профили:** 3 слота (слот 1 — legacy `save.yaml`, слоты 2/3 — `save2/3.yaml`);
+выбор — на экране Profile (Enter — играть, R — «начать заново»/сброс с подтверждением), текущий
+слот помнится в `settings.yaml` (`LastProfile`), сменить — пункт меню «Сменить профиль».
+Рекорд/прогресс/валюта/апгрейды сохраняются в профиле ([Utils/SaveData.cs](RiotGalaxy.Core/Utils/SaveData.cs),
+`save<N>.yaml`): грузится при старте (`GameManager.LoadContent`), пишется в конце партии
 (`ChangeGameState`) и при загрузке уровня (`LevelDirector.Load`). См. §16.
 
 **Прогрессия/магазин (этап 3).** Убийства дают **очки** (рекорд). **Кредиты** (на магазин) даёт

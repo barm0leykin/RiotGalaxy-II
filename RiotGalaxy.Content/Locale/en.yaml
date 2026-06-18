@@ -7,13 +7,25 @@ splash.loading: "loading..."
 
 # Main menu
 menu.title: "-= Galaxy Riot! =-"
+menu.continue: "Continue"
 menu.start: "Start game"
 menu.shop: "Shop"
 menu.settings: "Settings"
+menu.profile: "Change profile"
 menu.exit: "Exit"
 menu.record: "Best: {0}"
 menu.credits: "Credits: {0}"
+menu.profile_label: "Profile {0}"
 menu.hint: "Tap an item · arrows + Enter · Esc — exit"
+
+# Profile select screen
+profile.title: "Select profile"
+profile.slot: "Profile {0}"
+profile.summary: "best {0} · credits {1}"
+profile.empty: "empty"
+profile.reset: "Reset profile {0}"
+profile.reset_confirm: "Erase profile {0} progress? Enter — yes, Esc — no"
+profile.hint: "Arrows + Enter — play · R — reset · Esc — menu"
 
 # Shop (upgrades)
 shop.title: "Shop"

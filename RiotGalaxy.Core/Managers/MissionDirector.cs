@@ -33,6 +33,10 @@ namespace RiotGalaxy.Core.Managers
         public string CurrentMissionTitle => _cur?.Title ?? "";
         public string CurrentMissionBackground => _cur?.Background;
 
+        /// <summary>Индекс текущей миссии и шага (для чекпоинта/возобновления).</summary>
+        public int MissionIndex => _mi;
+        public int StepIndex => _si;
+
         /// <summary>Начать кампанию заново: загрузить список миссий, сбросить указатели.</summary>
         public void StartCampaign()
         {
@@ -44,6 +48,30 @@ namespace RiotGalaxy.Core.Managers
             _cur = null;
             _si = -1;
             Log.Debug($"Campaign started: missions={_missionIds.Count}");
+        }
+
+        /// <summary>Перезапустить ТЕКУЩУЮ миссию с её первого шага (для рестарта после смерти).</summary>
+        public void RestartMission()
+        {
+            if (_cur != null) _si = -1; // следующий Advance вернёт первый шаг текущей миссии
+        }
+
+        /// <summary>
+        /// Возобновить кампанию с конкретной позиции (миссия/шаг) — для «Продолжить» после выхода.
+        /// Возвращает false, если позиция некорректна (тогда зовущий стартует с начала).
+        /// </summary>
+        public bool ResumeAt(int missionIndex, int stepIndex)
+        {
+            StartCampaign(); // загрузить список миссий
+            if (missionIndex < 0 || missionIndex >= _missionIds.Count)
+                return false;
+            _cur = MissionDef.Load(_missionIds[missionIndex]);
+            if (_cur == null || _cur.Steps == null || _cur.Steps.Count == 0)
+                return false;
+            _mi = missionIndex;
+            int s = stepIndex < 0 ? 0 : (stepIndex >= _cur.Steps.Count ? _cur.Steps.Count - 1 : stepIndex);
+            _si = s - 1; // следующий Advance вернёт шаг s
+            return true;
         }
 
         /// <summary>

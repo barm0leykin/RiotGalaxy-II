@@ -15,6 +15,9 @@ namespace RiotGalaxy.Core.Utils
         /// <summary>Выбранный язык интерфейса (код локали: "ru"/"en").</summary>
         public static string Language { get; set; } = "ru";
 
+        /// <summary>Последний выбранный профиль (слот 1..SaveData.ProfileCount).</summary>
+        public static int LastProfile { get; set; } = 1;
+
         public static void Load()
         {
             var data = Yaml.LoadFile<SettingsYaml>(FilePath);
@@ -23,6 +26,7 @@ namespace RiotGalaxy.Core.Utils
             AudioManager.Instance.EffectsVolume = MathHelper.Clamp(data.EffectsVolume, 0f, 1f);
             if (!string.IsNullOrWhiteSpace(data.Language))
                 Language = data.Language;
+            LastProfile = data.LastProfile >= 1 ? data.LastProfile : 1;
         }
 
         public static void Save()
@@ -33,6 +37,7 @@ namespace RiotGalaxy.Core.Utils
                 {
                     EffectsVolume = AudioManager.Instance.EffectsVolume,
                     Language = Language,
+                    LastProfile = LastProfile,
                 };
                 File.WriteAllText(FilePath, Yaml.Serializer.Serialize(data));
             }
@@ -47,6 +52,7 @@ namespace RiotGalaxy.Core.Utils
         {
             public float EffectsVolume { get; set; } = 0.1f;
             public string Language { get; set; } = "ru";
+            public int LastProfile { get; set; } = 1;
         }
     }
 }

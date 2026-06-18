@@ -21,7 +21,7 @@ namespace RiotGalaxy.Core.Screens
 
             bool skip = KeyPressed(Keys.Space) || KeyPressed(Keys.Enter) || KeyPressed(Keys.Escape) || MouseClicked();
             if (_time >= Duration || skip)
-                GameManager.Instance.ChangeGameState(GameManager.GameState.MainMenu);
+                GameManager.Instance.ChangeGameState(GameManager.GameState.Profile); // сначала выбор профиля
         }
 
         public override void Draw(SpriteBatch spriteBatch)
