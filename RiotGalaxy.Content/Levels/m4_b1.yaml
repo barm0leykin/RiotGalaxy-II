@@ -2,6 +2,6 @@
 description: "Пятёрочка — торговый зал"
 spawnInterval: 0.5
 events:
-  - { enemy: green, count: 5, route: zmeyka1-left, after: scatter }
+  - { enemy: green, count: 5, route: swoop-left, after: scatter }
   - { wait: 1 }
-  - { enemy: green, count: 5, route: zmeyka1-right, after: scatter }
+  - { enemy: green, count: 5, route: swoop-right, after: scatter }

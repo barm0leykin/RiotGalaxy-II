@@ -6,6 +6,6 @@ sortieInterval: 3
 sortieCount: 2
 events:
   - parallel:
-      - - { enemy: kamik, count: 4, route: zmeyka1-left, after: scatter }
-      - - { enemy: kamik, count: 4, route: zmeyka1-right, after: scatter }
+      - - { enemy: kamik, count: 4, route: cross-left, after: scatter }
+      - - { enemy: kamik, count: 4, route: cross-right, after: scatter }
   - { enemy: heavy, count: 3, formation: true }

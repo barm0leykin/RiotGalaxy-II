@@ -182,8 +182,12 @@
       паттерны (минер/щитоносец/делящийся/снайпер) — потребуют нового кода поведения/ИИ.
 - [ ] **Новые тактики пике** ([SortieMovement.cs](RiotGalaxy.Core/Components/SortieMovement.cs)):
       доп. траектории, комбинированные атаки улья (синхронный залп пике).
-- [ ] **Новые формации/маршруты** ([Routes/](RiotGalaxy.Content/Routes/), [Hive.cs](RiotGalaxy.Core/GameObjects/Hive.cs)):
-      доп. построения, параллельные синхронные волны.
+- [~] **Маршруты влёта** ([Routes/](RiotGalaxy.Content/Routes/)) — +13 разнообразных: петли (`loop`),
+      свупы-дуги (`swoop`), зигзаг (`zigzag-wide`), диагонали (`cross`), нырок-финт (`dive-feint`),
+      спираль (`spiral-in`), восьмёрка (`figure8`), низкая дуга (`arc-low`), клещи (`pincer`).
+      Задействованы в m4/m7/m8. Точки — сетка World 16×10. *(Доп. построения улья — отдельно.)*
+- [ ] **Новые тактики пике улья** ([SortieMovement.cs](RiotGalaxy.Core/Components/SortieMovement.cs)) +
+      параллельные синхронные волны.
 - [ ] **Главы-биомы** — структура `Content/Chapters/*.yaml`: список уровней, фон, музыка, набор
       врагов/палитра, босс главы. Меню выбора главы (разблокировка по прогрессу).
 - [x] **Боссы с фазами и телеграфом** — [BossAI.cs](RiotGalaxy.Core/AI/BossAI.cs) (`ai: boss` в enemies.yaml):
