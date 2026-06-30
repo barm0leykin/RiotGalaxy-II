@@ -50,6 +50,20 @@ namespace RiotGalaxy.Core.Managers
             Log.Debug($"Campaign started: missions={_missionIds.Count}");
         }
 
+        /// <summary>Список миссий кампании (id + заголовок) — для dev-меню выбора миссии.</summary>
+        public static List<(string id, string title)> Catalog()
+        {
+            var res = new List<(string, string)>();
+            var camp = Yaml.LoadAsset<CampaignYaml>("Content/Missions/campaign.yaml");
+            var ids = (camp?.Missions != null && camp.Missions.Count > 0) ? camp.Missions : new List<string> { "m1" };
+            foreach (var id in ids)
+            {
+                var def = MissionDef.Load(id);
+                res.Add((id, def?.Title ?? id));
+            }
+            return res;
+        }
+
         /// <summary>Перезапустить ТЕКУЩУЮ миссию с её первого шага (для рестарта после смерти).</summary>
         public void RestartMission()
         {

@@ -3,5 +3,5 @@ lines:
   - { speaker: "Рейдер", text: "Помехи в эфире. Шёпот на частотах, которых быть не должно.", portrait: "Images/portrait_raider" }
   - { speaker: "Люк", text: "И кто шепчет?", portrait: "Images/portrait_luke" }
   - { speaker: "Рейдер", text: "Бризанцы. Древние. Они не воюют — они стравливают. Зависть укропитеков — их работа.", portrait: "Images/portrait_raider" }
-  - { speaker: "Люк", text: "То есть Зональный, Косморика, укропитеки — все пляшут под чужую дудку?", portrait: "Images/portrait_luke" }
+  - { speaker: "Люк", text: "То есть Зональный, Космерика, укропитеки — все пляшут под чужую дудку?", portrait: "Images/portrait_luke" }
   - { speaker: "Рейдер", text: "Пешки на пешках. Прорвись сквозь помехи.", portrait: "Images/portrait_raider" }

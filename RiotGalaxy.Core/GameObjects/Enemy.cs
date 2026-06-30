@@ -94,6 +94,7 @@ namespace RiotGalaxy.Core.GameObjects
             {
                 case "blue": Ai = new AI.EnemyAIBlue(this); break;
                 case "red":  Ai = new AI.EnemyAIRed(this); break;
+                case "boss": Ai = new AI.BossAI(this); break; // фазы + телеграф, движение/огонь ведёт сам
                 default:
                     Move = new EnemyBounceMovement(this, CurrentSpeed);
                     Movement = Move;

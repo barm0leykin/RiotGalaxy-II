@@ -15,14 +15,17 @@ namespace RiotGalaxy.Core.Screens
     /// </summary>
     public class MainMenuScreen : Screen
     {
-        private const float SpacingY = 84f; // крупные пункты + запас под палец
         private int _selected;
         private int _hover = -1;
 
         private List<(string label, Action act)> _items = new List<(string, Action)>();
 
-        private float StartY => ScreenH * 0.36f;
-        private Rectangle ItemRect(int i) => CenteredItemRect(_items[i].label, StartY + i * SpacingY, ItemScale);
+        // Вертикаль пунктов адаптивна к их числу (5–7): равномерно между TopY и BottomY.
+        private float TopY => ScreenH * 0.34f;
+        private float BottomY => ScreenH * 0.90f;
+        private float StepY => (BottomY - TopY) / System.Math.Max(1, _items.Count);
+        private float ItemY(int i) => TopY + StepY * (i + 0.5f);
+        private Rectangle ItemRect(int i) => CenteredItemRect(_items[i].label, ItemY(i), ItemScale);
 
         private void BuildItems()
         {
@@ -35,6 +38,10 @@ namespace RiotGalaxy.Core.Screens
             _items.Add((Utils.Loc.T("menu.shop"), () => gm.OpenShop(GameManager.GameState.MainMenu)));
             _items.Add((Utils.Loc.T("menu.settings"), () => gm.ChangeGameState(GameManager.GameState.Settings)));
             _items.Add((Utils.Loc.T("menu.profile"), () => gm.ChangeGameState(GameManager.GameState.Profile)));
+#if DEBUG
+            // Только в Debug-сборке: быстрый выбор миссии для тестирования (в релизе скрыто).
+            _items.Add(("[DEV] Выбрать миссию", () => gm.ChangeGameState(GameManager.GameState.DevMenu)));
+#endif
             _items.Add((Utils.Loc.T("menu.exit"), () => Game1.Instance.Exit()));
 
             if (_selected >= _items.Count) _selected = _items.Count - 1;
@@ -82,7 +89,7 @@ namespace RiotGalaxy.Core.Screens
             for (int i = 0; i < _items.Count; i++)
             {
                 bool active = (i == _hover) || (i == _selected);
-                DrawMenuItem(spriteBatch, _items[i].label, StartY + i * SpacingY, active);
+                DrawMenuItem(spriteBatch, _items[i].label, ItemY(i), active);
             }
 
             DrawCentered(spriteBatch, Utils.Loc.T("menu.hint"), ScreenH * 0.95f, Color.Gray, HintScale);

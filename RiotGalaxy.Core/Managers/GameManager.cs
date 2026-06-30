@@ -34,7 +34,7 @@ namespace RiotGalaxy.Core.Managers
         private SpriteFont _defaultFont;
         
         // Базовые игровые состояния
-        public enum GameState { Splash, Profile, MainMenu, Settings, Playing, Paused, GameOver, Victory, NextLevel, Dialogue, Shop }
+        public enum GameState { Splash, Profile, MainMenu, Settings, Playing, Paused, GameOver, Victory, NextLevel, Dialogue, Shop, DevMenu }
         public GameState CurrentGameState { get; private set; }
 
         // Диалог (брифинг/сюжет) и состояние, в которое перейти после него.
@@ -393,6 +393,9 @@ namespace RiotGalaxy.Core.Managers
                 case GameState.Profile:
                     Screens.Change(new Screens.ProfileScreen());
                     break;
+                case GameState.DevMenu:
+                    Screens.Change(new Screens.DevMenuScreen());
+                    break;
                 case GameState.MainMenu:
                     Screens.Change(new Screens.MainMenuScreen());
                     break;
@@ -676,6 +679,25 @@ namespace RiotGalaxy.Core.Managers
             catch (Exception ex)
             {
                 Console.WriteLine($"Error restarting mission: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// DEV: начать кампанию с выбранной миссии (для тестирования). Свежий игрок, прыжок
+        /// на первый шаг миссии missionIndex. Доступно из dev-меню (скрыто в релизе).
+        /// </summary>
+        public void DevStartMission(int missionIndex)
+        {
+            try
+            {
+                SetupNewPlayer();
+                if (!_mission.ResumeAt(missionIndex, 0))
+                    _mission.StartCampaign();
+                RunNextStep();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error dev-start mission {missionIndex}: {ex.Message}");
             }
         }
 

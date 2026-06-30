@@ -1,6 +1,6 @@
-# Брифинг миссии 7: укропитеков вооружает Косморика (DJ Trapp).
+# Брифинг миссии 7: укропитеков вооружает Космерика (DJ Trapp).
 lines:
   - { speaker: "Рейдер", text: "Укропитеки вооружены не по карману. Кто-то им поставляет.", portrait: "Images/portrait_raider" }
-  - { speaker: "DJ Trapp", text: "Йоу-йоу! Гуманитарные… пушки! Косморика дарит свободу! Бвамп!", portrait: "Images/portrait_trapp" }
+  - { speaker: "DJ Trapp", text: "Йоу-йоу! Гуманитарные… пушки! Космерика дарит свободу! Бвамп!", portrait: "Images/portrait_trapp" }
   - { speaker: "Люк", text: "Это сейчас был DJ Trapp?", portrait: "Images/portrait_luke" }
-  - { speaker: "Рейдер", text: "Косморика. Перехвати караваны — отрежем им клыки.", portrait: "Images/portrait_raider" }
+  - { speaker: "Рейдер", text: "Космерика. Перехвати караваны — отрежем им клыки.", portrait: "Images/portrait_raider" }

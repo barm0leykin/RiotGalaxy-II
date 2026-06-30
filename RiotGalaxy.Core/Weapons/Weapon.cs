@@ -81,6 +81,16 @@ namespace RiotGalaxy.Core.Weapons
             _burstTimer = Options.burstInterval;
         }
 
+        /// <summary>
+        /// Немедленно выпустить один снаряд под заданным углом (рад; 0=вверх, π=вниз), минуя
+        /// перезарядку/очередь. Для паттернов босса (веер/радиал) — см. AI/BossAI.
+        /// </summary>
+        public void FireShell(float angleRad)
+        {
+            if (Options == null) return;
+            SpawnShell(angleRad);
+        }
+
         /// <summary>Один «тик» стрельбы: веер (если задан) или одиночный снаряд (с разбросом).</summary>
         private void FireOnce()
         {
