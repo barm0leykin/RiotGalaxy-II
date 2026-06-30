@@ -49,6 +49,45 @@ namespace RiotGalaxy.Core.Interface
                 screenWidth, Margin + (int)(font.LineSpacing * Big) + 4, Color.Gold, Big);
         }
 
+        /// <summary>
+        /// Шкала HP босса — по центру сверху, с именем (описание боя) и засечками фаз (66%/33%),
+        /// цвет заливки совпадает с фазой BossAI. Вызывается из GameManager.DrawGameplay, если есть босс.
+        /// </summary>
+        public void DrawBossBar(SpriteBatch sb, SpriteFont font, Texture2D pixel, Enemy boss, string name, int screenWidth)
+        {
+            if (boss == null || pixel == null || font == null) return;
+
+            int w = (int)(screenWidth * 0.52f);
+            const int h = 18, y = 48;
+            var rect = new Rectangle((screenWidth - w) / 2, y, w, h);
+            float frac = boss.MaxHp > 0 ? (float)boss.Hp / boss.MaxHp : 0f;
+
+            // Цвет по фазе (как в BossAI: >66% / >33% / ниже).
+            Color fill = frac > 0.66f ? new Color(220, 70, 70)
+                       : frac > 0.33f ? new Color(240, 140, 40)
+                                      : new Color(255, 40, 40);
+            DrawBar(sb, pixel, rect, frac, fill);
+
+            // Засечки границ фаз.
+            DrawTick(sb, pixel, rect, 0.66f);
+            DrawTick(sb, pixel, rect, 0.33f);
+
+            // Имя босса по центру над полосой.
+            if (!string.IsNullOrEmpty(name))
+            {
+                Vector2 size = font.MeasureString(name) * Small;
+                sb.DrawString(font, name, new Vector2(rect.Center.X - size.X / 2f, y - font.LineSpacing * Small - 2),
+                    Color.OrangeRed, 0f, Vector2.Zero, Small, SpriteEffects.None, 0f);
+            }
+        }
+
+        /// <summary>Вертикальная засечка на полосе (граница фазы) по доле frac.</summary>
+        private static void DrawTick(SpriteBatch sb, Texture2D pixel, Rectangle r, float frac)
+        {
+            int tx = r.X + (int)(r.Width * frac);
+            sb.Draw(pixel, new Rectangle(tx, r.Y, 2, r.Height), new Color(20, 20, 28, 220));
+        }
+
         /// <summary>Полоса со шкалой: тёмный фон + рамка + цветная заливка по доле fill (0..1).</summary>
         private static void DrawBar(SpriteBatch sb, Texture2D pixel, Rectangle r, float fill, Color fillColor)
         {

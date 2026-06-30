@@ -585,6 +585,16 @@ namespace RiotGalaxy.Core.Managers
 
         #region Методы отрисовки для каждого состояния
 
+        /// <summary>Найти живого босса на сцене (для шкалы HP); null — босса нет.</summary>
+        private Enemy FindActiveBoss()
+        {
+            for (int i = 0; i < GameObjects.Count; i++)
+                if (GameObjects[i] is Enemy e && e.IsAlive &&
+                    (e.Type == EnemyType.BOSS || e.Type == EnemyType.UKRO_BOSS))
+                    return e;
+            return null;
+        }
+
         public void DrawGameplay()
         {
             
@@ -604,6 +614,11 @@ namespace RiotGalaxy.Core.Managers
 
             // Рисуем HUD
             _hud.Draw(_spriteBatch, _defaultFont, SimpleTexture, Player, ScreenWidth);
+
+            // Шкала HP босса (если на сцене есть живой босс).
+            var boss = FindActiveBoss();
+            if (boss != null)
+                _hud.DrawBossBar(_spriteBatch, _defaultFont, SimpleTexture, boss, CurrentLevelDescription, ScreenWidth);
 
             // Панель тестовых кнопок
             foreach (var btn in InputManager.Instance.GuiButtons)
