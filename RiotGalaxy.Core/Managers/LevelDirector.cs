@@ -112,13 +112,15 @@ namespace RiotGalaxy.Core.Managers
 
             if (_level != null)
                 foreach (var info in _level.Tick(dt))
-                    SpawnEnemy(info.Type, info.Formation, info.Route, info.After);
+                    SpawnEnemy(info.Type, info.Formation, info.Route, info.After, info.Drop, info.DropChance);
         }
 
         /// <summary>
-        /// Создать врага сверху экрана. formation — в улей; routeName — пустить по маршруту.
+        /// Создать врага сверху экрана. formation — в улей; routeName — пустить по маршруту;
+        /// drop — авторский бонус при смерти (с шансом dropChance%).
         /// </summary>
-        private void SpawnEnemy(EnemyType type, bool formation, string routeName = null, string after = null)
+        private void SpawnEnemy(EnemyType type, bool formation, string routeName = null, string after = null,
+                                string drop = null, int dropChance = 100)
         {
             int screenW = GameManager.Instance.ScreenWidth;
 
@@ -148,6 +150,8 @@ namespace RiotGalaxy.Core.Managers
             // Неизвестный/RND трактуем как разведчика — как было в прежнем switch.
             var t = type == EnemyType.RND ? EnemyType.SM_SCOUT : type;
             Enemy e = new Enemy(t, pos);
+            e.DropBonus = drop;          // авторский бонус при смерти (из YAML уровня)
+            e.DropChance = dropChance;
 
             if (inFormation)
             {

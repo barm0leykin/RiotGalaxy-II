@@ -26,7 +26,7 @@ namespace RiotGalaxy.Core.Utils
                 ["speed"] = new BuffDef { Mult = 1.4f, Duration = 10f },
             };
 
-            public int BuffDropChance { get; set; } = 12; // % шанс выпадения баффа из врага
+            public int BuffDropChance { get; set; } = 0; // % «фонового» случайного баффа с любого врага; 0 = только авторские дропы (drop: в YAML уровня)
 
             // Бонус-кредиты за прохождение уровня: base + perLevel * номер_уровня.
             public int LevelClearBonusBase { get; set; } = 25;

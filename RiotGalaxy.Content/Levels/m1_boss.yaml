@@ -3,5 +3,6 @@ description: "Платформа «ХмельМаш»"
 spawnInterval: 1.2
 events:
   - { enemy: green, count: 4 }
+  - { enemy: green, count: 1, drop: hp }   # аптечка перед боссом
   - { wait: 2 }
   - { enemy: boss, count: 1 }

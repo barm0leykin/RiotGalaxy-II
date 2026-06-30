@@ -8,4 +8,5 @@ events:
   - { enemy: heavy, count: 4, formation: true }
   - { wait: 2 }
   - { enemy: ukro, count: 6 }
+  - { enemy: ukro, count: 1, drop: hp }    # аптечка перед боссом
   - { enemy: ukroboss, count: 1 }

@@ -1,8 +1,12 @@
 # Уровень 1 «First Contact» — мягкий ввод: учимся двигаться и стрелять.
 # Скауты не стреляют, зелёные изредка бьют вниз. Без формаций.
 # Формат events:
-#   { enemy: <scout|green|blue|red|boss>, count: N } — заспавнить N врагов с текущим интервалом
+#   { enemy: <scout|green|blue|red|boss|ukro|kamik|heavy|ukroboss>, count: N } — заспавнить N врагов
 #   { interval: T } — интервал между спавнами (сек); { wait: T } — пауза
+#   formation: true — в улей; route: <имя>, after: formation/scatter/bounce — по маршруту
+#   drop: <hp|power|rapid|speed|nuke> [, dropChance: %] — бонус при смерти врага (привязка к врагу).
+#       Без drop враг даёт только звёзды (кредиты). dropChance не задан → 100% (гарантированно).
+#       Пример: { enemy: heavy, count: 1, drop: hp }  /  { enemy: ukro, count: 8, drop: power, dropChance: 20 }
 description: "First Contact"
 spawnInterval: 1.2
 events:

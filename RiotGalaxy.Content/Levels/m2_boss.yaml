@@ -3,5 +3,6 @@ description: "Автонасос «Брандспойт-9000»"
 spawnInterval: 1.0
 events:
   - { enemy: red, count: 6, formation: true }
+  - { enemy: green, count: 1, drop: hp }   # аптечка перед боссом
   - { wait: 2 }
   - { enemy: boss, count: 1 }

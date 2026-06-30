@@ -6,6 +6,7 @@ sortieInterval: 3
 sortieCount: 2
 events:
   - { enemy: ukro, count: 10, formation: true }
+  - { enemy: ukro, count: 1, drop: speed }   # ускорение — уклоняться от камикадзе
   - { enemy: kamik, count: 3 }
   - { wait: 1 }
   - { enemy: kamik, count: 3 }

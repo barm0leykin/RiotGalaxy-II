@@ -134,6 +134,11 @@
       (`buffDropChance`), множители/длительность — в [bonuses.yaml](RiotGalaxy.Content/Config/bonuses.yaml),
       показываются в HUD с обратным отсчётом. Оружие читает `EffectiveDamageMult/EffectiveFireRateMult`
       (апгрейд × бафф). *(авто-щит/мультивыстрел — можно добавить тем же механизмом).*
+- [x] **Авторский дроп усилений (не случайный)** — усиления (hp/power/rapid/speed/nuke) больше не
+      сыплются случайно: задаются в YAML уровня полем `drop:` (+ опц. `dropChance:`) на конкретном
+      враге (`Level→Enemy.DropBonus`→`SpawnAuthoredDrop`). Звёзды (кредиты) — по-прежнему со всех.
+      Расставлено: hp перед всеми боссами, power/speed/nuke в тяжёлых волнах. Случайный «фон» —
+      `buffDropChance: 0` (выкл). Дизайн «что/когда» — см. формат в [level1.yaml](RiotGalaxy.Content/Levels/level1.yaml).
 - [x] **Экономика** — крупные награды (scout 10 … boss 120) + **бонус за прохождение уровня**
       (`levelClearBonusBase/PerLevel` в bonuses.yaml). Цены ×5 (апгрейды 200–300, оружие 400–1000).
       Полный забег ≈ ~1955 кредитов, весь арсенал ≈ ~15000 ≈ **8 забегов** (средний темп). Числа — в YAML.

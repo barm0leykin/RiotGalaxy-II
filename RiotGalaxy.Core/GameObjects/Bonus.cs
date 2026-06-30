@@ -48,6 +48,20 @@ namespace RiotGalaxy.Core.GameObjects
                 LoadSprite(sprite);
         }
 
+        /// <summary>Разбор id бонуса из YAML уровня (drop:) в тип. false — неизвестный id.</summary>
+        public static bool TryParseType(string id, out BonusType type)
+        {
+            switch ((id ?? "").Trim().ToLowerInvariant())
+            {
+                case "hp": case "hpup":        type = BonusType.HP_UP;     return true;
+                case "power": case "bulletup": type = BonusType.POWER;     return true;
+                case "rapid":                  type = BonusType.RAPID;     return true;
+                case "speed":                  type = BonusType.SPEED;     return true;
+                case "nuke": case "nukebomb":  type = BonusType.NUKE_BOMB; return true;
+                default:                       type = BonusType.STAR;      return false;
+            }
+        }
+
         protected void LoadSprite(string asset)
         {
             try

@@ -10,3 +10,4 @@ events:
       - - { enemy: red, count: 4, route: zmeyka1-right, after: scatter }
   - { enemy: blue, count: 8, formation: true }
   - { enemy: red, count: 6, formation: true }
+  - { enemy: red, count: 1, drop: power }   # ×2 урон — рывок перед финалом акта

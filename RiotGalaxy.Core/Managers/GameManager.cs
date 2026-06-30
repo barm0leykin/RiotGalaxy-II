@@ -928,7 +928,7 @@ namespace RiotGalaxy.Core.Managers
             if (obj is Enemy enemy)
             {
                 // Визуальный взрыв + тряска экрана (босс — заметно мощнее). Параметры — из effects.yaml.
-                bool isBoss = enemy.Type == EnemyType.BOSS;
+                bool isBoss = enemy.Type == EnemyType.BOSS || enemy.Type == EnemyType.UKRO_BOSS;
                 Particles.Explosion(obj.Position, enemy.ExplosionColor,
                     isBoss ? Utils.EffectsConfig.BossExplosion : Utils.EffectsConfig.EnemyExplosion);
                 var deathShake = isBoss ? Utils.EffectsConfig.BossDeathShake : Utils.EffectsConfig.EnemyDeathShake;
@@ -941,8 +941,9 @@ namespace RiotGalaxy.Core.Managers
                 // Запускаем ивент смерти врага
                 TriggerEnemyDeathEvent(obj);
 
-                // Выпадение бонусов: звезда несёт кредиты (= reward убитого врага).
+                // Выпадение бонусов: звёзды (кредиты) — со всех; авторский бонус — из YAML уровня.
                 SpawnBonusOnEnemyDeath(obj.Position, enemy.Reward);
+                SpawnAuthoredDrop(enemy);
             }
 
             // Выполняем базовое удаление объекта
@@ -951,16 +952,16 @@ namespace RiotGalaxy.Core.Managers
 
         private static readonly Random _bonusRnd = new Random();
 
-        /// <summary>
-        /// Выпадение бонусов из убитого врага: всегда звезда (очки) + иногда усиление.
-        /// Аналог CommandStarBonus + CommandSpawnRandomBonus из CocosSharp.
-        /// </summary>
+        /// <summary>Случайные усиления для опционального ambient-дропа (по умолчанию выключен).</summary>
         private static readonly BonusType[] _buffTypes = { BonusType.POWER, BonusType.RAPID, BonusType.SPEED };
 
+        /// <summary>
+        /// Звёзды (кредиты) из убитого врага: дробятся на несколько (тяжёлые сыплют больше).
+        /// Усиления здесь НЕ выпадают случайно — они авторские (см. SpawnAuthoredDrop). Опциональный
+        /// ambient-бафф включается только если bonuses.yaml buffDropChance > 0 (по умолчанию 0).
+        /// </summary>
         private void SpawnBonusOnEnemyDeath(Vector2 pos, int starCredits)
         {
-            // Дробим награду на несколько звёзд: тяжёлые враги «выплёвывают» больше звёзд.
-            // Сумма номиналов = starCredits (остаток раскидываем по первым звёздам).
             var bc = Utils.BonusConfig.Current;
             int count = Math.Max(1, (int)Math.Round(starCredits / (float)Math.Max(1, bc.StarValue)));
             count = Math.Min(count, Math.Max(1, bc.MaxStarsPerKill));
@@ -969,34 +970,25 @@ namespace RiotGalaxy.Core.Managers
             for (int i = 0; i < count; i++)
             {
                 int val = baseVal + (i < rem ? 1 : 0);
-                // Небольшой разлёт от точки гибели, чтобы звёзды не слипались.
                 var off = new Vector2((float)(_bonusRnd.NextDouble() * 2 - 1) * 26f,
                                       (float)(_bonusRnd.NextDouble() * 2 - 1) * 26f);
                 GameObjects.Add(new BonusStar(pos + off, Math.Max(1, val)));
             }
 
-            // Временный бафф — с шансом из конфига (поровну между баффами).
-            if (_bonusRnd.Next(100) < Utils.BonusConfig.Current.BuffDropChance)
-            {
-                var bt = _buffTypes[_bonusRnd.Next(_buffTypes.Length)];
-                GameObjects.Add(new Bonus(bt, pos));
-                return; // не сыпем ещё и усиление тем же убийством
-            }
+            // Опциональный «фоновый» случайный бафф — по умолчанию выключен (buffDropChance: 0).
+            if (bc.BuffDropChance > 0 && _bonusRnd.Next(100) < bc.BuffDropChance)
+                GameObjects.Add(new Bonus(_buffTypes[_bonusRnd.Next(_buffTypes.Length)], pos));
+        }
 
-            // Иначе с шансом 30% — случайное усиление (хил/апгрейд/нюк)
-            int roll = _bonusRnd.Next(100);
-            if (roll < 30)
-            {
-                int kind = _bonusRnd.Next(100);
-                BonusType bt;
-                if (kind < 45)
-                    bt = BonusType.HP_UP;      // 45%
-                else if (kind < 90)
-                    bt = BonusType.BULLET_UP;  // 45%
-                else
-                    bt = BonusType.NUKE_BOMB;  // 10%
-                GameObjects.Add(new Bonus(bt, pos));
-            }
+        /// <summary>Авторский бонус из YAML уровня (drop/dropChance), привязанный к врагу.</summary>
+        private void SpawnAuthoredDrop(Enemy enemy)
+        {
+            if (enemy == null || string.IsNullOrEmpty(enemy.DropBonus))
+                return;
+            if (enemy.DropChance < 100 && _bonusRnd.Next(100) >= enemy.DropChance)
+                return;
+            if (Bonus.TryParseType(enemy.DropBonus, out var bt))
+                GameObjects.Add(new Bonus(bt, enemy.Position));
         }
 
         private void CleanupGameplay()

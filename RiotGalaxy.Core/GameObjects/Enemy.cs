@@ -27,6 +27,11 @@ namespace RiotGalaxy.Core.GameObjects
         public float AttackSpeed { get; set; } = 100f; // скорость во время вылета/атаки из улья
         public int Reward { get; set; } = 1;            // валюта (кредиты) за убийство
 
+        /// <summary>Авторский бонус при смерти (hp/power/rapid/speed/nuke/bulletup); null — только звёзды.</summary>
+        public string DropBonus { get; set; }
+        /// <summary>Шанс дропа DropBonus, % (100 — гарантированно).</summary>
+        public int DropChance { get; set; } = 100;
+
         /// <summary>Цвет взрыва/искр попадания — под палитру спрайта врага.</summary>
         public Color ExplosionColor => Type switch
         {

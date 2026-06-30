@@ -29,6 +29,8 @@ namespace RiotGalaxy.Core.Utils
             public bool Formation;  // спавнить в формацию (улей)
             public string Route;    // имя маршрута (null/пусто — без маршрута)
             public string After;    // поведение после маршрута: formation/scatter/bounce
+            public string Drop;     // бонус при смерти (hp/power/rapid/speed/nuke/bulletup); null — только звёзды
+            public int DropChance;  // % шанс дропа (100 — гарантированно)
         }
 
         private enum ActionKind { Spawn, SetInterval, Wait, Parallel }
@@ -40,6 +42,8 @@ namespace RiotGalaxy.Core.Utils
             public bool Formation;
             public string Route;
             public string After;
+            public string Drop;
+            public int DropChance;
             public float Value;                 // интервал или пауза
             public List<List<Action>> Groups;   // для Parallel: группы под-таймлайнов
         }
@@ -131,8 +135,10 @@ namespace RiotGalaxy.Core.Utils
                 {
                     int count = ev.Count > 0 ? ev.Count : 1;
                     EnemyType type = ParseEnemy(ev.Enemy);
+                    int dropChance = ev.DropChance ?? 100; // drop задан без шанса → гарантированно
                     for (int i = 0; i < count; i++)
-                        list.Add(new Action { Kind = ActionKind.Spawn, Enemy = type, Formation = ev.Formation, Route = ev.Route, After = ev.After });
+                        list.Add(new Action { Kind = ActionKind.Spawn, Enemy = type, Formation = ev.Formation, Route = ev.Route, After = ev.After,
+                                              Drop = ev.Drop, DropChance = dropChance });
                     total += count;
                 }
                 else if (ev.Interval.HasValue)
@@ -206,7 +212,7 @@ namespace RiotGalaxy.Core.Utils
                     t.Timer += a.Value;
                     break;
                 case ActionKind.Spawn:
-                    output.Add(new SpawnInfo { Type = a.Enemy, Formation = a.Formation, Route = a.Route, After = a.After });
+                    output.Add(new SpawnInfo { Type = a.Enemy, Formation = a.Formation, Route = a.Route, After = a.After, Drop = a.Drop, DropChance = a.DropChance });
                     t.Timer += t.Interval;
                     break;
             }
@@ -249,6 +255,8 @@ namespace RiotGalaxy.Core.Utils
             public bool Formation { get; set; }
             public string Route { get; set; }
             public string After { get; set; }
+            public string Drop { get; set; }        // бонус при смерти: hp/power/rapid/speed/nuke/bulletup
+            public int? DropChance { get; set; }     // % шанс (нет → 100, если drop задан)
             public float? Interval { get; set; }
             public float? Wait { get; set; }
             public List<List<EventYaml>> Parallel { get; set; } // параллельные группы
