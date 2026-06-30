@@ -87,3 +87,62 @@ boss:
   dirMin: 135
   dirMax: 135
   reward: 120
+
+# ── Акт II: укропитеки (оранжевые) и Косморика-тяжёлые ───────────────────────
+# ukro — рядовой укропитек (стреляет вниз, блуждает); kamik — камикадзе (несётся вниз, таранит,
+# не стреляет); heavy — тяжёлый с оружием Косморики (живучий, прицельный, ИИ red); ukroboss —
+# полевой командир (финал Акта II).
+ukro:
+  hp: 12
+  damage: 10
+  speedMin: 90
+  speedMax: 140
+  attackSpeed: 210
+  shootInterval: 3.5
+  tactics: [random, snake]
+  sprite: Images/Enemies/fat_orange_1
+  shoot: down
+  wander: true
+  dirMin: 140
+  dirMax: 220
+  reward: 18
+
+kamik:
+  hp: 8
+  damage: 18
+  speedMin: 180
+  speedMax: 230
+  attackSpeed: 320
+  shootInterval: 0
+  tactics: [ram]
+  sprite: Images/Enemies/thin_yellow_1
+  shoot: none
+  dirMin: 170
+  dirMax: 190
+  reward: 14
+
+heavy:
+  hp: 40
+  damage: 12
+  speed: 55
+  attackSpeed: 150
+  shootInterval: 2.5
+  tactics: [ram, ellipse]
+  sprite: Images/Enemies/fat_orange_2
+  scale: 1.2
+  ai: red
+  shoot: aim
+  reward: 35
+
+ukroboss:
+  hp: 320
+  damage: 22
+  speed: 45
+  shootInterval: 1.0
+  tactics: []
+  sprite: Images/Enemies/fat_orange_6
+  scale: 2.6
+  shoot: aim
+  dirMin: 135
+  dirMax: 135
+  reward: 200

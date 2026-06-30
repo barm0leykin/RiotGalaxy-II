@@ -1,0 +1,6 @@
+# Брифинг финала Акта II: штурм полевого командира укропитеков.
+lines:
+  - { speaker: "Кардиган", text: "Пилот! Полевой командир укропитеков окопался. Решительный штурм!", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Рейдер", text: "Он фанатик до мозга костей. Переговоров не будет.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "Их и не планировалось. Где он?", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "В сердце фронта. Пробейся — и геноциду конец.", portrait: "Images/portrait_raider" }

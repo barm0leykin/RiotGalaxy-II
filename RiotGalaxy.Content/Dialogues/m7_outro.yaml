@@ -1,0 +1,5 @@
+# Итог миссии 7: караваны Косморики разбиты; но зависть придумал не Trapp.
+lines:
+  - { speaker: "Люк", text: "Караван разбит. Ящики — с логотипом Косморики.", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Значит, Trapp кормит резню оружием. Но зависть придумал не он — он слишком прост.", portrait: "Images/portrait_raider" }
+  - { speaker: "Кардиган", text: "Я бы сказал «туп», но я же дипломат!", portrait: "Images/portrait_kardigan" }

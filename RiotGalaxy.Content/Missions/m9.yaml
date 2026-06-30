@@ -1,0 +1,12 @@
+# Миссия 9 — «Полевой командир» (финал Акта II). Всё вместе + босс ukroboss. Магазин перед финалом.
+id: m9
+title: "Полевой командир"
+steps:
+  - { briefing: m9_intro }
+  - { battle:   m9_b1 }
+  - { battle:   m9_b2 }
+  - { battle:   m9_b3 }
+  - { shop: true }
+  - { briefing: m9_mid }
+  - { boss:     m9_boss }
+  - { briefing: m9_outro }

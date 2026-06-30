@@ -1,0 +1,7 @@
+# Акт II, брифинг перед миссией 6 «Сигма-Кита»: империя вмешивается в геноцид.
+lines:
+  - { speaker: "Кардиган", text: "Пилот! Система Сигма-Кита горит. Укропитеки вырезают мирную колонию.", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Люк", text: "За что?", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "За зависть. Им внушили, что соседи живут лучше — значит, обокрали их.", portrait: "Images/portrait_raider" }
+  - { speaker: "Кардиган", text: "Империя восстанавливает справедливость! Огнём — по тем, кто первым поднял оружие!", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Люк", text: "Справедливость на форсаже. Принято.", portrait: "Images/portrait_luke" }

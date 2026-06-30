@@ -1,0 +1,6 @@
+# Середина миссии 8: бризанский сигнал-кукловод; Зональный был мелкой пешкой.
+lines:
+  - { speaker: "Рейдер", text: "Вот он — бризанский сигнал-кукловод. Зональный был мелкой монетой в их кармане.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "А Trapp?", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Тоже монета. Просто крупнее и громче.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "Чудно. Чем выше лезем — тем меньше виноватых и больше кукловодов.", portrait: "Images/portrait_luke" }

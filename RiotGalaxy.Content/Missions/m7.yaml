@@ -1,0 +1,11 @@
+# Миссия 7 — «Оружейные караваны» (Акт II). Вводим тяжёлых (heavy, оружие Косморики) + маршруты/конвои.
+id: m7
+title: "Оружейные караваны"
+steps:
+  - { briefing: m7_intro }
+  - { battle:   m7_b1 }
+  - { battle:   m7_b2 }
+  - { battle:   m7_b3 }
+  - { boss:     m7_boss }
+  - { briefing: m7_outro }
+  - { shop: true }

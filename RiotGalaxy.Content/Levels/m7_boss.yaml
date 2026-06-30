@@ -1,0 +1,7 @@
+# Бронекараван Косморики — стена тяжёлых (мини-босс волны).
+description: "Бронекараван Косморики"
+spawnInterval: 0.8
+events:
+  - { enemy: heavy, count: 5, formation: true }
+  - { wait: 1.5 }
+  - { enemy: heavy, count: 3 }

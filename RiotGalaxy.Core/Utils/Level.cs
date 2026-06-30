@@ -222,6 +222,11 @@ namespace RiotGalaxy.Core.Utils
                 case "scout":
                 case "smscout": return EnemyType.SM_SCOUT;
                 case "boss": return EnemyType.BOSS;
+                case "ukro": return EnemyType.UKRO;
+                case "kamik":
+                case "kamikaze": return EnemyType.KAMIK;
+                case "heavy": return EnemyType.HEAVY;
+                case "ukroboss": return EnemyType.UKRO_BOSS;
                 default: return EnemyType.SM_SCOUT;
             }
         }

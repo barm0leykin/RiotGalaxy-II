@@ -1,0 +1,11 @@
+# ФИНАЛ Акта II: полевой командир укропитеков (ukroboss) + прикрытие тяжёлых.
+description: "Полевой командир укропитеков"
+spawnInterval: 0.9
+sortie: true
+sortieInterval: 2.5
+sortieCount: 1
+events:
+  - { enemy: heavy, count: 4, formation: true }
+  - { wait: 2 }
+  - { enemy: ukro, count: 6 }
+  - { enemy: ukroboss, count: 1 }

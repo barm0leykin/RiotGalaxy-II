@@ -1,0 +1,11 @@
+# Командир — натиск. Камикадзе с двух сторон + строй тяжёлых, агрессивные вылеты.
+description: "Командир — натиск"
+spawnInterval: 0.3
+sortie: true
+sortieInterval: 2.2
+sortieCount: 2
+events:
+  - parallel:
+      - - { enemy: kamik, count: 5, route: zmeyka1-left, after: scatter }
+      - - { enemy: kamik, count: 5, route: zmeyka1-right, after: scatter }
+  - { enemy: heavy, count: 5, formation: true }

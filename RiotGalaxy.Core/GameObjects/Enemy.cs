@@ -10,7 +10,7 @@ namespace RiotGalaxy.Core.GameObjects
     /// <summary>
     /// Типы врагов (как в CocosSharp).
     /// </summary>
-    public enum EnemyType { RND = 0, SM_SCOUT, BLUE, GREEN, RED, BOSS }
+    public enum EnemyType { RND = 0, SM_SCOUT, BLUE, GREEN, RED, BOSS, UKRO, KAMIK, HEAVY, UKRO_BOSS }
 
     /// <summary>
     /// Базовый класс врага. Адаптация Enemy из CocosSharp.

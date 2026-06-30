@@ -1,0 +1,5 @@
+# Итог миссии 6: это не наёмники, а фанатики; кто-то их подпитывает.
+lines:
+  - { speaker: "Рейдер", text: "Высадку отбили. Но это не наёмники за деньги — это фанатики.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "Деньги хотя бы кончаются. А зависть — нет.", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Кто-то подпитывает их — и оружием, и злобой. Ищем источник.", portrait: "Images/portrait_raider" }

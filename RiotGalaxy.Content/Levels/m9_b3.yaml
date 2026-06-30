@@ -1,0 +1,11 @@
+# Командир — последний рубеж. Всё сразу: тяжёлые + укропитеки строем + шквал камикадзе.
+description: "Командир — последний рубеж"
+spawnInterval: 0.3
+sortie: true
+sortieInterval: 2
+sortieCount: 2
+events:
+  - { enemy: heavy, count: 6, formation: true }
+  - { enemy: ukro, count: 8, formation: true }
+  - { wait: 1 }
+  - { enemy: kamik, count: 6 }

@@ -1,0 +1,9 @@
+# Тень бризанцев — помехи. Большой улей укропитеков с частыми вылетами + камикадзе.
+description: "Тень бризанцев — помехи"
+spawnInterval: 0.4
+sortie: true
+sortieInterval: 2.6
+sortieCount: 2
+events:
+  - { enemy: ukro, count: 10, formation: true }
+  - { enemy: kamik, count: 4 }

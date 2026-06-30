@@ -1,0 +1,8 @@
+# Финал Акта II: геноцид остановлен; Косморика идёт войной — мост в Акт III.
+lines:
+  - { speaker: "Рейдер", text: "Командир пал. Резня в Сигма-Ките остановлена.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "Мирных спасли. Хоть что-то настоящее за весь этот балаган.", portrait: "Images/portrait_luke" }
+  - { speaker: "DJ Trapp", text: "Ах та-а-ак?! Хватит игр! Косморика идёт сама — всей армией! Это уже не ремикс, это хардбас!", portrait: "Images/portrait_trapp" }
+  - { speaker: "Рейдер", text: "Вот и второй акт окончен, пилот. Дальше — открытая война.", portrait: "Images/portrait_raider" }
+  - { speaker: "Кардиган", text: "Блестяще! Орден… снова Агдам! Но в этот раз он почти присутствовал!", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Люк", text: "День надцатый без дома. Ниблер меня не простит.", portrait: "Images/portrait_luke" }

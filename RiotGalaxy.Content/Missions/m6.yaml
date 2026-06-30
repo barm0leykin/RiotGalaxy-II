@@ -1,0 +1,11 @@
+# Миссия 6 — «Сигма-Кита» (Акт II, начало). Вводим укропитеков (ukro) и камикадзе (kamik).
+id: m6
+title: "Сигма-Кита"
+steps:
+  - { briefing: m6_intro }
+  - { battle:   m6_b1 }
+  - { battle:   m6_b2 }
+  - { battle:   m6_b3 }
+  - { boss:     m6_boss }
+  - { briefing: m6_outro }
+  - { shop: true }

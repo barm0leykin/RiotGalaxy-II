@@ -1,0 +1,7 @@
+# Сигма-Кита — высадка. ВВОДИМ УКРОПИТЕКОВ (ukro): оранжевые, стреляют вниз, блуждают.
+description: "Сигма-Кита — высадка"
+spawnInterval: 0.6
+events:
+  - { enemy: ukro, count: 6, formation: true }
+  - { wait: 1 }
+  - { enemy: ukro, count: 4 }

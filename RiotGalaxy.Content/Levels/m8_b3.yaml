@@ -1,0 +1,12 @@
+# Тень бризанцев — окружение. Камикадзе по маршрутам с двух сторон + двойной улей.
+description: "Тень бризанцев — окружение"
+spawnInterval: 0.32
+sortie: true
+sortieInterval: 2.2
+sortieCount: 2
+events:
+  - parallel:
+      - - { enemy: kamik, count: 5, route: zmeyka1-left, after: scatter }
+      - - { enemy: kamik, count: 5, route: zmeyka1-right, after: scatter }
+  - { enemy: heavy, count: 4, formation: true }
+  - { enemy: ukro, count: 6, formation: true }

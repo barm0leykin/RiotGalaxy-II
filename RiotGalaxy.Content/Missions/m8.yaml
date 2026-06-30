@@ -1,0 +1,12 @@
+# Миссия 8 — «Тень бризанцев» (Акт II). Самый плотный микс + сюжетная вставка-разоблачение.
+id: m8
+title: "Тень бризанцев"
+steps:
+  - { briefing: m8_intro }
+  - { battle:   m8_b1 }
+  - { battle:   m8_b2 }
+  - { briefing: m8_mid }
+  - { battle:   m8_b3 }
+  - { boss:     m8_boss }
+  - { briefing: m8_outro }
+  - { shop: true }

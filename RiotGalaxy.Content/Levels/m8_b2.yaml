@@ -1,0 +1,11 @@
+# Тень бризанцев — давление. Тяжёлые + укропитеки строем, добивание камикадзе.
+description: "Тень бризанцев — давление"
+spawnInterval: 0.35
+sortie: true
+sortieInterval: 2.4
+sortieCount: 2
+events:
+  - { enemy: heavy, count: 4, formation: true }
+  - { enemy: ukro, count: 6, formation: true }
+  - { wait: 1 }
+  - { enemy: kamik, count: 5 }

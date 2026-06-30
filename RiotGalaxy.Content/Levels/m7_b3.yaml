@@ -1,0 +1,11 @@
+# Караван — эскорт. Плотный строй тяжёлых и укропитеков + добивающие камикадзе.
+description: "Караван — эскорт"
+spawnInterval: 0.4
+sortie: true
+sortieInterval: 2.6
+sortieCount: 2
+events:
+  - { enemy: heavy, count: 4, formation: true }
+  - { enemy: ukro, count: 6, formation: true }
+  - { wait: 1 }
+  - { enemy: kamik, count: 4 }

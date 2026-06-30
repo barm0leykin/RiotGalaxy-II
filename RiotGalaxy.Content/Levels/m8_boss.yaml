@@ -1,0 +1,7 @@
+# Кукловоды отступают — стена тяжёлых и шквал камикадзе (мини-босс волны).
+description: "Кукловоды отступают"
+spawnInterval: 0.7
+events:
+  - { enemy: heavy, count: 6, formation: true }
+  - { wait: 1.5 }
+  - { enemy: kamik, count: 6 }

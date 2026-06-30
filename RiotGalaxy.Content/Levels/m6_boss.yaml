@@ -1,0 +1,7 @@
+# Сигма-Кита — прорыв: первые ТЯЖЁЛЫЕ (heavy, оружие Косморики) как элита волны.
+description: "Прорыв укропитеков"
+spawnInterval: 0.8
+events:
+  - { enemy: ukro, count: 6, formation: true }
+  - { wait: 1.5 }
+  - { enemy: heavy, count: 3 }

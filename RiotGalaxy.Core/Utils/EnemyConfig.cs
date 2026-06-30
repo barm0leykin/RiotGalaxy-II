@@ -67,6 +67,16 @@ namespace RiotGalaxy.Core.Utils
                                                Sprite = "Images/enemySmallScout", Shoot = "none", DirMin = 155, DirMax = 205, Reward = 10 },
             [EnemyType.BOSS]     = new Stats { Hp = 200, Damage = 20, Speed = 50, ShootInterval = 1.2f,
                                                Sprite = "Images/enemyRed", Scale = 2.5f, Shoot = "aim", DirMin = 135, DirMax = 135, Reward = 120 },
+
+            // ── Акт II: укропитеки (оранжевые/жёлтые) + Косморика-тяжёлые ──
+            [EnemyType.UKRO]      = new Stats { Hp = 12, Damage = 10, SpeedMin = 90, SpeedMax = 140, AttackSpeed = 210, ShootInterval = 3.5f, Tactics = new List<string> { "random", "snake" },
+                                                Sprite = "Images/Enemies/fat_orange_1", Shoot = "down", Wander = true, DirMin = 140, DirMax = 220, Reward = 18 },
+            [EnemyType.KAMIK]     = new Stats { Hp = 8, Damage = 18, SpeedMin = 180, SpeedMax = 230, AttackSpeed = 320, ShootInterval = 0, Tactics = new List<string> { "ram" },
+                                                Sprite = "Images/Enemies/thin_yellow_1", Shoot = "none", DirMin = 170, DirMax = 190, Reward = 14 },
+            [EnemyType.HEAVY]     = new Stats { Hp = 40, Damage = 12, Speed = 55, AttackSpeed = 150, ShootInterval = 2.5f, Tactics = new List<string> { "ram", "ellipse" },
+                                                Sprite = "Images/Enemies/fat_orange_2", Scale = 1.2f, Ai = "red", Shoot = "aim", Reward = 35 },
+            [EnemyType.UKRO_BOSS] = new Stats { Hp = 320, Damage = 22, Speed = 45, ShootInterval = 1.0f,
+                                                Sprite = "Images/Enemies/fat_orange_6", Scale = 2.6f, Shoot = "aim", DirMin = 135, DirMax = 135, Reward = 200 },
         };
 
         private static Dictionary<EnemyType, Stats> _stats;
@@ -102,6 +112,11 @@ namespace RiotGalaxy.Core.Utils
                 case "scout":
                 case "smscout": type = EnemyType.SM_SCOUT; return true;
                 case "boss": type = EnemyType.BOSS; return true;
+                case "ukro": type = EnemyType.UKRO; return true;
+                case "kamik":
+                case "kamikaze": type = EnemyType.KAMIK; return true;
+                case "heavy": type = EnemyType.HEAVY; return true;
+                case "ukroboss": type = EnemyType.UKRO_BOSS; return true;
                 default: type = EnemyType.RND; return false;
             }
         }

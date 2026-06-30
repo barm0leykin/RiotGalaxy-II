@@ -1,0 +1,9 @@
+# Командир — авангард. Плотный улей укропитеков с тяжёлыми, частые вылеты.
+description: "Командир — авангард"
+spawnInterval: 0.35
+sortie: true
+sortieInterval: 2.4
+sortieCount: 2
+events:
+  - { enemy: ukro, count: 10, formation: true }
+  - { enemy: heavy, count: 3, formation: true }

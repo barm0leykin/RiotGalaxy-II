@@ -1,0 +1,11 @@
+# Сигма-Кита — натиск. Улей укропитеков пикирует + волны камикадзе.
+description: "Сигма-Кита — натиск"
+spawnInterval: 0.45
+sortie: true
+sortieInterval: 3
+sortieCount: 2
+events:
+  - { enemy: ukro, count: 8, formation: true }
+  - { enemy: kamik, count: 3 }
+  - { wait: 1 }
+  - { enemy: kamik, count: 3 }
