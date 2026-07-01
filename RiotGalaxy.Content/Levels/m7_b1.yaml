@@ -1,6 +1,7 @@
-# Караван — перехват. Укропитеки заходят по маршрутам, прикрыты тяжёлыми.
-description: "Караван — перехват"
-spawnInterval: 0.45
+# Корован — перехват. Укропитеки заходят по маршрутам, прикрыты тяжёлыми.
+# spawnInterval пошире, чтобы враги на одной линии-маршруте шли с зазором (не нос-в-хвост).
+description: "Корован — перехват"
+spawnInterval: 0.65
 events:
   - { enemy: ukro, count: 4, route: zmeyka1-left, after: scatter }
   - { enemy: ukro, count: 4, route: zmeyka1-right, after: scatter }

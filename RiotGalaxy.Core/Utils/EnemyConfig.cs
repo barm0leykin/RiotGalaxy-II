@@ -46,6 +46,9 @@ namespace RiotGalaxy.Core.Utils
             public float DirMax { get; set; } = 205f;
 
             public float PickSpeed(Random r) => Pick(Speed, SpeedMin, SpeedMax, r);
+            /// <summary>Единая (не случайная) скорость движения в строю — чтобы юниты не наезжали
+            /// друг на друга: минимум диапазона (SpeedMin) либо фиксированная Speed.</summary>
+            public float FormationSpeed() => (SpeedMax > SpeedMin && SpeedMin > 0f) ? SpeedMin : Speed;
             public float PickShootInterval(Random r) => Pick(ShootInterval, ShootIntervalMin, ShootIntervalMax, r);
             /// <summary>Скорость атаки; 0 — не задана (вызывающий берёт обычную скорость).</summary>
             public float PickAttackSpeed(Random r) => Pick(AttackSpeed, AttackSpeedMin, AttackSpeedMax, r);

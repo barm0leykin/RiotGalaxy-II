@@ -88,6 +88,6 @@ weapons:
 
 # Магнит — оборудование корабля: притягивает звёзды-очки.
 magnet:
-  radius: 150
-  pullSpeed: 150
+  radius: 100
+  pullSpeed: 100
   turnSpeed: 120

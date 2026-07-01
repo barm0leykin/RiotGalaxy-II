@@ -48,8 +48,9 @@ namespace RiotGalaxy.Core.Components
             }
 
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            float speed = (_owner is Enemy e) ? e.CurrentSpeed : _speed;
-            float step = speed * dt;
+            // Единая скорость (из конструктора), НЕ случайная CurrentSpeed — иначе на одной линии
+            // враги догоняют друг друга и наезжают.
+            float step = _speed * dt;
 
             Vector2 to = _route.Current - _owner.Position;
             float dist = to.Length();

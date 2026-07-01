@@ -154,7 +154,8 @@ namespace RiotGalaxy.Core.GameObjects
         {
             Ai = null;          // формация управляет движением сама
             ShootSafe = true;   // в строю улья не стреляем (как в Galaga) — огонь только в вылете
-            Movement = new FormationMovement(this, CurrentSpeed, hive, cx, cy);
+            // Единая скорость для всех в строю (не случайная), иначе юниты наезжают друг на друга.
+            Movement = new FormationMovement(this, Utils.EnemyConfig.Get(Type).FormationSpeed(), hive, cx, cy);
             Move = null;
         }
 
@@ -162,7 +163,8 @@ namespace RiotGalaxy.Core.GameObjects
         public void SetRoute(Route route, RouteEndBehavior end = RouteEndBehavior.Bounce, Hive hive = null)
         {
             Ai = null; // маршрут управляет движением сам
-            Movement = new RouteMovement(this, CurrentSpeed, route, end, hive);
+            // Единая скорость на маршруте (не случайная) — чтобы враги на одной линии не наезжали.
+            Movement = new RouteMovement(this, Utils.EnemyConfig.Get(Type).FormationSpeed(), route, end, hive);
             Move = null;
         }
 

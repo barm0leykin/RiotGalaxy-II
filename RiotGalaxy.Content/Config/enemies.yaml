@@ -10,10 +10,16 @@
 #
 # tactics — список тактик пике при вылете из улья (sortie). При каждом вылете
 # выбирается случайная из списка. Возможные значения:
-#   random  — прямо вниз с уклоном и отскоком от боков
-#   snake   — змейкой (синус по X)
-#   ram     — таран: прямо в точку, где был игрок на момент вылета
-#   ellipse — петля/дуга (Galaga-стиль)
+#   random    — прямо вниз с уклоном и отскоком от боков
+#   snake     — змейкой (синус по X)
+#   ram       — таран: прямо в точку, где был игрок на момент вылета
+#   ellipse   — петля/дуга (Galaga-стиль)
+#   zigzag    — резкий зигзаг (треугольная волна)
+#   spiral    — расширяющийся штопор
+#   swoop     — дайв-бомба: разгон вниз с боковым замахом
+#   strafe    — спуск → проход поперёк экрана → снова вниз
+#   homing    — самонаведение: доворачивает на игрока
+#   boomerang — ныряет и возвращается вверх
 #
 # Внешний вид и поведение (раньше задавались классами-наследниками, теперь — данными):
 #   sprite           — ассет спрайта (Images/...)
@@ -42,7 +48,7 @@ blue:
   speed: 130
   attackSpeed: 200
   shootInterval: 4
-  tactics: [snake, ram]
+  tactics: [snake, ram, zigzag]
   sprite: Images/Enemies/thin_blue_1
   ai: blue
   shoot: down
@@ -55,7 +61,7 @@ green:
   speedMax: 150
   attackSpeed: 200
   shootInterval: 4
-  tactics: [random, snake]
+  tactics: [random, snake, swoop]
   sprite: Images/Enemies/fat_green_1
   shoot: down
   wander: true
@@ -69,7 +75,7 @@ red:
   speed: 60
   attackSpeed: 160
   shootInterval: 6
-  tactics: [ram, ellipse]
+  tactics: [ram, ellipse, boomerang]
   sprite: Images/Enemies/fat_red_1
   ai: red
   shoot: aim
@@ -100,7 +106,7 @@ ukro:
   speedMax: 140
   attackSpeed: 210
   shootInterval: 3.5
-  tactics: [random, snake]
+  tactics: [random, snake, spiral]
   sprite: Images/Enemies/fat_orange_1
   shoot: down
   wander: true
@@ -115,7 +121,7 @@ kamik:
   speedMax: 230
   attackSpeed: 320
   shootInterval: 0
-  tactics: [ram]
+  tactics: [ram, homing]
   sprite: Images/Enemies/thin_yellow_1
   shoot: none
   dirMin: 170
@@ -128,7 +134,7 @@ heavy:
   speed: 55
   attackSpeed: 150
   shootInterval: 2.5
-  tactics: [ram, ellipse]
+  tactics: [ram, ellipse, strafe]
   sprite: Images/Enemies/fat_orange_2
   scale: 1.2
   ai: red
