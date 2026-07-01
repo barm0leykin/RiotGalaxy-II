@@ -253,6 +253,11 @@ namespace RiotGalaxy.Core.GameObjects
                 return;
             Vector2 d = player.Position - Position;
             float angle = (float)Math.Atan2(d.X, -d.Y); // конвенция Weapon.Aim: 0=вверх, π=вниз
+            // Ограничиваем конусом вниз: без этого при враге на уровне игрока выстрел почти
+            // горизонтален (не увернуться). δ — отклонение от вертикали-вниз, зажимаем в ±maxDeg.
+            float maxRad = MathHelper.ToRadians(Utils.GameOptions.EnemyAimMaxDeg);
+            float delta = MathHelper.Clamp(MathHelper.WrapAngle(angle - MathHelper.Pi), -maxRad, maxRad);
+            angle = MathHelper.Pi + delta;
             Gun.Aim(angle);
             Gun.Fire();
         }

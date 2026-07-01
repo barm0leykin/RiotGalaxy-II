@@ -13,7 +13,7 @@ namespace RiotGalaxy.Core.Weapons
     {
         public string Id { get; set; }
         public string Name { get; set; }
-        public string Sprite { get; set; } = "Images/bullet";
+        public string Sprite { get; set; } = "Images/wpn_bullet";
         public string Icon { get; set; } = "Images/btn_cannon"; // иконка кнопки/магазина
         public string Key { get; set; } = "";                   // клавиша десктопа (имя из Keys: D1..D5)
         public bool Piercing { get; set; }                      // снаряд летит насквозь (лазер)
@@ -75,7 +75,7 @@ namespace RiotGalaxy.Core.Weapons
             // Бластер — стартовый: слабый, но очень скорострельный (не скучно с первой секунды).
             new WeaponDef
             {
-                Id = "blaster", Name = "Бластер", Sprite = "Images/bullet", Icon = "Images/btn_auto_cannon",
+                Id = "blaster", Name = "Бластер", Sprite = "Images/wpn_blaster", Icon = "Images/btn_auto_cannon",
                 Key = "D1", UnlockCost = 0, BaseCost = 200, CostGrowth = 1.6f,
                 Levels =
                 {
@@ -87,7 +87,7 @@ namespace RiotGalaxy.Core.Weapons
             // Пушка — медленно, но больно.
             new WeaponDef
             {
-                Id = "cannon", Name = "Пушка", Sprite = "Images/bullet", Icon = "Images/btn_cannon",
+                Id = "cannon", Name = "Пушка", Sprite = "Images/wpn_bullet", Icon = "Images/btn_cannon",
                 Key = "D2", UnlockCost = 400, BaseCost = 350, CostGrowth = 1.6f,
                 Levels =
                 {
@@ -99,7 +99,7 @@ namespace RiotGalaxy.Core.Weapons
             // Пулемёт — очереди слабых снарядов с разбросом.
             new WeaponDef
             {
-                Id = "minigun", Name = "Пулемёт", Sprite = "Images/slug", Icon = "Images/btn_minigun",
+                Id = "minigun", Name = "Пулемёт", Sprite = "Images/wpn_slug", Icon = "Images/btn_minigun",
                 Key = "D3", JitterDeg = 6, UnlockCost = 600, BaseCost = 350, CostGrowth = 1.6f,
                 Levels =
                 {
@@ -111,7 +111,7 @@ namespace RiotGalaxy.Core.Weapons
             // Лазер — пробивающий.
             new WeaponDef
             {
-                Id = "laser", Name = "Лазер", Sprite = "Images/laser", Icon = "Images/btn_laser",
+                Id = "laser", Name = "Лазер", Sprite = "Images/wpn_laser", Icon = "Images/btn_laser",
                 Key = "D4", Piercing = true, UnlockCost = 1000, BaseCost = 450, CostGrowth = 1.6f,
                 Levels =
                 {
@@ -123,7 +123,7 @@ namespace RiotGalaxy.Core.Weapons
             // Разлёт — веер снарядов (число растёт с уровнем).
             new WeaponDef
             {
-                Id = "spread", Name = "Разлёт", Sprite = "Images/bullet", Icon = "Images/btn_BulletUp",
+                Id = "spread", Name = "Разлёт", Sprite = "Images/wpn_bullet", Icon = "Images/btn_BulletUp",
                 Key = "D5", FanCount = 3, FanPerLevel = 1, FanStepDeg = 12f,
                 UnlockCost = 750, BaseCost = 450, CostGrowth = 1.6f,
                 Levels =
@@ -148,7 +148,7 @@ namespace RiotGalaxy.Core.Weapons
                     if (w == null || string.IsNullOrEmpty(w.Id)) continue;
                     list.Add(new WeaponDef
                     {
-                        Id = w.Id, Name = w.Name, Sprite = w.Sprite ?? "Images/bullet",
+                        Id = w.Id, Name = w.Name, Sprite = w.Sprite ?? "Images/wpn_bullet",
                         Icon = w.Icon ?? "Images/btn_cannon", Key = w.Key ?? "",
                         Piercing = w.Piercing, JitterDeg = w.JitterDeg,
                         FanCount = w.FanCount > 0 ? w.FanCount : 1, FanPerLevel = w.FanPerLevel,

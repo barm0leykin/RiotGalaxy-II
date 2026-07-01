@@ -143,7 +143,11 @@ namespace RiotGalaxy.Core.AI
         {
             if (player == null) return MathHelper.Pi; // вниз
             Vector2 d = player.Position - owner.Position;
-            return (float)Math.Atan2(d.X, -d.Y); // конвенция Weapon.Aim: 0=вверх, π=вниз
+            float angle = (float)Math.Atan2(d.X, -d.Y); // конвенция Weapon.Aim: 0=вверх, π=вниз
+            // Тот же конус вниз, что и у обычных врагов (радиальный залп фазы 3 не через этот метод).
+            float maxRad = MathHelper.ToRadians(Utils.GameOptions.EnemyAimMaxDeg);
+            float delta = MathHelper.Clamp(MathHelper.WrapAngle(angle - MathHelper.Pi), -maxRad, maxRad);
+            return MathHelper.Pi + delta;
         }
 
         private void SpawnAdds(int count)

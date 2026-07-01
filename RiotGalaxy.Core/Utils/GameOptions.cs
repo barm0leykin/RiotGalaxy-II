@@ -16,6 +16,10 @@ namespace RiotGalaxy.Core.Utils
         public static float PlayerBrakeSpeed = 800f;
         public static float PlayerInvulnTime = 2.0f; // секунды неуязвимости после попадания
 
+        /// <summary>Макс. отклонение прицельного выстрела врага от вертикали (вниз), градусы.
+        /// Ограничивает «почти горизонтальные» выстрелы, чтобы игрок мог увернуться.</summary>
+        public static float EnemyAimMaxDeg = 55f;
+
         public static void Load()
         {
             var data = Yaml.LoadAsset<OptionsYaml>(Yaml.ConfigAsset("options.yaml"));
@@ -36,6 +40,8 @@ namespace RiotGalaxy.Core.Utils
                 if (data.Player.BrakeSpeed > 0) PlayerBrakeSpeed = data.Player.BrakeSpeed;
                 if (data.Player.InvulnTime > 0) PlayerInvulnTime = data.Player.InvulnTime;
             }
+            if (data.Combat != null && data.Combat.AimMaxDeg > 0)
+                EnemyAimMaxDeg = data.Combat.AimMaxDeg;
         }
 
         // POCO под структуру options.yaml (имена в YAML — camelCase)
@@ -43,6 +49,11 @@ namespace RiotGalaxy.Core.Utils
         {
             public ScreenYaml Screen { get; set; }
             public PlayerYaml Player { get; set; }
+            public CombatYaml Combat { get; set; }
+        }
+        private class CombatYaml
+        {
+            public float AimMaxDeg { get; set; }
         }
         private class ScreenYaml
         {

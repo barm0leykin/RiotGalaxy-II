@@ -15,7 +15,7 @@
 weapons:
   - id: blaster
     name: "Бластер"
-    sprite: Images/bullet
+    sprite: Images/wpn_blaster
     icon: Images/btn_auto_cannon
     key: D1
     unlockCost: 0
@@ -31,7 +31,7 @@ weapons:
 
   - id: cannon
     name: "Пушка"
-    sprite: Images/bullet
+    sprite: Images/wpn_bullet
     icon: Images/btn_cannon
     key: D2
     unlockCost: 400
@@ -44,7 +44,7 @@ weapons:
 
   - id: minigun
     name: "Пулемёт"
-    sprite: Images/slug
+    sprite: Images/wpn_slug
     icon: Images/btn_minigun
     key: D3
     jitterDeg: 6
@@ -58,7 +58,7 @@ weapons:
 
   - id: laser
     name: "Лазер"
-    sprite: Images/laser
+    sprite: Images/wpn_laser
     icon: Images/btn_laser
     key: D4
     piercing: true
@@ -72,7 +72,7 @@ weapons:
 
   - id: spread
     name: "Разлёт"
-    sprite: Images/bullet
+    sprite: Images/wpn_bullet
     icon: Images/btn_BulletUp
     key: D5
     fanCount: 3

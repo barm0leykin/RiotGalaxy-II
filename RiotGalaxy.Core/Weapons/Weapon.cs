@@ -117,7 +117,7 @@ namespace RiotGalaxy.Core.Weapons
             Vector2 dir = DirFromAngle(angle);
             Vector2 spawn = _owner.Position + dir * (_owner.Height * 0.5f);
 
-            Shell shell = new Shell(spawn, Def?.Sprite ?? "Images/bullet", Def?.Piercing ?? false);
+            Shell shell = new Shell(spawn, Def?.Sprite ?? "Images/wpn_bullet", Def?.Piercing ?? false);
             shell.Speed = Options.shellSpeed;
             shell.Damage = (int)(Options.damage * OwnerDamageMult);
             shell.Direction = dir;

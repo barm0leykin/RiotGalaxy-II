@@ -200,7 +200,7 @@
 /processorParam:TextureFormat=Color
 /build:Images/btn_win.png
 
-#begin Images/bullet.png
+#begin Images/wpn_bullet.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -210,9 +210,9 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Images/bullet.png
+/build:Images/wpn_bullet.png
 
-#begin Images/bullet_glow.png
+#begin Images/wpn_bullet_glow.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -222,7 +222,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Images/bullet_glow.png
+/build:Images/wpn_bullet_glow.png
 
 #begin Images/enemyBlue.png
 /importer:TextureImporter
@@ -272,7 +272,7 @@
 /processorParam:TextureFormat=Color
 /build:Images/enemySmallScout.png
 
-#begin Images/laser.png
+#begin Images/wpn_laser.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -282,7 +282,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Images/laser.png
+/build:Images/wpn_laser.png
 
 #begin Images/red_cross.png
 /importer:TextureImporter
@@ -320,7 +320,7 @@
 /processorParam:TextureFormat=Color
 /build:Images/ship.png
 
-#begin Images/slug.png
+#begin Images/wpn_slug.png
 /importer:TextureImporter
 /processor:TextureProcessor
 /processorParam:ColorKeyColor=255,0,255,255
@@ -330,7 +330,7 @@
 /processorParam:ResizeToPowerOfTwo=False
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
-/build:Images/slug.png
+/build:Images/wpn_slug.png
 
 #begin Backgrounds/background.jpg
 /importer:TextureImporter
@@ -1243,3 +1243,15 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:Images/portrait_trapp.png
+
+#begin Images/wpn_blaster.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=False
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:Images/wpn_blaster.png
