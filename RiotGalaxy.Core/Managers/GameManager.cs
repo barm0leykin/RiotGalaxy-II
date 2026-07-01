@@ -99,6 +99,7 @@ namespace RiotGalaxy.Core.Managers
 
         // Параллакс-фон (звёзды). Анимируется во всех состояниях, рисуется под сценой.
         private Effects.StarField _starField;
+        private Utils.BiomeConfig.Biome _biome = Utils.BiomeConfig.Get("act1"); // небо/звёзды текущего акта
 
         // Отрисовщик боевого HUD (вынесен из GameManager).
         private readonly Interface.HudRenderer _hud = new Interface.HudRenderer();
@@ -257,6 +258,7 @@ namespace RiotGalaxy.Core.Managers
             Utils.BonusConfig.Load();
             Utils.GameOptions.Load();
             Utils.EffectsConfig.Load();
+            Utils.BiomeConfig.Load();      // биомы актов (небо/звёзды)
             Utils.UpgradeConfig.Load();    // определения апгрейдов (магазин)
             Utils.SkillsConfig.Load();     // активные навыки
             Utils.SaveData.CurrentProfile = Utils.GameSettings.LastProfile; // последний выбранный слот
@@ -270,6 +272,7 @@ namespace RiotGalaxy.Core.Managers
             // Параллакс-фон из звёзд (процедурный, без ассетов). Слои — из EffectsConfig,
             // поэтому создаём после загрузки конфигов.
             _starField = new Effects.StarField(ScreenWidth, ScreenHeight);
+            ApplyBiome("act1"); // биом по умолчанию (меню/старт), дальше меняется по акту миссии
 
             // Сколько уровней доступно (по файлам Content/Levels/level*.yaml)
             _levels.InitTotalLevels();
@@ -308,21 +311,47 @@ namespace RiotGalaxy.Core.Managers
             UpdateRenderTransform();
             _spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _renderMatrix);
 
-            // Рисуем фоновое изображение (задник) под всеми состояниями
-            if (_background != null)
-            {
-                _spriteBatch.Draw(_background, new Rectangle(0, 0, ScreenWidth, ScreenHeight), Color.White);
-            }
-
-            // Параллакс-звёзды поверх задника, под игровой сценой/UI.
+            // Небо биома: вертикальный градиент верх→низ (цвет зависит от акта).
             if (SimpleTexture == null)
                 SimpleTexture = Utils.Textures.CreateSolid(GraphicsDevice, Color.White);
+            DrawSky();
+
+            // Параллакс-звёзды поверх неба, под игровой сценой/UI (оттенок звёзд — из биома).
             _starField?.Draw(_spriteBatch, SimpleTexture);
 
             // Все состояния рисует ScreenSystem (включая GameplayScreen → DrawGameplay).
             Screens.Draw(_spriteBatch);
 
             _spriteBatch.End();
+        }
+
+        /// <summary>Небо биома: вертикальный градиент верх→низ (полосами через SimpleTexture).</summary>
+        private void DrawSky()
+        {
+            const int strips = 32;
+            float h = ScreenHeight / (float)strips;
+            for (int i = 0; i < strips; i++)
+            {
+                Color c = Color.Lerp(_biome.SkyTop, _biome.SkyBottom, i / (float)(strips - 1));
+                _spriteBatch.Draw(SimpleTexture,
+                    new Rectangle(0, (int)(i * h), ScreenWidth, (int)Math.Ceiling(h) + 1), c);
+            }
+        }
+
+        /// <summary>Применить биом акта: цвет неба + оттенок звёзд.</summary>
+        private void ApplyBiome(string id)
+        {
+            _biome = Utils.BiomeConfig.Get(id);
+            if (_starField != null) _starField.Tint = _biome.Star;
+        }
+
+        /// <summary>Биом текущей миссии: явный `biome:` из YAML или по номеру акта (m1–5/6–9/далее).</summary>
+        private void ApplyBiomeForCurrentMission()
+        {
+            int n = _mission.MissionNumber;
+            string biome = !string.IsNullOrEmpty(_mission.CurrentBiome) ? _mission.CurrentBiome
+                         : (n <= 5 ? "act1" : n <= 9 ? "act2" : "act3");
+            ApplyBiome(biome);
         }
 
         // Запрошен переход «в меню» по кнопке Назад. Выставляется из UI-потока (OnBackPressed),
@@ -751,6 +780,10 @@ namespace RiotGalaxy.Core.Managers
                 FinishCampaign(); // кампания пройдена
                 return;
             }
+
+            // Биом (небо/звёзды) по текущей миссии — на каждом шаге, идемпотентно. Так работает и
+            // для dev-прыжка/«Продолжить» (там миссия задаётся через ResumeAt, без флага «старт»).
+            ApplyBiomeForCurrentMission();
 
             switch (step.Kind)
             {

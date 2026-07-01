@@ -244,10 +244,12 @@ _spriteBatch.End();                     // 6. закрыть пакет → вс
   виртуальных пикселях) подмешивается в `_renderMatrix` letterbox'а (× scale), затухает
   линейно в `UpdateScreenShake`. Слабая тряска не перебивает более сильную активную.
   Триггеры: гибель врага/босса, «нюк» (`KillAllEnemies`), урон игроку (`OnPlayerHealthChanged`).
-- **Параллакс-фон** — [Effects/StarField.cs](RiotGalaxy.Core/Effects/StarField.cs). Слои
-  процедурных звёзд (дальний/средний/ближний) плывут вниз с разной скоростью и яркостью,
-  при уходе за край возвращаются сверху. Анимируется в `Update` (во всех состояниях),
-  рисуется в `Draw` поверх задника, под сценой/UI. Тоже без ассетов (`SimpleTexture`).
+- **Небо + параллакс-фон** — фон рисуется как **градиент неба биома** (`GameManager.DrawSky`,
+  полосами через `SimpleTexture`), поверх — [Effects/StarField.cs](RiotGalaxy.Core/Effects/StarField.cs):
+  слои процедурных звёзд плывут вниз с разной скоростью/яркостью, при уходе за край — сверху.
+  **Биом акта** ([BiomeConfig](RiotGalaxy.Core/Utils/BiomeConfig.cs) ← `biomes.yaml`) задаёт цвет неба
+  (верх/низ) и оттенок звёзд (`StarField.Tint`); `GameManager.ApplyBiome(id)` вызывается при старте
+  миссии (id по акту: `act1/act2/act3`, либо поле `biome:` в миссии). Всё без ассетов (`SimpleTexture`).
 
 - **Всплывающие числа** — [Effects/FloatingText.cs](RiotGalaxy.Core/Effects/FloatingText.cs)
   (статический, в координатах мира): урон над врагом (`CollisionSystem`), очки над звездой

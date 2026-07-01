@@ -190,8 +190,10 @@
       `zigzag`, `spiral`, `swoop`, `strafe`, `homing`, `boomerang` (было random/snake/ram/ellipse).
       Розданы врагам в [enemies.yaml](RiotGalaxy.Content/Config/enemies.yaml) (напр. kamik → homing,
       red → boomerang). *(Ещё: параллельные синхронные залпы всем строем — отдельно.)*
-- [ ] **Главы-биомы** — структура `Content/Chapters/*.yaml`: список уровней, фон, музыка, набор
-      врагов/палитра, босс главы. Меню выбора главы (разблокировка по прогрессу).
+- [~] **Биомы актов** — [BiomeConfig](RiotGalaxy.Core/Utils/BiomeConfig.cs) + [biomes.yaml](RiotGalaxy.Content/Config/biomes.yaml):
+      небо-градиент (верх→низ) + оттенок звёзд, свой на акт (m1–5 act1 холодный синий, m6–9 act2
+      багрянец, далее act3 фиолет); применяется при старте миссии (`GameManager.ApplyBiome`), можно
+      переопределить полем `biome:` в миссии. *(Ещё: своя музыка/набор врагов на главу, меню выбора главы.)*
 - [x] **Боссы с фазами и телеграфом** — [BossAI.cs](RiotGalaxy.Core/AI/BossAI.cs) (`ai: boss` в enemies.yaml):
       влёт → свип, 3 фазы по HP (66%/33%), паттерны (прицельная очередь → веер вниз → радиал),
       перед залпом телеграф-вспышка ~0.6с + почти остановка, в фазе 3 — подмога + тряска. Применён к

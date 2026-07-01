@@ -32,6 +32,8 @@ namespace RiotGalaxy.Core.Managers
         public int TotalMissions => _missionIds.Count;
         public string CurrentMissionTitle => _cur?.Title ?? "";
         public string CurrentMissionBackground => _cur?.Background;
+        /// <summary>Явный биом миссии из YAML (`biome:`); пусто — берётся по акту.</summary>
+        public string CurrentBiome => _cur?.Biome;
 
         /// <summary>Индекс текущей миссии и шага (для чекпоинта/возобновления).</summary>
         public int MissionIndex => _mi;
@@ -124,13 +126,14 @@ namespace RiotGalaxy.Core.Managers
             public string Id;
             public string Title;
             public string Background;
+            public string Biome;
             public List<MissionStep> Steps;
 
             public static MissionDef Load(string id)
             {
                 var y = Yaml.LoadAsset<MissionYaml>($"Content/Missions/{id}.yaml");
                 if (y == null) return null;
-                var def = new MissionDef { Id = y.Id ?? id, Title = y.Title ?? "", Background = y.Background, Steps = new List<MissionStep>() };
+                var def = new MissionDef { Id = y.Id ?? id, Title = y.Title ?? "", Background = y.Background, Biome = y.Biome, Steps = new List<MissionStep>() };
                 if (y.Steps != null)
                     foreach (var s in y.Steps)
                     {
@@ -153,6 +156,7 @@ namespace RiotGalaxy.Core.Managers
             public string Id { get; set; }
             public string Title { get; set; }
             public string Background { get; set; }
+            public string Biome { get; set; }
             public List<StepYaml> Steps { get; set; }
         }
         private class StepYaml

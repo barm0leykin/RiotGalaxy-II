@@ -29,6 +29,9 @@ namespace RiotGalaxy.Core.Effects
         private readonly float _height;
         private readonly Random _rng = new Random();
 
+        /// <summary>Оттенок звёзд (палитра биома акта). По умолчанию — белые.</summary>
+        public Color Tint { get; set; } = Color.White;
+
         /// <summary>
         /// Слои параллакса берутся из <see cref="Utils.EffectsConfig.StarLayers"/>
         /// (порядок: дальний → ближний). Параметры задаются в Content/Config/effects.yaml.
@@ -91,7 +94,7 @@ namespace RiotGalaxy.Core.Effects
                 {
                     float scale = s.Size / pixel.Width;
                     spriteBatch.Draw(pixel, new Vector2(s.X, s.Y), null,
-                                     Color.White * s.Brightness, 0f, Vector2.Zero,
+                                     Tint * s.Brightness, 0f, Vector2.Zero,
                                      scale, SpriteEffects.None, 0f);
                 }
             }
