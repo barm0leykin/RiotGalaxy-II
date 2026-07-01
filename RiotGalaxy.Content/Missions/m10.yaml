@@ -1,0 +1,11 @@
+# Миссия 10 — «Вторжение» (Акт III, начало). Вводим Космерику (korma). Финал волны — элита.
+id: m10
+title: "Вторжение"
+steps:
+  - { briefing: m10_intro }
+  - { battle:   m10_b1 }
+  - { battle:   m10_b2 }
+  - { battle:   m10_b3 }
+  - { boss:     m10_boss }
+  - { briefing: m10_outro }
+  - { shop: true }

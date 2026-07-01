@@ -1,0 +1,8 @@
+# Финал кампании: империя выстояла; тихий героизм Рейдера; Люк — домой к Ниблеру.
+lines:
+  - { speaker: "Рейдер", text: "Сверхразум умолк. J-D-bI отступают — где нет наживы, им делать нечего.", portrait: "Images/portrait_raider" }
+  - { speaker: "Кардиган", text: "ПОБЕДА! Орден Галактики… мне! И… ладно, и Агдаму.", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Агдам", text: "Я всё это спланировал. Где-то в глубине души.", portrait: "Images/portrait_agdam" }
+  - { speaker: "Император", text: "Империя выстояла. Хорошая работа, кто бы ты ни был.", portrait: "Images/portrait_emperor" }
+  - { speaker: "Рейдер", text: "Мир хрупок, пилот. Кто-то должен его держать. Сегодня держал ты.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "А теперь — домой. Ниблер уже точит когти.", portrait: "Images/portrait_luke" }

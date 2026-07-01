@@ -1,0 +1,10 @@
+# Тень — первые кукловоды. ВВОДИМ БРИЗАНЦЕВ (briz): быстрые, петляют, самонаводятся.
+description: "Тень — первые кукловоды"
+spawnInterval: 0.45
+sortie: true
+sortieInterval: 2.6
+sortieCount: 2
+events:
+  - { enemy: korma, count: 6, formation: true }
+  - { wait: 1 }
+  - { enemy: briz, count: 4 }

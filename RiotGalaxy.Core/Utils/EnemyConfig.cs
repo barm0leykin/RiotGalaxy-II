@@ -80,6 +80,18 @@ namespace RiotGalaxy.Core.Utils
                                                 Sprite = "Images/Enemies/fat_orange_2", Scale = 1.2f, Ai = "red", Shoot = "aim", Reward = 35 },
             [EnemyType.UKRO_BOSS] = new Stats { Hp = 320, Damage = 22, Speed = 45, ShootInterval = 1.0f,
                                                 Sprite = "Images/Enemies/fat_orange_6", Scale = 2.6f, Ai = "boss", Shoot = "aim", DirMin = 135, DirMax = 135, Reward = 200 },
+
+            // ── Акт III: армия Космерики (синие) + бризанцы (фиолетовые) + финальные боссы ──
+            [EnemyType.KORMA]    = new Stats { Hp = 18, Damage = 10, SpeedMin = 80, SpeedMax = 110, AttackSpeed = 200, ShootInterval = 3f, Tactics = new List<string> { "snake", "ram", "zigzag" },
+                                               Sprite = "Images/Enemies/fat_blue_1", Shoot = "down", Reward = 28 },
+            [EnemyType.BRIZ]     = new Stats { Hp = 14, Damage = 12, SpeedMin = 120, SpeedMax = 170, AttackSpeed = 260, ShootInterval = 2.6f, Tactics = new List<string> { "swoop", "homing", "boomerang" },
+                                               Sprite = "Images/Enemies/fat_purple_2", Shoot = "aim", Wander = true, DirMin = 120, DirMax = 240, Reward = 32 },
+            [EnemyType.TRAPP]    = new Stats { Hp = 380, Damage = 22, Speed = 45, ShootInterval = 1.0f,
+                                               Sprite = "Images/Enemies/fat_blue_6", Scale = 2.7f, Ai = "boss", Shoot = "aim", DirMin = 135, DirMax = 135, Reward = 250 },
+            [EnemyType.REAPER]   = new Stats { Hp = 460, Damage = 26, Speed = 45, ShootInterval = 0.9f,
+                                               Sprite = "Images/Enemies/fat_purple_6", Scale = 2.9f, Ai = "boss", Shoot = "aim", DirMin = 135, DirMax = 135, Reward = 350 },
+            [EnemyType.OVERMIND] = new Stats { Hp = 560, Damage = 28, Speed = 40, ShootInterval = 0.8f,
+                                               Sprite = "Images/Enemies/thin_pink_6", Scale = 3.0f, Ai = "boss", Shoot = "aim", DirMin = 135, DirMax = 135, Reward = 500 },
         };
 
         private static Dictionary<EnemyType, Stats> _stats;
@@ -120,6 +132,11 @@ namespace RiotGalaxy.Core.Utils
                 case "kamikaze": type = EnemyType.KAMIK; return true;
                 case "heavy": type = EnemyType.HEAVY; return true;
                 case "ukroboss": type = EnemyType.UKRO_BOSS; return true;
+                case "korma": type = EnemyType.KORMA; return true;
+                case "briz": type = EnemyType.BRIZ; return true;
+                case "trapp": type = EnemyType.TRAPP; return true;
+                case "reaper": type = EnemyType.REAPER; return true;
+                case "overmind": type = EnemyType.OVERMIND; return true;
                 default: type = EnemyType.RND; return false;
             }
         }

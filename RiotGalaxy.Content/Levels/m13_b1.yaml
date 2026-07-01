@@ -1,0 +1,9 @@
+# Сердце — все фронты. Косморика + бризанцы вместе.
+description: "Сердце — все фронты"
+spawnInterval: 0.35
+sortie: true
+sortieInterval: 2.2
+sortieCount: 2
+events:
+  - { enemy: korma, count: 8, formation: true }
+  - { enemy: briz, count: 4 }

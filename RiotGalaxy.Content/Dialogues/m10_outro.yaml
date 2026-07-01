@@ -1,0 +1,5 @@
+# Итог миссии 10: авангард отбит, на подходе флагман.
+lines:
+  - { speaker: "Рейдер", text: "Первый вал отбит. Но это лишь авангард.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "И на подходе что-то большое.", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Флагман «Трапизон». Личная игрушка Trapp. Летим туда.", portrait: "Images/portrait_raider" }

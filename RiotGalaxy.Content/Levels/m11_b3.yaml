@@ -1,0 +1,12 @@
+# Трапизон — мостик. Тяжёлые + строй Космерики + добивающие камикадзе. Усиление урона.
+description: "Трапизон — мостик"
+spawnInterval: 0.32
+sortie: true
+sortieInterval: 2.2
+sortieCount: 2
+events:
+  - { enemy: heavy, count: 5, formation: true }
+  - { enemy: korma, count: 8, formation: true }
+  - { wait: 1 }
+  - { enemy: kamik, count: 5 }
+  - { enemy: korma, count: 1, drop: power }

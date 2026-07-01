@@ -1,0 +1,11 @@
+# Трапизон — БОСС: DJ Trapp на флагмане. Прикрытие Космерики + аптечка.
+description: "DJ Trapp — флагман «Трапизон»"
+spawnInterval: 0.9
+sortie: true
+sortieInterval: 2.5
+sortieCount: 1
+events:
+  - { enemy: korma, count: 6, formation: true }
+  - { enemy: korma, count: 1, drop: hp }
+  - { wait: 2 }
+  - { enemy: trapp, count: 1 }

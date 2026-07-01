@@ -1,0 +1,8 @@
+# Вторжение — ударный кулак (элита волны: стена тяжёлых + солдаты). Аптечка внутри.
+description: "Ударный кулак Космерики"
+spawnInterval: 0.7
+events:
+  - { enemy: heavy, count: 5, formation: true }
+  - { enemy: korma, count: 1, drop: hp }
+  - { wait: 1.5 }
+  - { enemy: korma, count: 6 }

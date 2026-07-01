@@ -1,0 +1,10 @@
+# Тень — рой бризанцев. Много briz + камикадзе. Ускорение для уклонения.
+description: "Тень — рой бризанцев"
+spawnInterval: 0.35
+sortie: true
+sortieInterval: 2.3
+sortieCount: 2
+events:
+  - { enemy: briz, count: 8 }
+  - { enemy: briz, count: 1, drop: speed }
+  - { enemy: kamik, count: 4 }

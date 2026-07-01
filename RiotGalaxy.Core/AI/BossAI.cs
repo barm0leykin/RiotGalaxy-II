@@ -37,7 +37,6 @@ namespace RiotGalaxy.Core.AI
             _centerX = GameManager.Instance.ScreenWidth * 0.5f;
             _amp     = GameManager.Instance.ScreenWidth * 0.32f;
             _attackTimer = 1.2f;      // пауза перед первой атакой
-            GameManager.Instance.ShowBossTaunt("intro"); // реплика при появлении
         }
 
         private float HpFrac => owner.MaxHp > 0 ? (float)owner.Hp / owner.MaxHp : 0f;
@@ -56,7 +55,11 @@ namespace RiotGalaxy.Core.AI
                 p.X = _centerX;
                 p.Y += 90f * dt;
                 owner.Position = p;
-                if (p.Y >= _hoverY) _arrived = true;
+                if (p.Y >= _hoverY)
+                {
+                    _arrived = true;
+                    GameManager.Instance.ShowBossTaunt("intro"); // реплика — когда босс долетел и виден
+                }
                 return;
             }
 

@@ -1,0 +1,11 @@
+# Миссия 11 — «Флагман Трапизон» (Акт III). Босс: DJ Trapp.
+id: m11
+title: "Флагман Трапизон"
+steps:
+  - { briefing: m11_intro }
+  - { battle:   m11_b1 }
+  - { battle:   m11_b2 }
+  - { battle:   m11_b3 }
+  - { boss:     m11_boss }
+  - { briefing: m11_outro }
+  - { shop: true }

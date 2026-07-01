@@ -1,0 +1,11 @@
+# Тень — окружение. Тяжёлые + строй Космерики + рой бризанцев.
+description: "Тень — окружение"
+spawnInterval: 0.32
+sortie: true
+sortieInterval: 2.1
+sortieCount: 2
+events:
+  - { enemy: heavy, count: 6, formation: true }
+  - { enemy: korma, count: 6, formation: true }
+  - { wait: 1 }
+  - { enemy: briz, count: 8 }

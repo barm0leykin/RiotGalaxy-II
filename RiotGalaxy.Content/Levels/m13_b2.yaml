@@ -1,0 +1,12 @@
+# Сердце — натиск. Камикадзе петлями с двух сторон + тяжёлые + бризанцы.
+description: "Сердце — натиск"
+spawnInterval: 0.3
+sortie: true
+sortieInterval: 2
+sortieCount: 2
+events:
+  - parallel:
+      - - { enemy: kamik, count: 5, route: loop-left, after: scatter }
+      - - { enemy: kamik, count: 5, route: loop-right, after: scatter }
+  - { enemy: heavy, count: 5, formation: true }
+  - { enemy: briz, count: 4 }

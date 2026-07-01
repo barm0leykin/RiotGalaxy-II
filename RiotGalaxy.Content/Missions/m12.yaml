@@ -1,0 +1,12 @@
+# Миссия 12 — «Жнец из тени» (Акт III). Вводим бризанцев (briz). Босс: «Жнец» + разоблачение J-D-bI.
+id: m12
+title: "Жнец из тени"
+steps:
+  - { briefing: m12_intro }
+  - { battle:   m12_b1 }
+  - { battle:   m12_b2 }
+  - { briefing: m12_mid }
+  - { battle:   m12_b3 }
+  - { boss:     m12_boss }
+  - { briefing: m12_outro }
+  - { shop: true }

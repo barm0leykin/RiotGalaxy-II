@@ -154,3 +154,75 @@ ukroboss:
   dirMin: 135
   dirMax: 135
   reward: 200
+
+# ── Акт III: армия Космерики (синие), бризанцы (фиолет.) и финальные боссы ────
+# korma — регулярный солдат Космерики (живучий строй); briz — бризанец-кукловод
+# (быстрый, самонаводящийся, петляет); trapp/reaper/overmind — боссы Акта III.
+korma:
+  hp: 18
+  damage: 10
+  speedMin: 80
+  speedMax: 110
+  attackSpeed: 200
+  shootInterval: 3
+  tactics: [snake, ram, zigzag]
+  sprite: Images/Enemies/fat_blue_1
+  shoot: down
+  reward: 28
+
+briz:
+  hp: 14
+  damage: 12
+  speedMin: 120
+  speedMax: 170
+  attackSpeed: 260
+  shootInterval: 2.6
+  tactics: [swoop, homing, boomerang]
+  sprite: Images/Enemies/fat_purple_2
+  shoot: aim
+  wander: true
+  dirMin: 120
+  dirMax: 240
+  reward: 32
+
+trapp:
+  hp: 380
+  damage: 22
+  speed: 45
+  shootInterval: 1.0
+  tactics: []
+  sprite: Images/Enemies/fat_blue_6
+  scale: 2.7
+  ai: boss
+  shoot: aim
+  dirMin: 135
+  dirMax: 135
+  reward: 250
+
+reaper:
+  hp: 460
+  damage: 26
+  speed: 45
+  shootInterval: 0.9
+  tactics: []
+  sprite: Images/Enemies/fat_purple_6
+  scale: 2.9
+  ai: boss
+  shoot: aim
+  dirMin: 135
+  dirMax: 135
+  reward: 350
+
+overmind:
+  hp: 560
+  damage: 28
+  speed: 40
+  shootInterval: 0.8
+  tactics: []
+  sprite: Images/Enemies/thin_pink_6
+  scale: 3.0
+  ai: boss
+  shoot: aim
+  dirMin: 135
+  dirMax: 135
+  reward: 500

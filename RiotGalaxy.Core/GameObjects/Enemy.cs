@@ -10,7 +10,8 @@ namespace RiotGalaxy.Core.GameObjects
     /// <summary>
     /// Типы врагов (как в CocosSharp).
     /// </summary>
-    public enum EnemyType { RND = 0, SM_SCOUT, BLUE, GREEN, RED, BOSS, UKRO, KAMIK, HEAVY, UKRO_BOSS }
+    public enum EnemyType { RND = 0, SM_SCOUT, BLUE, GREEN, RED, BOSS, UKRO, KAMIK, HEAVY, UKRO_BOSS,
+                            KORMA, BRIZ, TRAPP, REAPER, OVERMIND }
 
     /// <summary>
     /// Базовый класс врага. Адаптация Enemy из CocosSharp.
@@ -31,6 +32,10 @@ namespace RiotGalaxy.Core.GameObjects
         public string DropBonus { get; set; }
         /// <summary>Шанс дропа DropBonus, % (100 — гарантированно).</summary>
         public int DropChance { get; set; } = 100;
+
+        /// <summary>Является ли враг боссом (фазовый ИИ, HP-шкала, реплики, усиленный взрыв).</summary>
+        public bool IsBossType => Type == EnemyType.BOSS || Type == EnemyType.UKRO_BOSS
+                               || Type == EnemyType.TRAPP || Type == EnemyType.REAPER || Type == EnemyType.OVERMIND;
 
         /// <summary>Цвет взрыва/искр попадания — под палитру спрайта врага.</summary>
         public Color ExplosionColor => Type switch

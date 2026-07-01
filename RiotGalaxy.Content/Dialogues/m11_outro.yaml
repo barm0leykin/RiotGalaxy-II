@@ -1,0 +1,6 @@
+# Итог миссии 11: Trapp повержен и сдаёт бризанцев — он тоже пешка.
+lines:
+  - { speaker: "DJ Trapp", text: "Э-эй! Я же просто диджей! Мне сказали — будет весело!", portrait: "Images/portrait_trapp" }
+  - { speaker: "Люк", text: "Кто сказал?", portrait: "Images/portrait_luke" }
+  - { speaker: "DJ Trapp", text: "Ну эти… шепчущие… бризанцы! Они всё придумали! Я только за пультом!", portrait: "Images/portrait_trapp" }
+  - { speaker: "Рейдер", text: "Вот и кукловоды. Trapp — тоже пешка. Просто крупная и громкая.", portrait: "Images/portrait_raider" }

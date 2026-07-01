@@ -265,7 +265,6 @@ namespace RiotGalaxy.Core.Managers
             Utils.GameOptions.Load();
             Utils.EffectsConfig.Load();
             Utils.BiomeConfig.Load();      // биомы актов (небо/звёзды)
-            Utils.BossTauntConfig.Load();  // реплики боссов
             Utils.UpgradeConfig.Load();    // определения апгрейдов (магазин)
             Utils.SkillsConfig.Load();     // активные навыки
             Utils.SaveData.CurrentProfile = Utils.GameSettings.LastProfile; // последний выбранный слот
@@ -354,24 +353,20 @@ namespace RiotGalaxy.Core.Managers
 
         /// <summary>
         /// Показать реплику босса текущей миссии (which: intro/phase2/phase3/defeat) через MessageLog —
-        /// бой не прерывается. Нет реплики в bosstaunts.yaml — молчит.
+        /// бой не прерывается. Нет реплики с таким тегом — молчит.
         /// </summary>
         public void ShowBossTaunt(string which)
         {
-            var t = Utils.BossTauntConfig.Get(_mission.CurrentMissionId);
-            if (t == null) return;
-            string line = which switch
-            {
-                "intro" => t.Intro,
-                "phase2" => t.Phase2,
-                "phase3" => t.Phase3,
-                "defeat" => t.Defeat,
-                _ => null,
-            };
-            if (string.IsNullOrEmpty(line)) return;
-            string text = string.IsNullOrEmpty(t.Name) ? line : $"{t.Name}: {line}";
-            Color c = which == "defeat" ? Color.Gold : new Color(255, 120, 90);
-            MessageLog.Add(text, c);
+            // Реплики босса лежат в диалоге миссии Content/Dialogues/<mission>_boss.yaml,
+            // строки помечены тегом (intro/phase2/phase3/defeat).
+            var d = Utils.Dialogue.Load($"{_mission.CurrentMissionId}_boss");
+            if (d?.Lines == null) return;
+            Utils.DialogueLine line = null;
+            foreach (var l in d.Lines)
+                if (l.Tag == which) { line = l; break; }
+            if (line == null || string.IsNullOrEmpty(line.Text)) return;
+            string text = string.IsNullOrEmpty(line.Speaker) ? line.Text : $"{line.Speaker}: {line.Text}";
+            MessageLog.Add(text, which == "defeat" ? Color.Gold : new Color(255, 120, 90));
         }
 
         /// <summary>Биом текущей миссии: явный `biome:` из YAML или по номеру акта (m1–5/6–9/далее).</summary>
@@ -647,8 +642,7 @@ namespace RiotGalaxy.Core.Managers
         private Enemy FindActiveBoss()
         {
             for (int i = 0; i < GameObjects.Count; i++)
-                if (GameObjects[i] is Enemy e && e.IsAlive &&
-                    (e.Type == EnemyType.BOSS || e.Type == EnemyType.UKRO_BOSS))
+                if (GameObjects[i] is Enemy e && e.IsAlive && e.IsBossType)
                     return e;
             return null;
         }
@@ -1005,7 +999,7 @@ namespace RiotGalaxy.Core.Managers
             if (obj is Enemy enemy)
             {
                 // Визуальный взрыв + тряска экрана (босс — заметно мощнее). Параметры — из effects.yaml.
-                bool isBoss = enemy.Type == EnemyType.BOSS || enemy.Type == EnemyType.UKRO_BOSS;
+                bool isBoss = enemy.IsBossType;
                 Particles.Explosion(obj.Position, enemy.ExplosionColor,
                     isBoss ? Utils.EffectsConfig.BossExplosion : Utils.EffectsConfig.EnemyExplosion);
                 var deathShake = isBoss ? Utils.EffectsConfig.BossDeathShake : Utils.EffectsConfig.EnemyDeathShake;

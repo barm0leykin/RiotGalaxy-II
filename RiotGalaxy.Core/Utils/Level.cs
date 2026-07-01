@@ -233,6 +233,11 @@ namespace RiotGalaxy.Core.Utils
                 case "kamikaze": return EnemyType.KAMIK;
                 case "heavy": return EnemyType.HEAVY;
                 case "ukroboss": return EnemyType.UKRO_BOSS;
+                case "korma": return EnemyType.KORMA;
+                case "briz": return EnemyType.BRIZ;
+                case "trapp": return EnemyType.TRAPP;
+                case "reaper": return EnemyType.REAPER;
+                case "overmind": return EnemyType.OVERMIND;
                 default: return EnemyType.SM_SCOUT;
             }
         }

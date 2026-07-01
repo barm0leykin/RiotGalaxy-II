@@ -1,0 +1,5 @@
+# Итог миссии 12: «Жнец» пал, J-D-bI тянутся к сердцу империи.
+lines:
+  - { speaker: "Рейдер", text: "«Жнец» пал. Но J-D-bI уже здесь — тянутся к сердцу империи.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "К столице?", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Да. Последний рубеж. Падёт она — империя сожрёт сама себя.", portrait: "Images/portrait_raider" }

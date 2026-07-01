@@ -1,0 +1,6 @@
+# Брифинг финала (миссия 13): оборона сердца империи.
+lines:
+  - { speaker: "Кардиган", text: "Пилот! Сердце империи под ударом! Э-э… у меня совещание, но я морально с тобой!", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Рейдер", text: "Держи столицу. Не ради Императора — ради тех, кто под ним живёт.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "Звучит почти как «ради дома».", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Именно. Вперёд.", portrait: "Images/portrait_raider" }

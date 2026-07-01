@@ -1,0 +1,5 @@
+# Брифинг миссии 11: штурм флагмана «Трапизон».
+lines:
+  - { speaker: "Кардиган", text: "Штурмуем флагман «Трапизон»! Решительно и прямо в лоб!", portrait: "Images/portrait_kardigan" }
+  - { speaker: "Люк", text: "«В лоб» — это по-вашему, командующий.", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Trapp труслив, но флот вокруг него — нет. Пробейся к мостику.", portrait: "Images/portrait_raider" }

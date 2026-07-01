@@ -1,0 +1,11 @@
+# Тень — БОСС: бризанский «Жнец». Прикрытие из бризанцев + аптечка.
+description: "Бризанский «Жнец»"
+spawnInterval: 0.9
+sortie: true
+sortieInterval: 2.4
+sortieCount: 1
+events:
+  - { enemy: briz, count: 5 }
+  - { enemy: korma, count: 1, drop: hp }
+  - { wait: 2 }
+  - { enemy: reaper, count: 1 }

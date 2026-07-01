@@ -1,0 +1,11 @@
+# Трапизон — ангары. Косморика влетает свупами с двух сторон + строй тяжёлых.
+description: "Трапизон — ангары"
+spawnInterval: 0.38
+sortie: true
+sortieInterval: 2.4
+sortieCount: 2
+events:
+  - parallel:
+      - - { enemy: korma, count: 5, route: swoop-left, after: scatter }
+      - - { enemy: korma, count: 5, route: swoop-right, after: scatter }
+  - { enemy: heavy, count: 4, formation: true }

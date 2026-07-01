@@ -1,0 +1,6 @@
+# Акт III, брифинг миссии 10: Космерика идёт открытой войной.
+lines:
+  - { speaker: "Кардиган", text: "Пилот! Косморика идёт. ВСЕЙ армией. Это уже не бунт — это война.", portrait: "Images/portrait_kardigan" }
+  - { speaker: "DJ Trapp", text: "Йо-йо! Финальный дроп! Империя, встречай хардбас войны! Бвамп-бвамп!", portrait: "Images/portrait_trapp" }
+  - { speaker: "Люк", text: "Он вообще понимает, что развязал?", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "Нет. Но за ним — те, кто понимает. Держи фронт.", portrait: "Images/portrait_raider" }

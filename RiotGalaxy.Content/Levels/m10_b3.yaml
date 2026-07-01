@@ -1,0 +1,10 @@
+# Вторжение — прорыв. Плотный строй Космерики + камикадзе.
+description: "Вторжение — прорыв"
+spawnInterval: 0.35
+sortie: true
+sortieInterval: 2.4
+sortieCount: 2
+events:
+  - { enemy: korma, count: 10, formation: true }
+  - { enemy: korma, count: 1, drop: speed }
+  - { enemy: kamik, count: 4 }

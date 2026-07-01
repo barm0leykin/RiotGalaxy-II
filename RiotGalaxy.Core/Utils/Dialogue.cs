@@ -8,6 +8,7 @@ namespace RiotGalaxy.Core.Utils
         public string Speaker { get; set; }
         public string Text { get; set; }
         public string Portrait { get; set; } // ассет, напр. "Images/portrait_commander" (опционально)
+        public string Tag { get; set; }      // метка реплики (напр. intro/phase2/phase3/defeat у боссов)
     }
 
     /// <summary>

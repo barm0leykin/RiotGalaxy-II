@@ -1,0 +1,6 @@
+# Реплики босса миссии 11 — DJ Trapp (флагман «Трапизон»).
+lines:
+  - { tag: intro,  speaker: "DJ Trapp", text: "Йо! Добро пожаловать на мой сет! Он же — твой последний!" }
+  - { tag: phase2, speaker: "DJ Trapp", text: "Бас-дроп, детка! Бвамп!" }
+  - { tag: phase3, speaker: "DJ Trapp", text: "ТЫ СЛОМАЛ МНЕ ВЕРТУШКУ?! НУ ВСЁ!" }
+  - { tag: defeat, speaker: "DJ Trapp", text: "Меня… просто наняли…" }

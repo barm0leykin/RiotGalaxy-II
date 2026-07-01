@@ -1,0 +1,12 @@
+# Сердце — ФИНАЛ кампании: Сверхразум J-D-bI. Прикрытие бризанцев/тяжёлых + аптечка.
+description: "J-D-bI — Сверхразум"
+spawnInterval: 0.85
+sortie: true
+sortieInterval: 2.2
+sortieCount: 2
+events:
+  - { enemy: briz, count: 4 }
+  - { enemy: heavy, count: 3, formation: true }
+  - { enemy: korma, count: 1, drop: hp }
+  - { wait: 2 }
+  - { enemy: overmind, count: 1 }

@@ -1,0 +1,13 @@
+# Миссия 13 — «Сердце империи», ФИНАЛ кампании. Всё вместе + босс Сверхразум J-D-bI.
+# Магазин перед финальной связкой (mid-брифинг + босс), после — концовка.
+id: m13
+title: "Сердце империи"
+steps:
+  - { briefing: m13_intro }
+  - { battle:   m13_b1 }
+  - { battle:   m13_b2 }
+  - { battle:   m13_b3 }
+  - { shop: true }
+  - { briefing: m13_mid }
+  - { boss:     m13_boss }
+  - { briefing: m13_outro }

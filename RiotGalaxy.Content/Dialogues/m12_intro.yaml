@@ -1,0 +1,5 @@
+# Брифинг миссии 12: бризанцы выходят из тени, их «Жнец».
+lines:
+  - { speaker: "Рейдер", text: "Бризанцы выходят из тени. Они не воюют — они дирижируют.", portrait: "Images/portrait_raider" }
+  - { speaker: "Люк", text: "И чем дирижируют сейчас?", portrait: "Images/portrait_luke" }
+  - { speaker: "Рейдер", text: "«Жнецом». Древняя машина, жнёт целые системы. Останови её.", portrait: "Images/portrait_raider" }

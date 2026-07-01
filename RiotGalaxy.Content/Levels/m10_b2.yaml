@@ -1,0 +1,11 @@
+# Вторжение — фланги. Косморика заходит с двух сторон + строй тяжёлых.
+description: "Вторжение — фланги"
+spawnInterval: 0.4
+sortie: true
+sortieInterval: 2.8
+sortieCount: 2
+events:
+  - parallel:
+      - - { enemy: korma, count: 4, route: cross-left, after: scatter }
+      - - { enemy: korma, count: 4, route: cross-right, after: scatter }
+  - { enemy: heavy, count: 4, formation: true }

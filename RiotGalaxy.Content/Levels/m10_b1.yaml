@@ -1,0 +1,10 @@
+# Вторжение — первая волна. ВВОДИМ КОСМЕРИКУ (korma): живучие синие солдаты строем.
+description: "Вторжение — первая волна"
+spawnInterval: 0.5
+sortie: true
+sortieInterval: 3
+sortieCount: 2
+events:
+  - { enemy: korma, count: 8, formation: true }
+  - { wait: 1 }
+  - { enemy: korma, count: 4 }
