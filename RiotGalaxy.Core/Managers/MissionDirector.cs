@@ -34,6 +34,8 @@ namespace RiotGalaxy.Core.Managers
         public string CurrentMissionBackground => _cur?.Background;
         /// <summary>Явный биом миссии из YAML (`biome:`); пусто — берётся по акту.</summary>
         public string CurrentBiome => _cur?.Biome;
+        /// <summary>Id текущей миссии (для босс-реплик и т.п.).</summary>
+        public string CurrentMissionId => _cur?.Id;
 
         /// <summary>Индекс текущей миссии и шага (для чекпоинта/возобновления).</summary>
         public int MissionIndex => _mi;

@@ -37,6 +37,7 @@ namespace RiotGalaxy.Core.AI
             _centerX = GameManager.Instance.ScreenWidth * 0.5f;
             _amp     = GameManager.Instance.ScreenWidth * 0.32f;
             _attackTimer = 1.2f;      // пауза перед первой атакой
+            GameManager.Instance.ShowBossTaunt("intro"); // реплика при появлении
         }
 
         private float HpFrac => owner.MaxHp > 0 ? (float)owner.Hp / owner.MaxHp : 0f;
@@ -96,8 +97,7 @@ namespace RiotGalaxy.Core.AI
 
         private void OnEnterPhase(int ph)
         {
-            MessageLog.Add(ph == 3 ? "Босс в ярости!" : "Босс меняет тактику…",
-                           ph == 3 ? Color.OrangeRed : Color.Gold);
+            GameManager.Instance.ShowBossTaunt(ph == 3 ? "phase3" : "phase2"); // реплика смены фазы
             GameManager.Instance.Shake(ph == 3 ? 8f : 4f);
             if (ph == 3 && !_addsSpawned) { _addsSpawned = true; SpawnAdds(2); }
             _attackTimer = 0.6f; // быстрее перейти к атаке новой фазы

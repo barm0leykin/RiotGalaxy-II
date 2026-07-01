@@ -265,6 +265,7 @@ namespace RiotGalaxy.Core.Managers
             Utils.GameOptions.Load();
             Utils.EffectsConfig.Load();
             Utils.BiomeConfig.Load();      // биомы актов (небо/звёзды)
+            Utils.BossTauntConfig.Load();  // реплики боссов
             Utils.UpgradeConfig.Load();    // определения апгрейдов (магазин)
             Utils.SkillsConfig.Load();     // активные навыки
             Utils.SaveData.CurrentProfile = Utils.GameSettings.LastProfile; // последний выбранный слот
@@ -349,6 +350,28 @@ namespace RiotGalaxy.Core.Managers
         {
             _biome = Utils.BiomeConfig.Get(id);
             if (_starField != null) _starField.Tint = _biome.Star;
+        }
+
+        /// <summary>
+        /// Показать реплику босса текущей миссии (which: intro/phase2/phase3/defeat) через MessageLog —
+        /// бой не прерывается. Нет реплики в bosstaunts.yaml — молчит.
+        /// </summary>
+        public void ShowBossTaunt(string which)
+        {
+            var t = Utils.BossTauntConfig.Get(_mission.CurrentMissionId);
+            if (t == null) return;
+            string line = which switch
+            {
+                "intro" => t.Intro,
+                "phase2" => t.Phase2,
+                "phase3" => t.Phase3,
+                "defeat" => t.Defeat,
+                _ => null,
+            };
+            if (string.IsNullOrEmpty(line)) return;
+            string text = string.IsNullOrEmpty(t.Name) ? line : $"{t.Name}: {line}";
+            Color c = which == "defeat" ? Color.Gold : new Color(255, 120, 90);
+            MessageLog.Add(text, c);
         }
 
         /// <summary>Биом текущей миссии: явный `biome:` из YAML или по номеру акта (m1–5/6–9/далее).</summary>
@@ -987,6 +1010,8 @@ namespace RiotGalaxy.Core.Managers
                     isBoss ? Utils.EffectsConfig.BossExplosion : Utils.EffectsConfig.EnemyExplosion);
                 var deathShake = isBoss ? Utils.EffectsConfig.BossDeathShake : Utils.EffectsConfig.EnemyDeathShake;
                 Shake(deathShake.Magnitude, deathShake.Duration);
+
+                if (isBoss) ShowBossTaunt("defeat"); // предсмертная реплика босса
 
                 // Очки за убийство (идут в рекорд). Кредиты игрок получит, собрав звезду.
                 if (Player != null)
