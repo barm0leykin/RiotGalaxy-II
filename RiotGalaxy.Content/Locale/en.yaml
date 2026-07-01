@@ -77,6 +77,7 @@ hud.score: "Score: {0}"
 hud.weapon: "Weapon: {0} (lv. {1})"
 hud.credits: "Credits: {0}"
 hud.buff: "{0} {1}s"
+hud.actmission: "Act {0} · Mission {1}: {2}"
 
 # Short buff labels (HUD)
 buff.power: "Dmg+"

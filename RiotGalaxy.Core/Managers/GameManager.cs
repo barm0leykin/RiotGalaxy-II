@@ -66,6 +66,12 @@ namespace RiotGalaxy.Core.Managers
         public int TotalLevels => _levels.TotalLevels;
         public string CurrentLevelDescription => _levels.CurrentLevelDescription;
 
+        // Кампания (для HUD): номер/название миссии и номер акта (по номеру миссии).
+        public int CurrentMissionNumber => _mission.MissionNumber;
+        public int TotalMissions => _mission.TotalMissions;
+        public string CurrentMissionTitle => _mission.CurrentMissionTitle;
+        public int CurrentAct { get { int n = _mission.MissionNumber; return n <= 5 ? 1 : n <= 9 ? 2 : 3; } }
+
         // Система экранов меню (заставка/меню/настройки)
         public Screens.ScreenSystem Screens { get; private set; } = new Screens.ScreenSystem();
 

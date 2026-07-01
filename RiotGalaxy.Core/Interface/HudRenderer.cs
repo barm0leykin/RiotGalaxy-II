@@ -33,8 +33,20 @@ namespace RiotGalaxy.Core.Interface
             spriteBatch.DrawString(font, Utils.Loc.F("hud.weapon", weaponName, player.Gun.Level),
                 new Vector2(Margin, hpRect.Bottom + 8), Color.LightGray, 0f, Vector2.Zero, Mid, SpriteEffects.None, 0f);
 
+            // Текущий акт и миссия — под оружием.
+            float infoY = hpRect.Bottom + 8 + font.LineSpacing * Mid + 4;
+            var gm = Managers.GameManager.Instance;
+            if (gm.CurrentMissionNumber >= 1)
+            {
+                string mission = Utils.Loc.F("hud.actmission", gm.CurrentAct, gm.CurrentMissionNumber,
+                                             gm.CurrentMissionTitle);
+                spriteBatch.DrawString(font, mission, new Vector2(Margin, infoY),
+                    new Color(150, 170, 210), 0f, Vector2.Zero, Small, SpriteEffects.None, 0f);
+                infoY += font.LineSpacing * Small + 4;
+            }
+
             // Активные баффы — компактным списком ниже.
-            float by = hpRect.Bottom + 8 + font.LineSpacing * Mid + 6;
+            float by = infoY;
             foreach (var b in player.ActiveBuffs)
             {
                 int secs = (int)System.Math.Ceiling(b.Value);
