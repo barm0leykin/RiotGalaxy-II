@@ -9,7 +9,7 @@ using RiotGalaxy.Core.Managers;
 namespace RiotGalaxy.Core.Screens
 {
     /// <summary>
-    /// Главное меню: «Продолжить» (если есть чекпоинт) / «Начать игру» / «Магазин» /
+    /// Главное меню (неон): «Продолжить» (если есть чекпоинт) / «Начать игру» / «Магазин» /
     /// «Настройки» / «Сменить профиль» / «Выход». Управление мышью и клавиатурой.
     /// Список пунктов динамический (Продолжить появляется при наличии сохранённой позиции).
     /// </summary>
@@ -20,12 +20,17 @@ namespace RiotGalaxy.Core.Screens
 
         private List<(string label, Action act)> _items = new List<(string, Action)>();
 
-        // Вертикаль пунктов адаптивна к их числу (5–7): равномерно между TopY и BottomY.
-        private float TopY => ScreenH * 0.34f;
-        private float BottomY => ScreenH * 0.90f;
-        private float StepY => (BottomY - TopY) / System.Math.Max(1, _items.Count);
-        private float ItemY(int i) => TopY + StepY * (i + 0.5f);
-        private Rectangle ItemRect(int i) => CenteredItemRect(_items[i].label, ItemY(i), ItemScale);
+        private Rectangle Panel => PanelRect(0.52f, 0.07f, 0.95f);
+        private float ListTop => ScreenH * 0.40f;
+        private float ListBot => ScreenH * 0.88f;
+        private float RowH => (ListBot - ListTop) / Math.Max(1, _items.Count);
+        private Rectangle RowRect(int i)
+        {
+            var p = Panel;
+            int h = (int)Math.Min(RowH * 0.84f, MinTouchHeight);
+            int cy = (int)(ListTop + RowH * (i + 0.5f));
+            return new Rectangle(p.X + 16, cy - h / 2, p.Width - 32, h);
+        }
 
         private void BuildItems()
         {
@@ -56,7 +61,7 @@ namespace RiotGalaxy.Core.Screens
             // Наведение мышью
             _hover = -1;
             for (int i = 0; i < n; i++)
-                if (ItemRect(i).Contains(MousePoint)) { _hover = i; _selected = i; break; }
+                if (RowRect(i).Contains(MousePoint)) { _hover = i; _selected = i; break; }
 
             // Навигация клавиатурой
             if (KeyPressed(Keys.Down) || KeyPressed(Keys.S)) _selected = (_selected + 1) % n;
@@ -74,25 +79,48 @@ namespace RiotGalaxy.Core.Screens
         public override void Draw(SpriteBatch spriteBatch)
         {
             if (_items.Count == 0) BuildItems();
+            var sb = spriteBatch;
+            var p = Panel;
 
-            DrawDimmer(spriteBatch);
-            DrawPanel(spriteBatch, PanelRect(0.62f, 0.10f, 0.97f));
+            string title = Utils.Loc.T("menu.title");
+            float titleY = ScreenH * 0.115f;
+            float profY = ScreenH * 0.235f;
+            float statY = ScreenH * 0.285f;
 
-            DrawCentered(spriteBatch, Utils.Loc.T("menu.title"), ScreenH * 0.16f, Color.Orange, TitleScale);
+            DrawDimmer(sb, 175);
+            DrawNeonPanel(sb, p, NeonCyan);
 
-            DrawCentered(spriteBatch, Utils.Loc.F("menu.profile_label", Utils.SaveData.CurrentProfile), ScreenH * 0.25f, Color.Cyan, HintScale);
-            if (Utils.SaveData.HighScore > 0)
-                DrawCentered(spriteBatch, Utils.Loc.F("menu.record", Utils.SaveData.HighScore), ScreenH * 0.295f, Color.LightGray, HintScale);
-            if (Utils.SaveData.Currency > 0)
-                DrawCentered(spriteBatch, Utils.Loc.F("menu.credits", Utils.SaveData.Currency), ScreenH * 0.33f, Color.Gold, HintScale);
+            // Разделитель под шапкой
+            FillRect(sb, new Rectangle(p.X + 40, (int)(ScreenH * 0.335f), p.Width - 80, 1), WithA(NeonCyan, 70));
+
+            // ── Свечение (аддитивный проход) ──
+            GlowPass(sb, () =>
+            {
+                NeonPanelGlow(sb, p, NeonCyan);
+                GlowTextCentered(sb, title, titleY, NeonMag, TitleScale);
+                if (_selected >= 0 && _selected < _items.Count)
+                    SelectionBarGlow(sb, RowRect(_selected), NeonCyan);
+            });
+
+            // ── Чёткий слой ──
+            DrawCentered(sb, title, titleY, Color.White, TitleScale);
+
+            DrawCentered(sb, Utils.Loc.F("menu.profile_label", Utils.SaveData.CurrentProfile), profY, NeonCyan, HintScale);
+            string stats = "";
+            if (Utils.SaveData.HighScore > 0) stats += Utils.Loc.F("menu.record", Utils.SaveData.HighScore);
+            if (Utils.SaveData.Currency > 0) stats += (stats.Length > 0 ? "    " : "") + Utils.Loc.F("menu.credits", Utils.SaveData.Currency);
+            if (stats.Length > 0) DrawCentered(sb, stats, statY, NeonGold, HintScale);
 
             for (int i = 0; i < _items.Count; i++)
             {
                 bool active = (i == _hover) || (i == _selected);
-                DrawMenuItem(spriteBatch, _items[i].label, ItemY(i), active);
+                var r = RowRect(i);
+                if (active) DrawSelectionBar(sb, r, NeonCyan);
+                DrawCentered(sb, _items[i].label, r.Y + (r.Height - Font.MeasureString(_items[i].label).Y * ItemScale) / 2f,
+                    active ? Color.White : NeonDim, ItemScale);
             }
 
-            DrawCentered(spriteBatch, Utils.Loc.T("menu.hint"), ScreenH * 0.95f, Color.Gray, HintScale);
+            DrawCentered(sb, Utils.Loc.T("menu.hint"), ScreenH * 0.955f, Scale(NeonDim, 0.8f), HintScale);
         }
     }
 }

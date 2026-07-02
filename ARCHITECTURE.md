@@ -613,6 +613,17 @@ BossAI сам ведёт движение (`Movement=null`) и огонь (`Shoo
 `GameplayScreen`). Переходы между состояниями (Esc/P — пауза, Space — заново, Q/Esc — меню)
 обрабатывает `Game1.HandleGameplayKeys` по `CurrentGameState`.
 
+**Неоновый UI-кит** (в базовом [Screen.cs](RiotGalaxy.Core/Screens/Screen.cs)) — общий стиль всех
+меню: тёмные панели с акцентной рамкой (`DrawNeonPanel`), аддитивное свечение отдельным проходом
+(`GlowPass` → переоткрывает UI-батч в `BlendState.Additive` с `GameManager.RenderMatrix`, рисует
+radial-glow `GlowTexture`, возвращает AlphaBlend), плашка выбора (`DrawSelectionBar`+`SelectionBarGlow`),
+glow-заголовки (`GlowTextCentered`), двухколоночные строки (`DrawRow`), секции (`DrawSectionHeader`),
+пункты-списки (`DrawListItem`/`ListItemRect`). Палитра — `NeonCyan/NeonMag/NeonGold/NeonGreen/NeonDim`.
+**Важно:** батч в premultiplied-alpha, поэтому полупрозрачные ЦВЕТНЫЕ заливки задаём через
+`WithA()` (= `Color.FromNonPremultiplied`) — иначе низкая альфа даёт полный цвет, а не прозрачность.
+Магазин ([ShopScreen](RiotGalaxy.Core/Screens/ShopScreen.cs)) подгоняет высоту строк, чтобы всё
+влезало **без прокрутки**; DEV-меню — так же.
+
 ## 15. Уровни и прогрессия
 
 [Utils/Level.cs](RiotGalaxy.Core/Utils/Level.cs) грузит `Content/Levels/level{N}.yaml`

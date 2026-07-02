@@ -19,16 +19,27 @@ namespace RiotGalaxy.Core.Screens
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            DrawDimmer(spriteBatch, 170);
+            var sb = spriteBatch;
             int score = GameManager.Instance.LastScore;
-            DrawCentered(spriteBatch, Utils.Loc.T("victory.title"), ScreenH * 0.30f, Color.Gold, TitleScale);
-            DrawCentered(spriteBatch, Utils.Loc.F("result.score", score), ScreenH * 0.46f, Color.White, ItemScale);
-
             bool newRecord = score > 0 && score >= Utils.SaveData.HighScore;
-            DrawCentered(spriteBatch, newRecord ? Utils.Loc.T("result.newrecord") : Utils.Loc.F("result.record", Utils.SaveData.HighScore),
-                ScreenH * 0.56f, newRecord ? Color.Gold : Color.LightGray, ItemScale);
+            var p = PanelRect(0.5f, 0.24f, 0.72f);
+            string title = Utils.Loc.T("victory.title");
+            float titleY = ScreenH * 0.30f;
 
-            DrawCentered(spriteBatch, Utils.Loc.T("result.hint"), ScreenH * 0.66f, Color.Gray, HintScale);
+            DrawDimmer(sb, 180);
+            DrawNeonPanel(sb, p, NeonGold);
+
+            GlowPass(sb, () =>
+            {
+                NeonPanelGlow(sb, p, NeonGold);
+                GlowTextCentered(sb, title, titleY, NeonGold, TitleScale);
+            });
+
+            DrawCentered(sb, title, titleY, Color.White, TitleScale);
+            DrawCentered(sb, Utils.Loc.F("result.score", score), ScreenH * 0.46f, Color.White, ItemScale);
+            DrawCentered(sb, newRecord ? Utils.Loc.T("result.newrecord") : Utils.Loc.F("result.record", Utils.SaveData.HighScore),
+                ScreenH * 0.56f, newRecord ? NeonGold : NeonDim, ItemScale);
+            DrawCentered(sb, Utils.Loc.T("result.hint"), ScreenH * 0.66f, Scale(NeonDim, 0.8f), HintScale);
         }
     }
 }

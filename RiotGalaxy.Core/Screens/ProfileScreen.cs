@@ -93,24 +93,40 @@ namespace RiotGalaxy.Core.Screens
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            DrawDimmer(spriteBatch);
-            DrawPanel(spriteBatch, PanelRect(0.7f, 0.08f, 0.95f));
+            var sb = spriteBatch;
+            var p = PanelRect(0.7f, 0.08f, 0.95f);
+            string title = Loc.T("profile.title");
+            float titleY = ScreenH * 0.15f;
+            bool resetHover = !_confirmReset && ResetRect.Contains(MousePoint);
 
-            DrawCentered(spriteBatch, Loc.T("profile.title"), ScreenH * 0.16f, Color.Orange, TitleScale);
+            DrawDimmer(sb, 175);
+            DrawNeonPanel(sb, p, NeonCyan);
+
+            GlowPass(sb, () =>
+            {
+                NeonPanelGlow(sb, p, NeonCyan);
+                GlowTextCentered(sb, title, titleY, NeonMag, TitleScale);
+                if (!_confirmReset)
+                    SelectionBarGlow(sb, ListItemRect(p, SlotLabel(_slot), SlotY(_slot), ItemScale), NeonCyan);
+                if (resetHover)
+                    SelectionBarGlow(sb, ListItemRect(p, Loc.F("profile.reset", _slot + 1), ResetY, ItemScale), NeonMag);
+            });
+
+            DrawCentered(sb, title, titleY, Color.White, TitleScale);
 
             for (int i = 0; i < SaveData.ProfileCount; i++)
-                DrawMenuItem(spriteBatch, SlotLabel(i), SlotY(i), i == _slot && !_confirmReset);
+                DrawListItem(sb, p, SlotLabel(i), SlotY(i), i == _slot && !_confirmReset, NeonCyan);
 
-            DrawMenuItem(spriteBatch, Loc.F("profile.reset", _slot + 1), ResetY,
-                !_confirmReset && ResetRect.Contains(MousePoint));
+            DrawListItem(sb, p, Loc.F("profile.reset", _slot + 1), ResetY, resetHover, NeonMag);
 
-            DrawCentered(spriteBatch, Loc.T("profile.hint"), ScreenH * 0.92f, Color.Gray, HintScale);
+            DrawCentered(sb, Loc.T("profile.hint"), ScreenH * 0.92f, Scale(NeonDim, 0.8f), HintScale);
 
             // Оверлей подтверждения сброса.
             if (_confirmReset)
             {
-                DrawDimmer(spriteBatch, 190);
-                DrawCentered(spriteBatch, Loc.F("profile.reset_confirm", _slot + 1), ScreenH * 0.5f, Color.OrangeRed, ItemScale);
+                DrawDimmer(sb, 200);
+                GlowPass(sb, () => GlowTextCentered(sb, Loc.F("profile.reset_confirm", _slot + 1), ScreenH * 0.5f, new Color(255, 90, 90), ItemScale));
+                DrawCentered(sb, Loc.F("profile.reset_confirm", _slot + 1), ScreenH * 0.5f, new Color(255, 170, 170), ItemScale);
             }
         }
     }

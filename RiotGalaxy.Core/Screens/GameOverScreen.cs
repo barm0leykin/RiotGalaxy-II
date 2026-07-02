@@ -20,16 +20,29 @@ namespace RiotGalaxy.Core.Screens
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            DrawDimmer(spriteBatch, 170);
+            var sb = spriteBatch;
             int score = GameManager.Instance.LastScore;
-            DrawCentered(spriteBatch, Utils.Loc.T("gameover.title"), ScreenH * 0.30f, Color.Red, TitleScale);
-            DrawCentered(spriteBatch, Utils.Loc.F("result.score", score), ScreenH * 0.46f, Color.White, ItemScale);
-
             bool newRecord = score > 0 && score >= Utils.SaveData.HighScore;
-            DrawCentered(spriteBatch, newRecord ? Utils.Loc.T("result.newrecord") : Utils.Loc.F("result.record", Utils.SaveData.HighScore),
-                ScreenH * 0.56f, newRecord ? Color.Gold : Color.LightGray, ItemScale);
+            var accent = new Color(255, 80, 90); // красный неон поражения
+            var p = PanelRect(0.5f, 0.24f, 0.72f);
+            string title = Utils.Loc.T("gameover.title");
+            float titleY = ScreenH * 0.30f;
 
-            DrawCentered(spriteBatch, Utils.Loc.T("result.hint"), ScreenH * 0.66f, Color.Gray, HintScale);
+            DrawDimmer(sb, 180);
+            DrawNeonPanel(sb, p, accent);
+
+            GlowPass(sb, () =>
+            {
+                NeonPanelGlow(sb, p, accent);
+                GlowTextCentered(sb, title, titleY, accent, TitleScale);
+                if (newRecord) GlowTextCentered(sb, Utils.Loc.T("result.newrecord"), ScreenH * 0.56f, NeonGold, ItemScale);
+            });
+
+            DrawCentered(sb, title, titleY, Color.White, TitleScale);
+            DrawCentered(sb, Utils.Loc.F("result.score", score), ScreenH * 0.46f, Color.White, ItemScale);
+            DrawCentered(sb, newRecord ? Utils.Loc.T("result.newrecord") : Utils.Loc.F("result.record", Utils.SaveData.HighScore),
+                ScreenH * 0.56f, newRecord ? NeonGold : NeonDim, ItemScale);
+            DrawCentered(sb, Utils.Loc.T("result.hint"), ScreenH * 0.66f, Scale(NeonDim, 0.8f), HintScale);
         }
     }
 }

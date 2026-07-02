@@ -13,17 +13,20 @@ namespace RiotGalaxy.Core.Screens
     /// </summary>
     public class DevMenuScreen : Screen
     {
-        private const float RowScale = 1.05f;
-        private const int Visible = 12;            // строк в окне (миссий пока меньше)
+        private const float RowScale = 1.0f;
+        private const int Visible = 32;            // показываем все миссии сразу (без прокрутки)
         private readonly List<(string id, string title)> _missions;
         private int _selected;
         private int _scroll;
+        private Rectangle Panel => PanelRect(0.8f, 0.06f, 0.96f);
 
         public DevMenuScreen() => _missions = MissionDirector.Catalog();
 
-        private float RowY(int vis) => ScreenH * 0.22f + vis * ScreenH * 0.06f;
-        private string Label(int i) => $"{i + 1}. {_missions[i].id} — {_missions[i].title}";
-        private Rectangle RowRect(int vis, int idx) => CenteredItemRect(Label(idx), RowY(vis), RowScale);
+        // Шаг строки подстраивается под число миссий, чтобы всё влезло между заголовком и подсказкой.
+        private float RowStep => (ScreenH * 0.90f - ScreenH * 0.20f) / System.Math.Max(1, _missions.Count);
+        private float RowY(int vis) => ScreenH * 0.20f + RowStep * (vis + 0.5f) - Font.MeasureString("Ay").Y * RowScale / 2f;
+        private string Label(int i) => $"{i + 1}.  {_missions[i].id} — {_missions[i].title}";
+        private Rectangle RowRect(int vis, int idx) => ListItemRect(Panel, Label(idx), RowY(vis), RowScale);
 
         public override void Update(GameTime gameTime)
         {
@@ -54,19 +57,33 @@ namespace RiotGalaxy.Core.Screens
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            DrawDimmer(spriteBatch);
-            DrawPanel(spriteBatch, PanelRect(0.8f, 0.08f, 0.96f));
+            var sb = spriteBatch;
+            var p = Panel;
+            string title = "[DEV] Выбор миссии";
+            float titleY = ScreenH * 0.115f;
 
-            DrawCentered(spriteBatch, "[DEV] Выбор миссии", ScreenH * 0.14f, Color.Lime, TitleScale);
+            DrawDimmer(sb, 180);
+            DrawNeonPanel(sb, p, NeonGreen);
+
+            GlowPass(sb, () =>
+            {
+                NeonPanelGlow(sb, p, NeonGreen);
+                GlowTextCentered(sb, title, titleY, NeonGreen, TitleScale);
+                for (int vis = 0; vis < Visible && _scroll + vis < _missions.Count; vis++)
+                    if (_scroll + vis == _selected)
+                        SelectionBarGlow(sb, ListItemRect(p, Label(_selected), RowY(vis), RowScale), NeonGreen);
+            });
+
+            DrawCentered(sb, title, titleY, Color.White, TitleScale);
 
             for (int vis = 0; vis < Visible && _scroll + vis < _missions.Count; vis++)
             {
                 int idx = _scroll + vis;
-                DrawMenuItem(spriteBatch, Label(idx), RowY(vis), idx == _selected);
+                DrawListItem(sb, p, Label(idx), RowY(vis), idx == _selected, NeonGreen, RowScale);
             }
 
-            DrawCentered(spriteBatch, "↑/↓ — выбор · Enter — с начала миссии · B — сразу к боссу · Esc — назад",
-                ScreenH * 0.93f, Color.Gray, HintScale);
+            DrawCentered(sb, "↑/↓ — выбор · Enter — с начала · B — сразу к боссу · Esc — назад",
+                ScreenH * 0.955f, Scale(NeonDim, 0.8f), HintScale);
         }
     }
 }

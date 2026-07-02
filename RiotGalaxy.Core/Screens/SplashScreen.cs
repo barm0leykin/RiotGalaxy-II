@@ -26,8 +26,16 @@ namespace RiotGalaxy.Core.Screens
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            DrawCentered(spriteBatch, Utils.Loc.T("splash.title"), ScreenH * 0.4f, Color.Orange, 2.5f);
-            DrawCentered(spriteBatch, Utils.Loc.T("splash.loading"), ScreenH * 0.6f, Color.Gray);
+            var sb = spriteBatch;
+            string title = Utils.Loc.T("splash.title");
+            float titleY = ScreenH * 0.4f;
+            GlowPass(sb, () =>
+            {
+                GlowTextCentered(sb, title, titleY, NeonMag, 2.5f);
+                GlowTextCentered(sb, title, titleY, NeonCyan, 2.5f);
+            });
+            DrawCentered(sb, title, titleY, Color.White, 2.5f);
+            DrawCentered(sb, Utils.Loc.T("splash.loading"), ScreenH * 0.6f, Scale(NeonDim, 0.8f));
         }
     }
 }

@@ -16,18 +16,30 @@ namespace RiotGalaxy.Core.Screens
         {
             var gm = GameManager.Instance;
 
+            var sb = spriteBatch;
+
             // Замороженная игра под паузой
             gm.DrawGameplay();
 
             // Полупрозрачное затемнение
             if (gm.SimpleTexture != null)
-                spriteBatch.Draw(gm.SimpleTexture,
-                    new Rectangle(0, 0, ScreenW, ScreenH), new Color(0, 0, 0, 150));
+                sb.Draw(gm.SimpleTexture, new Rectangle(0, 0, ScreenW, ScreenH), new Color(0, 0, 0, 150));
 
-            // Меню паузы
-            DrawCentered(spriteBatch, Utils.Loc.T("paused.title"), ScreenH * 0.34f, Color.White, TitleScale);
-            DrawCentered(spriteBatch, Utils.Loc.T("paused.resume"), ScreenH * 0.5f, Color.Yellow, ItemScale);
-            DrawCentered(spriteBatch, Utils.Loc.T("paused.menu"), ScreenH * 0.58f, Color.Gray, ItemScale);
+            // Компактная неон-панель по центру
+            var p = PanelRect(0.44f, 0.30f, 0.68f);
+            string title = Utils.Loc.T("paused.title");
+            float titleY = ScreenH * 0.345f;
+            DrawNeonPanel(sb, p, NeonCyan);
+
+            GlowPass(sb, () =>
+            {
+                NeonPanelGlow(sb, p, NeonCyan);
+                GlowTextCentered(sb, title, titleY, NeonMag, TitleScale);
+            });
+
+            DrawCentered(sb, title, titleY, Color.White, TitleScale);
+            DrawCentered(sb, Utils.Loc.T("paused.resume"), ScreenH * 0.50f, NeonCyan, ItemScale);
+            DrawCentered(sb, Utils.Loc.T("paused.menu"), ScreenH * 0.58f, Scale(NeonDim, 0.9f), ItemScale);
         }
     }
 }

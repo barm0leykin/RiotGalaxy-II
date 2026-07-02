@@ -98,21 +98,36 @@ namespace RiotGalaxy.Core.Screens
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            DrawDimmer(spriteBatch);
-            DrawPanel(spriteBatch, PanelRect(0.62f, 0.12f, 0.88f));
+            var sb = spriteBatch;
+            var p = PanelRect(0.62f, 0.12f, 0.88f);
+            string title = Loc.T("settings.title");
+            float titleY = ScreenH * 0.165f;
+            int percent = (int)System.Math.Round(AudioManager.Instance.EffectsVolume * 100);
+            string volLabel = Loc.F("settings.volume", percent);
 
-            DrawCentered(spriteBatch, Loc.T("settings.title"), ScreenH * 0.17f, Color.Orange, TitleScale);
+            DrawDimmer(sb, 175);
+            DrawNeonPanel(sb, p, NeonCyan);
+
+            GlowPass(sb, () =>
+            {
+                NeonPanelGlow(sb, p, NeonCyan);
+                GlowTextCentered(sb, title, titleY, NeonMag, TitleScale);
+                if (_selected == Volume) SelectionBarGlow(sb, ListItemRect(p, volLabel, VolumeY, ItemScale), NeonCyan);
+                if (_selected == Language) SelectionBarGlow(sb, ListItemRect(p, LangLabel, LangY, ItemScale), NeonCyan);
+                if (_selected == Back) SelectionBarGlow(sb, ListItemRect(p, Loc.T("settings.back"), BackY, ItemScale), NeonCyan);
+            });
+
+            DrawCentered(sb, title, titleY, Color.White, TitleScale);
 
             // Громкость (значение + крупные кнопки [-]/[+]); подсветка строки при выборе.
-            int percent = (int)System.Math.Round(AudioManager.Instance.EffectsVolume * 100);
-            DrawMenuItem(spriteBatch, Loc.F("settings.volume", percent), VolumeY, _selected == Volume);
-            DrawButton(spriteBatch, "[-]", MinusRect, MinusRect.Contains(MousePoint));
-            DrawButton(spriteBatch, "[+]", PlusRect, PlusRect.Contains(MousePoint));
+            DrawListItem(sb, p, volLabel, VolumeY, _selected == Volume, NeonCyan);
+            DrawButton(sb, "[-]", MinusRect, MinusRect.Contains(MousePoint));
+            DrawButton(sb, "[+]", PlusRect, PlusRect.Contains(MousePoint));
 
-            DrawMenuItem(spriteBatch, LangLabel, LangY, _selected == Language);
-            DrawMenuItem(spriteBatch, Loc.T("settings.back"), BackY, _selected == Back);
+            DrawListItem(sb, p, LangLabel, LangY, _selected == Language, NeonCyan);
+            DrawListItem(sb, p, Loc.T("settings.back"), BackY, _selected == Back, NeonCyan);
 
-            DrawCentered(spriteBatch, Loc.T("settings.hint"), ScreenH * 0.92f, Color.Gray, HintScale);
+            DrawCentered(sb, Loc.T("settings.hint"), ScreenH * 0.92f, Scale(NeonDim, 0.8f), HintScale);
         }
 
         /// <summary>Крупный символ-кнопка по центру тач-зоны (подсветка цветом при наведении).</summary>
@@ -121,7 +136,7 @@ namespace RiotGalaxy.Core.Screens
             if (Font == null) return;
             Vector2 sz = Font.MeasureString(symbol) * BtnScale;
             var pos = new Vector2(rect.Center.X - sz.X / 2f, rect.Center.Y - sz.Y / 2f);
-            sb.DrawString(Font, symbol, pos, hover ? Color.Yellow : Color.White,
+            sb.DrawString(Font, symbol, pos, hover ? NeonCyan : Color.White,
                 0f, Vector2.Zero, BtnScale, SpriteEffects.None, 0f);
         }
     }

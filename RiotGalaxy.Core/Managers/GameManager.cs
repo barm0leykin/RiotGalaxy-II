@@ -116,7 +116,18 @@ namespace RiotGalaxy.Core.Managers
 
         // Вспомогательные текстуры
         public Texture2D SimpleTexture { get; set; }
+        /// <summary>Мягкая radial-glow текстура для неонового свечения (аддитивная отрисовка UI).</summary>
+        public Texture2D GlowTexture { get; set; }
         public GraphicsDevice GraphicsDevice => _graphics.GraphicsDevice;
+
+        /// <summary>Letterbox-матрица текущего кадра — чтобы экраны могли переоткрыть UI-батч
+        /// с той же трансформацией (напр. аддитивный проход неонового свечения).</summary>
+        public Matrix RenderMatrix => _renderMatrix;
+
+        /// <summary>Переоткрыть UI-батч с заданным блендом и той же letterbox-матрицей
+        /// (blend=null → стандартный AlphaBlend). Вызывать парой End()/Begin() из экрана.</summary>
+        public void BeginUiBatch(SpriteBatch sb, BlendState blend) =>
+            sb.Begin(SpriteSortMode.Deferred, blend, null, null, null, null, _renderMatrix);
 
         /// <summary>
         /// Пересчитывает letterbox-матрицу под текущий размер back buffer (вызывается каждый
@@ -320,6 +331,8 @@ namespace RiotGalaxy.Core.Managers
             // Небо биома: вертикальный градиент верх→низ (цвет зависит от акта).
             if (SimpleTexture == null)
                 SimpleTexture = Utils.Textures.CreateSolid(GraphicsDevice, Color.White);
+            if (GlowTexture == null)
+                GlowTexture = Utils.Textures.CreateGlow(GraphicsDevice);
             DrawSky();
 
             // Параллакс-звёзды поверх неба, под игровой сценой/UI (оттенок звёзд — из биома).

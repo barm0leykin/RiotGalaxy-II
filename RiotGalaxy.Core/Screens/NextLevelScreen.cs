@@ -50,25 +50,36 @@ namespace RiotGalaxy.Core.Screens
 
         public override void Draw(SpriteBatch spriteBatch)
         {
+            var sb = spriteBatch;
             var gm = GameManager.Instance;
+            var p = PanelRect(0.7f, 0.10f, 0.95f);
+            string title = Loc.F("nextlevel.title", gm.CurrentLevel, gm.TotalLevels);
+            float titleY = ScreenH * 0.135f;
 
-            DrawDimmer(spriteBatch);
-            DrawPanel(spriteBatch, PanelRect(0.7f, 0.10f, 0.95f));
+            DrawDimmer(sb, 178);
+            DrawNeonPanel(sb, p, NeonCyan);
 
-            DrawCentered(spriteBatch, Loc.F("nextlevel.title", gm.CurrentLevel, gm.TotalLevels), ScreenH * 0.14f, Color.Orange, TitleScale);
+            GlowPass(sb, () =>
+            {
+                NeonPanelGlow(sb, p, NeonCyan);
+                GlowTextCentered(sb, title, titleY, NeonMag, TitleScale);
+                SelectionBarGlow(sb, ListItemRect(p, Loc.T(ItemKeys[_selected]), ItemY(_selected), ItemScale), NeonCyan);
+            });
+
+            DrawCentered(sb, title, titleY, Color.White, TitleScale);
 
             if (!string.IsNullOrWhiteSpace(gm.CurrentLevelDescription))
-                DrawCentered(spriteBatch, gm.CurrentLevelDescription, ScreenH * 0.30f, Color.White, ItemScale);
+                DrawCentered(sb, gm.CurrentLevelDescription, ScreenH * 0.30f, Color.White, ItemScale);
 
             if (gm.Player != null)
-                DrawCentered(spriteBatch, Loc.F("nextlevel.score", gm.Player.Score), ScreenH * 0.40f, Color.Yellow, ItemScale);
+                DrawCentered(sb, Loc.F("nextlevel.score", gm.Player.Score), ScreenH * 0.40f, NeonCyan, ItemScale);
 
-            DrawCentered(spriteBatch, Loc.F("nextlevel.credits", SaveData.Currency), ScreenH * 0.48f, Color.Gold, ItemScale);
+            DrawCentered(sb, Loc.F("nextlevel.credits", SaveData.Currency), ScreenH * 0.48f, NeonGold, ItemScale);
 
             for (int i = 0; i < ItemKeys.Length; i++)
-                DrawMenuItem(spriteBatch, Loc.T(ItemKeys[i]), ItemY(i), i == _selected);
+                DrawListItem(sb, p, Loc.T(ItemKeys[i]), ItemY(i), i == _selected, NeonCyan);
 
-            DrawCentered(spriteBatch, Loc.T("nextlevel.hint"), ScreenH * 0.93f, Color.Gray, HintScale);
+            DrawCentered(sb, Loc.T("nextlevel.hint"), ScreenH * 0.93f, Scale(NeonDim, 0.8f), HintScale);
         }
     }
 }
