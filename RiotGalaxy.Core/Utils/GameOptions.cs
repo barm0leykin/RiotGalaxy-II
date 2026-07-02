@@ -20,6 +20,16 @@ namespace RiotGalaxy.Core.Utils
         /// Ограничивает «почти горизонтальные» выстрелы, чтобы игрок мог увернуться.</summary>
         public static float EnemyAimMaxDeg = 55f;
 
+        // ── Bloom (пост-процесс свечения, только десктоп; на Android шейдера нет — игнорируется) ──
+        /// <summary>Включён ли bloom (если шейдер доступен).</summary>
+        public static bool BloomEnabled = true;
+        /// <summary>Порог яркости (0..1): ниже — светится больше зон (в т.ч. тонкий неон меню).</summary>
+        public static float BloomThreshold = 0.45f;
+        /// <summary>Сила свечения при аддитивной композиции.</summary>
+        public static float BloomIntensity = 1.35f;
+        /// <summary>«Широта» гаусса (радиус размытия свечения).</summary>
+        public static float BloomBlurAmount = 2.4f;
+
         public static void Load()
         {
             var data = Yaml.LoadAsset<OptionsYaml>(Yaml.ConfigAsset("options.yaml"));
@@ -42,6 +52,14 @@ namespace RiotGalaxy.Core.Utils
             }
             if (data.Combat != null && data.Combat.AimMaxDeg > 0)
                 EnemyAimMaxDeg = data.Combat.AimMaxDeg;
+
+            if (data.Bloom != null)
+            {
+                BloomEnabled = data.Bloom.Enabled;
+                if (data.Bloom.Threshold >= 0f) BloomThreshold = data.Bloom.Threshold;
+                if (data.Bloom.Intensity > 0f) BloomIntensity = data.Bloom.Intensity;
+                if (data.Bloom.BlurAmount > 0f) BloomBlurAmount = data.Bloom.BlurAmount;
+            }
         }
 
         // POCO под структуру options.yaml (имена в YAML — camelCase)
@@ -50,10 +68,18 @@ namespace RiotGalaxy.Core.Utils
             public ScreenYaml Screen { get; set; }
             public PlayerYaml Player { get; set; }
             public CombatYaml Combat { get; set; }
+            public BloomYaml Bloom { get; set; }
         }
         private class CombatYaml
         {
             public float AimMaxDeg { get; set; }
+        }
+        private class BloomYaml
+        {
+            public bool Enabled { get; set; } = true;   // если поле отсутствует — считаем включённым
+            public float Threshold { get; set; } = -1f; // <0 → не переопределять
+            public float Intensity { get; set; } = -1f;
+            public float BlurAmount { get; set; } = -1f;
         }
         private class ScreenYaml
         {

@@ -10,8 +10,9 @@ KEYS="${1:-}"
 SLP="${2:-0.8}"
 OUT="${3:-/tmp/shot.png}"
 
-# именно окно игры (в VS Code заголовок тоже содержит "RiotGalaxy", поэтому имя точное)
-WID=$(xdotool search --name "RiotGalaxy.DesktopGL" 2>/dev/null | tail -1)
+# именно окно игры: точный матч имени (в VS Code заголовок содержит "RiotGalaxy.DesktopGL.csproj",
+# поэтому якорим ^...$)
+WID=$(xdotool search --name '^RiotGalaxy\.DesktopGL$' 2>/dev/null | tail -1)
 [ -z "$WID" ] && { echo "окно игры не найдено"; exit 1; }
 
 xdotool windowactivate --sync "$WID" >/dev/null 2>&1 || true

@@ -624,6 +624,15 @@ glow-заголовки (`GlowTextCentered`), двухколоночные ст�
 Магазин ([ShopScreen](RiotGalaxy.Core/Screens/ShopScreen.cs)) подгоняет высоту строк, чтобы всё
 влезало **без прокрутки**; DEV-меню — так же.
 
+**Bloom (пост-процесс, только десктоп).** Шейдер [Bloom.fx](RiotGalaxy.Content/Effects/Bloom.fx)
+(техники Extract + Blur) собирается отдельным [EffectsDesktop.mgcb](RiotGalaxy.Content/EffectsDesktop.mgcb),
+подключённым ТОЛЬКО в DesktopGL.csproj (на Android .fx не собирается → `_bloom==null` → пост-процесс
+выключается, свечение UI остаётся аддитивным; Docker-сборка Android не ломается). В `GameManager.Draw`
+сцена рендерится в `_sceneRT`, затем extract ярких зон (порог) → гаусс H/V в половинном разрешении
+(`_bloomA/_bloomB`) → композиция в back buffer (сцена + аддитивно свечение). Параметры — в
+`options.yaml` секция `bloom` (`enabled/threshold/intensity/blurAmount`, читаются в `Utils.GameOptions`),
+меняются без пересборки. На Linux компиляция HLSL требует wine — он уже настроен (`~/.winemonogame`).
+
 ## 15. Уровни и прогрессия
 
 [Utils/Level.cs](RiotGalaxy.Core/Utils/Level.cs) грузит `Content/Levels/level{N}.yaml`

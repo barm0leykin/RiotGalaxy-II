@@ -26,6 +26,10 @@
     <MonoGameContentReference Include="..\RiotGalaxy.Content\RiotGalaxy.Content.mgcb">
       <ContentFolder>Content</ContentFolder>
     </MonoGameContentReference>
+    <!-- Только десктоп: bloom-шейдер (Android его не собирает — там свечение аддитивное) -->
+    <MonoGameContentReference Include="..\RiotGalaxy.Content\EffectsDesktop.mgcb">
+      <ContentFolder>Content</ContentFolder>
+    </MonoGameContentReference>
   </ItemGroup>
 
   <!-- Текстовые/YAML-конфиги и уровни копируются в выход как есть (мимо Content Pipeline) -->

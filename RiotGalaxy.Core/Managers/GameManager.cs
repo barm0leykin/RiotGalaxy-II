@@ -120,6 +120,15 @@ namespace RiotGalaxy.Core.Managers
         public Texture2D GlowTexture { get; set; }
         public GraphicsDevice GraphicsDevice => _graphics.GraphicsDevice;
 
+        // ── Bloom post-process (только десктоп; _bloom==null → выключен) ──
+        private Effect _bloom;
+        private RenderTarget2D _sceneRT;              // сцена в полном размере вьюпорта
+        private RenderTarget2D _bloomA, _bloomB;      // буферы свечения (половинное разрешение)
+        private int _rtW, _rtH;                        // текущий размер таргетов
+        private readonly Vector2[] _blurOffsets = new Vector2[15];
+        private readonly float[] _blurWeights = new float[15];
+        // Параметры bloom берём из Utils.GameOptions (options.yaml → секция bloom).
+
         /// <summary>Letterbox-матрица текущего кадра — чтобы экраны могли переоткрыть UI-батч
         /// с той же трансформацией (напр. аддитивный проход неонового свечения).</summary>
         public Matrix RenderMatrix => _renderMatrix;
@@ -267,6 +276,19 @@ namespace RiotGalaxy.Core.Managers
                 Console.WriteLine($"=== Failed to load font 'TestFont': {ex.Message} ===");
             }
 
+            // Bloom-шейдер (только десктоп; на Android .xnb не собирается → останется null,
+            // и пост-обработка просто выключится, свечение UI остаётся аддитивным).
+            try
+            {
+                _bloom = _content.Load<Effect>("Effects/Bloom");
+                Utils.Log.Debug("Bloom effect loaded");
+            }
+            catch (Exception ex)
+            {
+                _bloom = null;
+                Utils.Log.Debug($"Bloom effect not available: {ex.Message}");
+            }
+
             // Загружаем конфиги из YAML (оружие, враги, параметры игры) и сохранённые настройки
             Utils.GameSettings.Load();           // в т.ч. выбранный язык
             Utils.Loc.Load(Utils.GameSettings.Language); // локализация UI (Content/Locale/<lang>.yaml)
@@ -322,26 +344,114 @@ namespace RiotGalaxy.Core.Managers
         public void Draw(GameTime gameTime)
         {
             _drawTime = gameTime; // для GameplayScreen.Draw → DrawGameplay (нужен gameObject.Draw)
-            _graphics.GraphicsDevice.Clear(Color.Black);
+            var device = _graphics.GraphicsDevice;
 
             // Letterbox: пересчитываем матрицу под текущий back buffer и масштабируем всю сцену.
             UpdateRenderTransform();
+
+            if (SimpleTexture == null) SimpleTexture = Utils.Textures.CreateSolid(GraphicsDevice, Color.White);
+            if (GlowTexture == null) GlowTexture = Utils.Textures.CreateGlow(GraphicsDevice);
+
+            int vpW = device.Viewport.Width, vpH = device.Viewport.Height;
+            bool useBloom = _bloom != null && Utils.GameOptions.BloomEnabled && vpW > 0 && vpH > 0;
+
+            // При bloom рисуем сцену в offscreen-таргет, иначе — прямо в back buffer.
+            if (useBloom) { EnsureBloomTargets(device, vpW, vpH); device.SetRenderTarget(_sceneRT); }
+            device.Clear(Color.Black);
+
+            // ── Сцена (как обычно) ──
             _spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _renderMatrix);
-
-            // Небо биома: вертикальный градиент верх→низ (цвет зависит от акта).
-            if (SimpleTexture == null)
-                SimpleTexture = Utils.Textures.CreateSolid(GraphicsDevice, Color.White);
-            if (GlowTexture == null)
-                GlowTexture = Utils.Textures.CreateGlow(GraphicsDevice);
             DrawSky();
-
-            // Параллакс-звёзды поверх неба, под игровой сценой/UI (оттенок звёзд — из биома).
-            _starField?.Draw(_spriteBatch, SimpleTexture);
-
-            // Все состояния рисует ScreenSystem (включая GameplayScreen → DrawGameplay).
-            Screens.Draw(_spriteBatch);
-
+            _starField?.Draw(_spriteBatch, SimpleTexture); // параллакс-звёзды
+            Screens.Draw(_spriteBatch);                    // все состояния (вкл. бой/UI)
             _spriteBatch.End();
+
+            if (useBloom)
+            {
+                DrawBloom(device, vpW, vpH);   // сцена + свечение → back buffer
+            }
+        }
+
+        /// <summary>Пересоздать bloom-таргеты при смене размера вьюпорта.</summary>
+        private void EnsureBloomTargets(GraphicsDevice device, int w, int h)
+        {
+            if (_sceneRT != null && _rtW == w && _rtH == h) return;
+            _sceneRT?.Dispose(); _bloomA?.Dispose(); _bloomB?.Dispose();
+            _rtW = w; _rtH = h;
+            _sceneRT = new RenderTarget2D(device, w, h, false, SurfaceFormat.Color, DepthFormat.None);
+            int bw = Math.Max(1, w / 2), bh = Math.Max(1, h / 2); // свечение — в половинном разрешении
+            _bloomA = new RenderTarget2D(device, bw, bh, false, SurfaceFormat.Color, DepthFormat.None);
+            _bloomB = new RenderTarget2D(device, bw, bh, false, SurfaceFormat.Color, DepthFormat.None);
+        }
+
+        /// <summary>Пост-обработка: extract ярких зон → блюр H/V → сцена + свечение в back buffer.</summary>
+        private void DrawBloom(GraphicsDevice device, int vpW, int vpH)
+        {
+            var full = new Rectangle(0, 0, vpW, vpH);
+            var bloomRect = new Rectangle(0, 0, _bloomA.Width, _bloomA.Height);
+
+            // 1) Extract: яркие зоны сцены → _bloomA (половинное разрешение).
+            device.SetRenderTarget(_bloomA);
+            device.Clear(Color.Transparent);
+            _bloom.CurrentTechnique = _bloom.Techniques["Extract"];
+            _bloom.Parameters["Threshold"].SetValue(Utils.GameOptions.BloomThreshold);
+            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, null, null, _bloom);
+            _spriteBatch.Draw(_sceneRT, bloomRect, Color.White);
+            _spriteBatch.End();
+
+            // 2) Гаусс по горизонтали: _bloomA → _bloomB.
+            SetBlurParameters(1f / _bloomA.Width, 0f);
+            device.SetRenderTarget(_bloomB);
+            device.Clear(Color.Transparent);
+            _bloom.CurrentTechnique = _bloom.Techniques["Blur"];
+            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, null, null, _bloom);
+            _spriteBatch.Draw(_bloomA, bloomRect, Color.White);
+            _spriteBatch.End();
+
+            // 3) Гаусс по вертикали: _bloomB → _bloomA.
+            SetBlurParameters(0f, 1f / _bloomA.Height);
+            device.SetRenderTarget(_bloomA);
+            device.Clear(Color.Transparent);
+            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, null, null, _bloom);
+            _spriteBatch.Draw(_bloomB, bloomRect, Color.White);
+            _spriteBatch.End();
+
+            // 4) Композиция в back buffer: сцена + аддитивно свечение.
+            device.SetRenderTarget(null);
+            device.Clear(Color.Black);
+            _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.LinearClamp, null, null);
+            _spriteBatch.Draw(_sceneRT, full, Color.White);
+            _spriteBatch.End();
+            _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, null, null);
+            _spriteBatch.Draw(_bloomA, full, Color.White * Utils.GameOptions.BloomIntensity);
+            _spriteBatch.End();
+        }
+
+        /// <summary>Гауссовы веса/смещения для одного направления (dx,dy — размер тексела по оси).</summary>
+        private void SetBlurParameters(float dx, float dy)
+        {
+            float b = Utils.GameOptions.BloomBlurAmount;
+            int n = _blurOffsets.Length;
+            _blurWeights[0] = Gauss(0);
+            _blurOffsets[0] = Vector2.Zero;
+            float total = _blurWeights[0];
+            for (int i = 0; i < n / 2; i++)
+            {
+                float w = Gauss(i + 1);
+                _blurWeights[i * 2 + 1] = w;
+                _blurWeights[i * 2 + 2] = w;
+                total += w * 2;
+                // сдвиг между парой текселей — для «бесплатной» билинейной выборки двух за раз
+                float off = i * 2 + 1.5f;
+                var delta = new Vector2(dx, dy) * off;
+                _blurOffsets[i * 2 + 1] = delta;
+                _blurOffsets[i * 2 + 2] = -delta;
+            }
+            for (int i = 0; i < n; i++) _blurWeights[i] /= total; // нормируем
+            _bloom.Parameters["SampleOffsets"].SetValue(_blurOffsets);
+            _bloom.Parameters["SampleWeights"].SetValue(_blurWeights);
+
+            float Gauss(float x) => (float)(Math.Exp(-(x * x) / (2 * b * b)) / Math.Sqrt(2 * Math.PI * b * b));
         }
 
         /// <summary>Небо биома: вертикальный градиент верх→низ (полосами через SimpleTexture).</summary>
