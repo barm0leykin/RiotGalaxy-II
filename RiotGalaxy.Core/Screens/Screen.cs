@@ -228,22 +228,34 @@ namespace RiotGalaxy.Core.Screens
             Glow(sb, new Rectangle(r.X - 14, r.Y - 3, 26, r.Height + 6), Scale(accent, 0.3f));
         }
 
-        /// <summary>Свечение текста (внутри GlowPass): несколько смещённых копий приглушённым цветом.</summary>
-        private static readonly Vector2[] _glowOffs =
-            { new Vector2(2, 0), new Vector2(-2, 0), new Vector2(0, 2), new Vector2(0, -2) };
+        /// <summary>Свечение текста (внутри GlowPass): МЯГКИЙ ОРЕОЛ за текстом (radial-glow), без
+        /// смещённых копий глифов — чтобы не двоить и не «мылить» пиксельный шрифт. pos — левый верх текста.</summary>
         protected void GlowText(SpriteBatch sb, string text, Vector2 pos, Color c, float scale)
         {
             if (Font == null || string.IsNullOrEmpty(text)) return;
-            var col = Scale(c, 0.5f);
-            foreach (var o in _glowOffs)
-                sb.DrawString(Font, text, pos + o * scale, col, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
+            var size = Font.MeasureString(text) * scale;
+            TextHalo(sb, pos.X + size.X / 2f, pos.Y + size.Y / 2f, size, c);
         }
-        /// <summary>Свечение центрированного текста (внутри GlowPass).</summary>
+        /// <summary>Свечение центрированного текста (внутри GlowPass): мягкий ореол за строкой.</summary>
         protected void GlowTextCentered(SpriteBatch sb, string text, float y, Color c, float scale)
         {
             if (Font == null || string.IsNullOrEmpty(text)) return;
-            float x = ScreenW / 2f - Font.MeasureString(text).X * scale / 2f;
-            GlowText(sb, text, new Vector2(x, y), c, scale);
+            var size = Font.MeasureString(text) * scale;
+            TextHalo(sb, ScreenW / 2f, y + size.Y / 2f, size, c);
+        }
+        /// <summary>Мягкий ореол за текстом: цепочка перекрывающихся radial-пятен вдоль строки,
+        /// равномерно подсвечивает надпись, не касаясь чёткости самих глифов.</summary>
+        private void TextHalo(SpriteBatch sb, float cx, float cy, Vector2 size, Color c)
+        {
+            var col = Scale(c, 0.4f);
+            float d = size.Y * 1.7f;                 // диаметр пятна ~ высота строки
+            int n = System.Math.Max(1, (int)System.Math.Round(size.X / (size.Y * 0.9f)));
+            float left = cx - size.X / 2f;
+            for (int i = 0; i < n; i++)
+            {
+                float bx = left + size.X * (i + 0.5f) / n;
+                Glow(sb, new Rectangle((int)(bx - d / 2f), (int)(cy - d / 2f), (int)d, (int)d), col);
+            }
         }
 
         /// <summary>Строка «две колонки»: подпись слева, значение/цена справа (по краям прямоугольника).</summary>
