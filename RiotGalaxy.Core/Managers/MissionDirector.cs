@@ -93,6 +93,21 @@ namespace RiotGalaxy.Core.Managers
         }
 
         /// <summary>
+        /// DEV: возобновить миссию сразу с её шага-босса (пропустив брифинги/бои).
+        /// Возвращает false, если позиция некорректна или у миссии нет шага-босса.
+        /// </summary>
+        public bool ResumeAtBoss(int missionIndex)
+        {
+            if (!ResumeAt(missionIndex, 0)) return false; // грузит _cur, ставит _si=-1
+            int bi = -1;
+            for (int i = 0; i < _cur.Steps.Count; i++)
+                if (_cur.Steps[i].Kind == StepKind.Boss) { bi = i; break; }
+            if (bi < 0) return false;
+            _si = bi - 1; // следующий Advance вернёт шаг-босс
+            return true;
+        }
+
+        /// <summary>
         /// Следующий шаг кампании (с пересечением границ миссий). null — кампания пройдена.
         /// missionStarted=true, если этот шаг — первый в новой миссии.
         /// </summary>

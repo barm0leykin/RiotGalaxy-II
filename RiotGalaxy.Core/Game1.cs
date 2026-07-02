@@ -55,10 +55,20 @@ namespace RiotGalaxy.Core
             _gameManager.SimpleTexture = RiotGalaxy.Core.Utils.Textures.CreateSolid(GraphicsDevice, Color.White);
         }
 
+        // Скриншот по F12: сохраняет текущий кадр в screenshot.png рядом с бинарником
+        // (для тестов/ревью — файл затем можно прочитать/переслать).
+        private bool _prevF12;
+        private bool _screenshotRequested;
+
         protected override void Update(GameTime gameTime)
         {
             // Ввод игровых состояний (меню/настройки обрабатывают сами экраны)
             HandleGameplayKeys();
+
+            // F12 — запрос скриншота (edge-детект, работает во всех состояниях).
+            bool f12 = Keyboard.GetState().IsKeyDown(Keys.F12);
+            if (f12 && !_prevF12) _screenshotRequested = true;
+            _prevF12 = f12;
 
             // Передаем обновление в GameManager
             _gameManager.Update(gameTime);
@@ -70,8 +80,36 @@ namespace RiotGalaxy.Core
         {
             // Передаем отрисовку в GameManager
             _gameManager.Draw(gameTime);
-            
+
             base.Draw(gameTime);
+
+            if (_screenshotRequested)
+            {
+                _screenshotRequested = false;
+                SaveScreenshot();
+            }
+        }
+
+        /// <summary>Сохранить текущий кадр (back buffer) в screenshot.png рядом с бинарником.</summary>
+        private void SaveScreenshot()
+        {
+            try
+            {
+                int w = GraphicsDevice.PresentationParameters.BackBufferWidth;
+                int h = GraphicsDevice.PresentationParameters.BackBufferHeight;
+                var data = new Color[w * h];
+                GraphicsDevice.GetBackBufferData(data);
+                using var tex = new Texture2D(GraphicsDevice, w, h);
+                tex.SetData(data);
+                string path = System.IO.Path.Combine(AppContext.BaseDirectory, "screenshot.png");
+                using var fs = System.IO.File.Create(path);
+                tex.SaveAsPng(fs, w, h);
+                RiotGalaxy.Core.Utils.Log.Debug($"Screenshot saved: {path} ({w}x{h})");
+            }
+            catch (Exception ex)
+            {
+                RiotGalaxy.Core.Utils.Log.Debug($"Screenshot failed: {ex.Message}");
+            }
         }
         
         /// <summary>

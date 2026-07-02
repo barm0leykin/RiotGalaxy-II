@@ -196,7 +196,8 @@ Victory): Esc/P — пауза и снятие, Space — рестарт на э
 - **Состояния игры** (паттерн State) —
   `enum GameState { Splash, Profile, MainMenu, Settings, Playing, Paused, GameOver, Victory, NextLevel, Dialogue, Shop, DevMenu }`.
   `DevMenu` ([DevMenuScreen](RiotGalaxy.Core/Screens/DevMenuScreen.cs)) — выбор миссии для тестов; пункт
-  входа в главном меню под `#if DEBUG`, в релизе недоступен.
+  входа в главном меню под `#if DEBUG`, в релизе недоступен. Enter — миссия с начала, **B** — сразу
+  с шага-босса (`DevStartMissionAtBoss` → `MissionDirector.ResumeAtBoss`).
   После заставки — экран **выбора профиля** (`Profile` → [ProfileScreen](RiotGalaxy.Core/Screens/ProfileScreen.cs)).
   **Все** состояния — экраны: `Update`/`Draw` целиком делегируются в `ScreenSystem` (см. §14),
   без `switch`. Переходы — через `ChangeGameState`, который заводит нужный `Screen` и решает,
@@ -424,6 +425,12 @@ var pad = GamePad.GetState(PlayerIndex.One);
 
 Чтобы поймать *момент нажатия* (а не удержание), сравнивают с прошлым кадром — см.
 `_previousKeyboardState` в `Game1`.
+
+**Разделение ответственности (важно):** `InputManager` отвечает ТОЛЬКО за геймплейный ввод
+(движение A/D, огонь Space, смена оружия, навыки Q/E). **Переходами состояний** (Esc/пауза,
+старт, итог) владеет исключительно `Game1.HandleGameplayKeys` (+ сами экраны меню). Раньше оба
+дублировали Esc/P/Enter — из-за рассинхрона «прошлого» кадра пауза не снималась; продублированные
+переходы из `InputManager` убраны.
 
 ---
 

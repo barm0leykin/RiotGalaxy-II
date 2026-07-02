@@ -349,21 +349,11 @@ namespace RiotGalaxy.Core.Managers
             {
                 HandleShootAction();
             }
-            
-            if (IsKeyJustPressed(Keys.Escape))
-            {
-                HandleEscapeAction();
-            }
-            
-            if (IsKeyJustPressed(Keys.P))
-            {
-                HandlePauseAction();
-            }
-            
-            if (IsKeyJustPressed(Keys.Enter))
-            {
-                HandleEnterAction();
-            }
+
+            // ВАЖНО: переходами состояний (пауза/меню/старт) владеет ТОЛЬКО Game1.HandleGameplayKeys.
+            // Здесь их не дублируем — иначе на Esc срабатывали два обработчика (у InputManager
+            // Paused→MainMenu, у Game1 Paused→Playing) и паузу нельзя было снять: InputManager
+            // не обновляет своё «прошлое» состояние во время паузы и на зажатом Esc видел ложный фронт.
         }
 
         /// <summary>
@@ -375,59 +365,8 @@ namespace RiotGalaxy.Core.Managers
             player?.Fire();
         }
 
-        /// <summary>
-        /// Обработка действия Escape
-        /// </summary>
-        private void HandleEscapeAction()
-        {
-            var currentState = GameManager.Instance.CurrentGameState;
-            switch (currentState)
-            {
-                case GameManager.GameState.Playing:
-                    GameManager.Instance.ChangeGameState(GameManager.GameState.Paused);
-                    break;
-                case GameManager.GameState.Paused:
-                    GameManager.Instance.ChangeGameState(GameManager.GameState.MainMenu);
-                    break;
-                case GameManager.GameState.MainMenu:
-                    // Выйти из игры
-                    break;
-            }
-        }
-
-        /// <summary>
-        /// Обработка действия паузы
-        /// </summary>
-        private void HandlePauseAction()
-        {
-            var currentState = GameManager.Instance.CurrentGameState;
-            if (currentState == GameManager.GameState.Playing)
-            {
-                GameManager.Instance.ChangeGameState(GameManager.GameState.Paused);
-            }
-            else if (currentState == GameManager.GameState.Paused)
-            {
-                GameManager.Instance.ChangeGameState(GameManager.GameState.Playing);
-            }
-        }
-
-        /// <summary>
-        /// Обработка действия Enter
-        /// </summary>
-        private void HandleEnterAction()
-        {
-            var currentState = GameManager.Instance.CurrentGameState;
-            switch (currentState)
-            {
-                case GameManager.GameState.MainMenu:
-                    GameManager.Instance.ChangeGameState(GameManager.GameState.Playing);
-                    break;
-                case GameManager.GameState.GameOver:
-                case GameManager.GameState.Victory:
-                    GameManager.Instance.ChangeGameState(GameManager.GameState.MainMenu);
-                    break;
-            }
-        }
+        // Переходы состояний (Esc/пауза/старт/итог) намеренно убраны отсюда — ими владеет
+        // Game1.HandleGameplayKeys и экраны меню (MainMenu/GameOver/Victory сами читают Enter/Space).
 
         #region Методы-аналоги обработчиков touch из CocosSharp
 

@@ -768,6 +768,25 @@ namespace RiotGalaxy.Core.Managers
             }
         }
 
+        /// <summary>
+        /// DEV: начать миссию сразу с её босса (пропустив брифинги/бои) — для быстрой проверки
+        /// боссов/шкалы HP/таунтов. Если у миссии нет босса — обычный старт с её начала.
+        /// </summary>
+        public void DevStartMissionAtBoss(int missionIndex)
+        {
+            try
+            {
+                SetupNewPlayer();
+                if (!_mission.ResumeAtBoss(missionIndex) && !_mission.ResumeAt(missionIndex, 0))
+                    _mission.StartCampaign();
+                RunNextStep();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error dev-start boss {missionIndex}: {ex.Message}");
+            }
+        }
+
         /// <summary>Создать свежего игрока и очистить сцену (бой ещё не загружается).</summary>
         private void SetupNewPlayer()
         {

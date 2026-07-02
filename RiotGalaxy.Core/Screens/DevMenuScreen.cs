@@ -9,7 +9,7 @@ namespace RiotGalaxy.Core.Screens
     /// <summary>
     /// DEV-меню: быстрый прыжок на любую миссию кампании (для тестирования). Открывается из
     /// главного меню только в Debug-сборке (пункт «[DEV]…» под #if DEBUG); в релизе недоступно.
-    /// ↑/↓ — выбор, Enter — играть с начала миссии, Esc — назад.
+    /// ↑/↓ — выбор, Enter — играть с начала миссии, B — сразу к боссу миссии, Esc — назад.
     /// </summary>
     public class DevMenuScreen : Screen
     {
@@ -44,10 +44,12 @@ namespace RiotGalaxy.Core.Screens
                     if (RowRect(vis, _scroll + vis).Contains(MousePoint)) { Play(_scroll + vis); return; }
 
             if (KeyPressed(Keys.Enter) || KeyPressed(Keys.Space)) Play(_selected);
+            if (KeyPressed(Keys.B)) PlayBoss(_selected); // B — сразу к боссу миссии
             if (KeyPressed(Keys.Escape)) Back();
         }
 
         private void Play(int i) => GameManager.Instance.DevStartMission(i);
+        private void PlayBoss(int i) => GameManager.Instance.DevStartMissionAtBoss(i);
         private void Back() => GameManager.Instance.ChangeGameState(GameManager.GameState.MainMenu);
 
         public override void Draw(SpriteBatch spriteBatch)
@@ -63,7 +65,7 @@ namespace RiotGalaxy.Core.Screens
                 DrawMenuItem(spriteBatch, Label(idx), RowY(vis), idx == _selected);
             }
 
-            DrawCentered(spriteBatch, "↑/↓ — выбор · Enter — играть с начала миссии · Esc — назад",
+            DrawCentered(spriteBatch, "↑/↓ — выбор · Enter — с начала миссии · B — сразу к боссу · Esc — назад",
                 ScreenH * 0.93f, Color.Gray, HintScale);
         }
     }
