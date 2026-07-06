@@ -300,6 +300,7 @@ namespace RiotGalaxy.Core.Managers
             Utils.BiomeConfig.Load();      // биомы актов (небо/звёзды)
             Utils.UpgradeConfig.Load();    // определения апгрейдов (магазин)
             Utils.SkillsConfig.Load();     // активные навыки
+            Utils.BarkConfig.Load();       // реплики пилота в бою (barks)
             Utils.SaveData.CurrentProfile = Utils.GameSettings.LastProfile; // последний выбранный слот
             Utils.SaveData.Load(); // профиль игрока: рекорд/прогресс/валюта/апгрейды/оружие
 
@@ -710,6 +711,7 @@ namespace RiotGalaxy.Core.Managers
             }
             _levels.Update(deltaTime);
             MessageLog.Update(deltaTime);
+            Barks.Update(deltaTime);
             ProcessGameObjects(gameTime);
 
             // Бой зачищен → даём несколько секунд на сбор звёзд, затем следующий шаг миссии.
@@ -973,6 +975,7 @@ namespace RiotGalaxy.Core.Managers
             Player?.ApplyUpgrades();                 // покупки из магазина вступают в силу
             _levels.LoadBattle(battleName, ScreenWidth, ScreenHeight);
             _levelClearTimer = 0f;
+            Barks.Reset();                            // барки пилота — с чистого листа на каждый бой
 
             // Чекпоинт «последней волны» — чтобы «Продолжить» возобновляло именно этот бой.
             Utils.SaveData.SetCheckpoint(_mission.MissionIndex, _mission.StepIndex, Player?.Score ?? 0);
@@ -1003,6 +1006,7 @@ namespace RiotGalaxy.Core.Managers
                 Player.Currency += clearBonus;
                 MessageLog.Add($"Зона зачищена: +{clearBonus}", Color.Gold);
             }
+            Barks.Fire("waveCleared");
             BankCurrency();
             RunNextStep();
         }

@@ -735,6 +735,13 @@ events:
 подписи над панелью кнопок («+25 HP», «Оружие: лазер», «+10 очк.»), затухают. Вызываются из
 точек событий (`Bonus.Apply`, `PlayerShip.ChangeWeapon/UpgradeWeapon`, команды кнопок).
 
+**Barks (реплики пилота в бою)** — [Barks.cs](RiotGalaxy.Core/Managers/Barks.cs): по триггеру
+(`lowHp`/`nuke`/`waveCleared`/`bossAppear`/`playerHit`) показывает случайную фразу из
+[barks.yaml](RiotGalaxy.Content/Config/barks.yaml) ([BarkConfig](RiotGalaxy.Core/Utils/BarkConfig.cs))
+через `MessageLog` (не прерывая игру), с общим кулдауном и защитой от повтора подряд. Триггеры
+раскиданы по коду: `PlayerShip.TakeDamage` (lowHp/playerHit), `PlayerShip.UseSkill` (nuke),
+`GameManager.OnBattleCleared` (waveCleared), `BossAI` на прилёте (bossAppear). `Barks.Reset()` — на старте боя.
+
 **Тестовая панель (debug).** Внизу слева во время игры — ряд кнопок ([Interface/MyButton.cs](RiotGalaxy.Core/Interface/MyButton.cs),
 регистрируются в `InputManager.GuiButtons`): смена оружия (Cannon/Minigun/Laser), апгрейд,
 лечение, «убить всех», «следующий уровень». Каждая кнопка несёт `ICommand` (папка

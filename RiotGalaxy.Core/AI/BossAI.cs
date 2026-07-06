@@ -58,7 +58,8 @@ namespace RiotGalaxy.Core.AI
                 if (p.Y >= _hoverY)
                 {
                     _arrived = true;
-                    GameManager.Instance.ShowBossTaunt("intro"); // реплика — когда босс долетел и виден
+                    GameManager.Instance.ShowBossTaunt("intro"); // реплика босса — когда долетел и виден
+                    Barks.Fire("bossAppear");                     // ответная реплика пилота
                 }
                 return;
             }

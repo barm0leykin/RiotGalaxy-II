@@ -157,6 +157,7 @@ namespace RiotGalaxy.Core.GameObjects
                     break;
                 case "nuke":
                     Managers.GameManager.Instance.KillAllEnemies();
+                    Managers.Barks.Fire("nuke");
                     break;
                 // новые навыки — добавлять сюда (эффект) + в skills.yaml (данные)
             }
@@ -305,12 +306,16 @@ namespace RiotGalaxy.Core.GameObjects
 
             
             // Наносим урон
+            bool wasLow = Health <= MaxHealth * 0.3f;
             Health -= damage;
 
             // Если еще живы, активируем временную неуязвимость (щит)
             if (IsAlive)
             {
                 ActivateInvulnerability(Utils.GameOptions.PlayerInvulnTime);
+                // Реплика пилота: при переходе в «мало HP» — тревожная, иначе — обычная на попадание.
+                bool nowLow = Health <= MaxHealth * 0.3f;
+                Managers.Barks.Fire(!wasLow && nowLow ? "lowHp" : "playerHit");
             }
         }
 
