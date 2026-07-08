@@ -313,6 +313,7 @@ namespace RiotGalaxy.Core.GameObjects
             if (IsAlive)
             {
                 ActivateInvulnerability(Utils.GameOptions.PlayerInvulnTime);
+                Managers.Barks.ResetStreak(); // получил урон — серия убийств прервана
                 // Реплика пилота: при переходе в «мало HP» — тревожная, иначе — обычная на попадание.
                 bool nowLow = Health <= MaxHealth * 0.3f;
                 Managers.Barks.Fire(!wasLow && nowLow ? "lowHp" : "playerHit");

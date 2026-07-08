@@ -176,11 +176,12 @@
       `campaign.yaml` = [m1..m13]. **Кампания сюжетно завершена.**
 - [ ] **en-локаль диалогов** (barks — русский готов, см. ниже).
 - [x] **Реплики в бою (barks)** — короткие всплывающие фразы пилота по триггерам, показ через
-      `MessageLog` (не прерывает бой), общий кулдаун + защита от повтора. Триггеры: `lowHp`, `nuke`,
-      `waveCleared`, `bossAppear`, `playerHit`. Данные — [barks.yaml](RiotGalaxy.Content/Config/barks.yaml)
-      (правится без пересборки), конфиг [BarkConfig.cs](RiotGalaxy.Core/Utils/BarkConfig.cs), логика
-      [Barks.cs](RiotGalaxy.Core/Managers/Barks.cs). *(TODO по желанию: en-локаль барков, ещё триггеры —
-      серия убийств/подбор редкого бонуса/старт волны.)*
+      `MessageLog` (не прерывает бой), общий кулдаун + защита от повтора. Триггеры (9): `battleStart`,
+      `lowHp`, `playerHit`, `nuke`, `waveCleared`, `bossAppear`, `bossPhase`, `killStreak` (6 убийств
+      без попаданий — урон сбрасывает серию), `bonusGrab` (подбор баффа). Данные —
+      [barks.yaml](RiotGalaxy.Content/Config/barks.yaml) (правится без пересборки), конфиг
+      [BarkConfig.cs](RiotGalaxy.Core/Utils/BarkConfig.cs), логика [Barks.cs](RiotGalaxy.Core/Managers/Barks.cs).
+      *(TODO по желанию: en-локаль барков.)*
 - [~] **Портреты персонажей** — движок готов (`DialogueLine.Portrait`). Сгенерированный арт (ChatGPT)
       для 7: Люк, Рейдер, Кардиган, Агдам, Зональный, Император, Trapp (`portrait_*`, 512²).
       Остальные 5 (Гаечка, Огнев, Сердюк, Подорожник, Захар) — пока код-аватары (PIL).

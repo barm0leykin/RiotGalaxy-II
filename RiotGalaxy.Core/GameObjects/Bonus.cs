@@ -108,6 +108,7 @@ namespace RiotGalaxy.Core.GameObjects
         /// </summary>
         public virtual void Apply(PlayerShip player)
         {
+            Managers.Barks.Fire("bonusGrab"); // реплика пилота на подбор бонуса-баффа (STAR — свой Apply)
             switch (Type)
             {
                 case BonusType.HP_UP:

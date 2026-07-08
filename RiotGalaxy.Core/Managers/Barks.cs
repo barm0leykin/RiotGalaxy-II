@@ -17,16 +17,44 @@ namespace RiotGalaxy.Core.Managers
         private const float DefaultGap = 3.5f;                // сек
         private static readonly Color BarkColor = new Color(150, 210, 255); // мягкий голубой — «пилот»
 
-        /// <summary>Тик кулдауна (звать из игрового Update).</summary>
+        // Килстрик: серия убийств без попаданий и без больших пауз.
+        private static int _streak;
+        private static float _sinceKill;
+        private const int StreakThreshold = 6;                // сколько убийств подряд → реплика
+        private const float StreakWindow = 3.0f;              // сек без убийств — серия сбрасывается
+
+        /// <summary>Тик кулдауна и окна килстрика (звать из игрового Update).</summary>
         public static void Update(float dt)
         {
             if (_cooldown > 0f) _cooldown -= dt;
+            if (_streak > 0)
+            {
+                _sinceKill += dt;
+                if (_sinceKill > StreakWindow) _streak = 0; // давно не убивал — серия прервана
+            }
         }
+
+        /// <summary>Зарегистрировать убийство врага (для килстрика). При достижении порога — реплика.</summary>
+        public static void RegisterKill()
+        {
+            _streak++;
+            _sinceKill = 0f;
+            if (_streak >= StreakThreshold)
+            {
+                Fire("killStreak");
+                _streak = 0;
+            }
+        }
+
+        /// <summary>Сбросить серию убийств (напр. при получении урона).</summary>
+        public static void ResetStreak() => _streak = 0;
 
         /// <summary>Сбросить состояние (при старте боя/миссии).</summary>
         public static void Reset()
         {
             _cooldown = 0f;
+            _streak = 0;
+            _sinceKill = 0f;
             _lastIdx.Clear();
         }
 

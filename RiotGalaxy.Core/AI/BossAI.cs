@@ -102,6 +102,7 @@ namespace RiotGalaxy.Core.AI
         private void OnEnterPhase(int ph)
         {
             GameManager.Instance.ShowBossTaunt(ph == 3 ? "phase3" : "phase2"); // реплика смены фазы
+            Barks.Fire("bossPhase");                                          // ответ пилота
             GameManager.Instance.Shake(ph == 3 ? 8f : 4f);
             if (ph == 3 && !_addsSpawned) { _addsSpawned = true; SpawnAdds(2); }
             _attackTimer = 0.6f; // быстрее перейти к атаке новой фазы

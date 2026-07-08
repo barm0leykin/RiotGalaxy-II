@@ -976,6 +976,7 @@ namespace RiotGalaxy.Core.Managers
             _levels.LoadBattle(battleName, ScreenWidth, ScreenHeight);
             _levelClearTimer = 0f;
             Barks.Reset();                            // барки пилота — с чистого листа на каждый бой
+            Barks.Fire("battleStart");
 
             // Чекпоинт «последней волны» — чтобы «Продолжить» возобновляло именно этот бой.
             Utils.SaveData.SetCheckpoint(_mission.MissionIndex, _mission.StepIndex, Player?.Score ?? 0);
@@ -1156,6 +1157,8 @@ namespace RiotGalaxy.Core.Managers
                 // Очки за убийство (идут в рекорд). Кредиты игрок получит, собрав звезду.
                 if (Player != null)
                     Player.Score += enemy.Reward;
+
+                if (!isBoss) Barks.RegisterKill(); // килстрик — только по рядовым врагам
 
                 // Запускаем ивент смерти врага
                 TriggerEnemyDeathEvent(obj);
