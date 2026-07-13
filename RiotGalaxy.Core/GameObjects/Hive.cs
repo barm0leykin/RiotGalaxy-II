@@ -29,16 +29,17 @@ namespace RiotGalaxy.Core.GameObjects
 
         // Параметры вылетов
         private bool _sortieEnabled;
-        private float _sortieInterval = 4f;
-        private int _sortieCount = 1;
+        private float _sortieInterval = Utils.AiConfig.Hive.DefaultSortieInterval;
+        private int _sortieCount = Utils.AiConfig.Hive.DefaultSortieCount;
         private float _sortieTimer;
         private static readonly Random _rnd = new Random();
 
         // Дрейф всего улья (синхронное барражирование)
         public Vector2 Offset { get; private set; }
         private float _time;
-        private const float SwayAmplitude = 70f; // пикселей по X
-        private const float SwaySpeed = 1.0f;     // рад/сек
+        // Качание улья — ai.yaml (секция hive)
+        private static float SwayAmplitude => Utils.AiConfig.Hive.SwayAmplitude;
+        private static float SwaySpeed => Utils.AiConfig.Hive.SwaySpeed;
 
         public Hive(World world, int startX, int startY, int cols, int rows)
         {
@@ -54,8 +55,8 @@ namespace RiotGalaxy.Core.GameObjects
         public void EnableSortie(float interval, int count)
         {
             _sortieEnabled = true;
-            _sortieInterval = interval > 0f ? interval : 4f;
-            _sortieCount = count > 0 ? count : 1;
+            _sortieInterval = interval > 0f ? interval : Utils.AiConfig.Hive.DefaultSortieInterval;
+            _sortieCount = count > 0 ? count : Utils.AiConfig.Hive.DefaultSortieCount;
             _sortieTimer = 0f;
         }
 
@@ -100,7 +101,7 @@ namespace RiotGalaxy.Core.GameObjects
             {
                 if (m.OnSortie || m.Enemy == null || !m.Enemy.IsAlive)
                     continue;
-                if (Vector2.Distance(m.Enemy.Position, CellWorldPos(m.Cx, m.Cy)) < 50f)
+                if (Vector2.Distance(m.Enemy.Position, CellWorldPos(m.Cx, m.Cy)) < Utils.AiConfig.Hive.SettleRadius)
                     ready.Add(m);
             }
 

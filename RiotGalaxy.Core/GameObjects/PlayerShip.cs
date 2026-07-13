@@ -426,50 +426,6 @@ namespace RiotGalaxy.Core.GameObjects
         }
 
         /// <summary>
-        /// Создание простой текстуры для корабля
-        /// </summary>
-        private Texture2D CreateSimpleTexture(Color color)
-        {
-            // Создаем текстуру 64x64 (квадрат)
-            Texture2D texture = new Texture2D(_graphicsDevice ?? throw new Exception("GraphicsDevice not set"), 64, 64);
-            Color[] data = new Color[64 * 64];
-            
-            // Создаем простой корабль как набор пикселей
-            for (int y = 0; y < 64; y++)
-            {
-                for (int x = 0; x < 64; x++)
-                {
-                    int index = y * 64 + x;
-                    
-                    // Создаем простую форму корабля
-                    if (y >= 40) // Нижняя часть (корпус)
-                    {
-                        if (x >= 20 && x <= 43)
-                            data[index] = color;
-                    }
-                    else if (y >= 30) // Средняя часть
-                    {
-                        if (x >= 25 && x <= 38)
-                            data[index] = color;
-                    }
-                    else if (y >= 20) // Верхняя часть (кабина)
-                    {
-                        if (x >= 28 && x <= 35)
-                            data[index] = color;
-                    }
-                    else // Верхушка
-                    {
-                        if (x >= 30 && x <= 33)
-                            data[index] = color;
-                    }
-                }
-            }
-            
-            texture.SetData(data);
-            return texture;
-        }
-
-        /// <summary>
         /// Дополнительная отрисовка (например, для здоровья или эффектов)
         /// </summary>
         private void DrawAdditionalInfo(SpriteBatch spriteBatch)
@@ -477,10 +433,9 @@ namespace RiotGalaxy.Core.GameObjects
             // Если неуязвим, рисуем щит (аналог AddMyshield из CocosSharp)
             if (IsInvulnerable)
             {
-                // Создаем простую текстуру для щита (если еще не создана)
-                // Это просто пример, в реальном приложении текстуры лучше кэшировать
-                if (_graphicsDevice == null) return; // Пропускаем если не установлен GraphicsDevice
-                Texture2D shieldTexture = CreateSimpleShieldTexture();
+                if (_graphicsDevice == null) return; // пропускаем, если не установлен GraphicsDevice
+                // Кэш: раньше текстура щита СОЗДАВАЛАСЬ КАЖДЫЙ КАДР (утечка GPU-ресурсов).
+                Texture2D shieldTexture = _shieldTexture ??= Utils.Textures.CreateShieldCircle(_graphicsDevice);
                 
                 // Рисуем прозрачный внешний слой щита
                 spriteBatch.Draw(
@@ -511,50 +466,10 @@ namespace RiotGalaxy.Core.GameObjects
         }
         
         /// <summary>
-        /// Создание простой текстуры для щита
-        /// </summary>
-        private Texture2D CreateSimpleShieldTexture()
-        {
-            // Создаем текстуру 64x64 в форме круга для щита
-            Texture2D texture = new Texture2D(_graphicsDevice, 64, 64);
-            Color[] data = new Color[64 * 64];
-            
-            int centerX = 32;
-            int centerY = 32;
-            int radius = 30;
-            
-            for (int y = 0; y < 64; y++)
-            {
-                for (int x = 0; x < 64; x++)
-                {
-                    int index = y * 64 + x;
-                    // Создаем круг для щита
-                    float distance = (float)Math.Sqrt(Math.Pow(x - centerX, 2) + Math.Pow(y - centerY, 2));
-                    if (distance <= radius)
-                    {
-                        // Градиент от центра к краям
-                        float alpha = 1.0f - (distance / radius);
-                        byte alphaByte = (byte)(alpha * 255);
-                        data[index] = new Color((byte)0, (byte)150, (byte)255, alphaByte);
-                    }
-                    else
-                    {
-                        // Прозрачные пиксели вне круга
-                        data[index] = Color.Transparent;
-                    }
-                }
-            }
-            
-            texture.SetData(data);
-            return texture;
-        }
-
-        /// <summary>
         /// Получение GraphicsDevice (нужно для создания текстур)
         /// </summary>
-        // private GraphicsDevice GraphicsDevice => GameManager.Instance.GraphicsDevice;
-        // Используем заглушку вместо GameManager пока не реализован
         private GraphicsDevice _graphicsDevice;
+        private Texture2D _shieldTexture; // кэш текстуры щита (генерируется один раз)
         
         /// <summary>
         /// Установка GraphicsDevice
@@ -581,7 +496,7 @@ namespace RiotGalaxy.Core.GameObjects
                 // Фолбэк на заглушку, чтобы игра не падала, если ассет недоступен
                 Utils.Log.Error($"=== Failed to load '{ShipSpriteAsset}', falling back to placeholder: {ex.Message} ===");
                 if (_graphicsDevice != null)
-                    Texture = CreateSimpleTexture(Color.Lime);
+                    Texture = Utils.Textures.CreateShipPlaceholder(_graphicsDevice, Color.Lime);
             }
         }
         

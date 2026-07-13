@@ -255,6 +255,10 @@
       6) рендер-слой из GameManager: `BloomRenderer`/`ScreenShake`/`BackgroundRenderer`,
       CollisionSystem/LevelDirector без Instance изнутри; 7) `CampaignFlow` (поток кампании) +
       `BonusSpawner`. GameManager: 1258 → ~890 строк; публичный API — фасады (call-sites целы).
+      Хвост (8-й коммит): формы sortie-тактик и параметры улья → `ai.yaml` (секции sortie/hive);
+      снаряд врагов → `weapons.yaml` (enemyShot) вместо хардкода в Weapon; генераторы
+      fallback-текстур корабля/щита → `Utils.Textures` (+фикс: текстура щита создавалась
+      КАЖДЫЙ КАДР — теперь кэш).
 - [x] **CI/CD-пайплайн** ([.github/workflows/build-release.yml](.github/workflows/build-release.yml)):
       по коммиту в master/тегу `v*` собирает Desktop (Linux/Windows, self-contained) и Android APK
       (в Docker-образе `Dockerfile.android` с кэшем слоёв) и выкладывает в GitHub Releases —

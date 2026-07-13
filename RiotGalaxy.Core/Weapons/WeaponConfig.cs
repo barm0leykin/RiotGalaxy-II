@@ -63,6 +63,11 @@ namespace RiotGalaxy.Core.Weapons
         }
         public static MagnetOptions Magnet = new MagnetOptions();
 
+        /// <summary>Снаряд врагов (простое одиночное оружие рядовых и снаряды паттернов боссов).
+        /// Раньше был хардкодом в конструкторе Weapon — теперь weapons.yaml (секция enemyShot).</summary>
+        public static WeaponOptions EnemyShot = new WeaponOptions(1, 0.25f, 1.2f, 10f, 250f);
+        public static string EnemyShotSprite = "Images/wpn_bullet";
+
         public static List<WeaponDef> All { get; private set; } = Defaults();
 
         public static WeaponDef Get(string id) => All.Find(w => w.Id == id);
@@ -167,6 +172,17 @@ namespace RiotGalaxy.Core.Weapons
                 if (data.Magnet.PullSpeed > 0) Magnet.PullSpeed = data.Magnet.PullSpeed;
                 if (data.Magnet.TurnSpeed > 0) Magnet.TurnSpeed = data.Magnet.TurnSpeed;
             }
+
+            if (data.EnemyShot != null)
+            {
+                var e = data.EnemyShot;
+                if (e.Burst > 0) EnemyShot.burst = e.Burst;
+                if (e.BurstInterval > 0f) EnemyShot.burstInterval = e.BurstInterval;
+                if (e.ReloadSpeed > 0f) EnemyShot.reloadSpeed = e.ReloadSpeed;
+                if (e.Damage > 0f) EnemyShot.damage = e.Damage;
+                if (e.ShellSpeed > 0f) EnemyShot.shellSpeed = e.ShellSpeed;
+                if (!string.IsNullOrEmpty(e.Sprite)) EnemyShotSprite = e.Sprite;
+            }
         }
 
         private static List<WeaponOptions> ConvertLevels(List<WeaponLevelYaml> levels)
@@ -183,6 +199,16 @@ namespace RiotGalaxy.Core.Weapons
         {
             public List<WeaponYaml> Weapons { get; set; }
             public MagnetYaml Magnet { get; set; }
+            public EnemyShotYaml EnemyShot { get; set; }
+        }
+        private class EnemyShotYaml
+        {
+            public int Burst { get; set; }
+            public float BurstInterval { get; set; }
+            public float ReloadSpeed { get; set; }
+            public float Damage { get; set; }
+            public float ShellSpeed { get; set; }
+            public string Sprite { get; set; }
         }
         private class WeaponYaml
         {

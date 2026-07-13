@@ -91,3 +91,13 @@ magnet:
   radius: 100
   pullSpeed: 100
   turnSpeed: 120
+
+# Снаряд врагов: простое одиночное оружие всех рядовых (и снаряды паттернов боссов).
+# damage — урон вражеской пули; таранный урон задаёт enemies.yaml (damage врага).
+enemyShot:
+  burst: 1
+  burstInterval: 0.25
+  reloadSpeed: 1.2
+  damage: 10
+  shellSpeed: 250
+  sprite: Images/wpn_bullet

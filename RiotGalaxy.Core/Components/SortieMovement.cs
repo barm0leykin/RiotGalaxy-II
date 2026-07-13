@@ -46,8 +46,8 @@ namespace RiotGalaxy.Core.Components
         private float _accel, _turn, _strafeY;
         private int _strafeStage;
 
-        // Страховка от «зависания»: максимум времени в пике до принудительного возврата.
-        private const float MaxDiveTime = 9f;
+        // Страховка от «зависания»: максимум времени в пике до принудительного возврата (ai.yaml).
+        private static float MaxDiveTime => Utils.AiConfig.Sortie.MaxDiveTime;
 
         public SortieMovement(GameObject owner, float speed, Hive hive, int cx, int cy, SortieTactic tactic)
             : base(owner, speed)
@@ -64,6 +64,7 @@ namespace RiotGalaxy.Core.Components
             float side() => R() < 0.5 ? -1f : 1f;
 
             var gm = GameManager.Instance;
+            var cfg = Utils.AiConfig.Sortie; // форма тактик — ai.yaml (секция sortie)
 
             switch (tactic)
             {
@@ -78,28 +79,28 @@ namespace RiotGalaxy.Core.Components
                     break;
                 }
                 case SortieTactic.Snake:
-                    _amp = 100f;
-                    _descend = speed * 0.85f;
-                    _omega = (speed * 0.5f) / _amp;
+                    _amp = cfg.SnakeAmplitude;
+                    _descend = speed * cfg.SnakeDescendFrac;
+                    _omega = (speed * cfg.SnakeWaveSpeedFrac) / _amp;
                     break;
                 case SortieTactic.Ellipse:
-                    _radius = 110f;
+                    _radius = cfg.EllipseRadius;
                     _omega = speed / _radius;
-                    _descend = speed * 0.3f;
+                    _descend = speed * cfg.EllipseDescendFrac;
                     _dir = side(); // петля влево/вправо
                     break;
                 case SortieTactic.Zigzag:
                     // Треугольная волна по X (острее змейки) + равномерный спуск.
-                    _amp = 90f;
-                    _descend = speed * 0.85f;
-                    _omega = (speed * 0.6f) / _amp;
+                    _amp = cfg.ZigzagAmplitude;
+                    _descend = speed * cfg.ZigzagDescendFrac;
+                    _omega = (speed * cfg.ZigzagWaveSpeedFrac) / _amp;
                     break;
                 case SortieTactic.Spiral:
                     // Штопор с растущим радиусом.
-                    _radius = 34f;              // стартовый радиус
-                    _grow = 65f;                // px/сек прирост радиуса
-                    _omega = speed / 85f;
-                    _descend = speed * 0.55f;
+                    _radius = cfg.SpiralStartRadius;
+                    _grow = cfg.SpiralRadiusGrow;               // px/сек прирост радиуса
+                    _omega = speed / cfg.SpiralOmegaDivisor;
+                    _descend = speed * cfg.SpiralDescendFrac;
                     _dir = side();
                     break;
                 case SortieTactic.Swoop:
@@ -107,30 +108,31 @@ namespace RiotGalaxy.Core.Components
                     // Дайв-бомба: боковой замах в сторону игрока, вертикаль разгоняется.
                     var player = gm.Player;
                     float sx = (player != null && player.Position.X < owner.Position.X) ? -1f : 1f;
-                    _vx = sx * speed * 0.7f;
-                    _vy = speed * 0.4f;
-                    _accel = speed * 1.3f;      // ускорение вниз
+                    _vx = sx * speed * cfg.SwoopSideFrac;
+                    _vy = speed * cfg.SwoopDownFrac;
+                    _accel = speed * cfg.SwoopAccelFrac; // ускорение вниз
                     break;
                 }
                 case SortieTactic.Strafe:
                     _descend = speed;
-                    _strafeY = gm.ScreenHeight * 0.42f; // до этой высоты спускаемся, потом штурмуем
+                    _strafeY = gm.ScreenHeight * cfg.StrafeTurnYFrac; // до этой высоты спускаемся, потом штурмуем
                     _dir = side();
                     _strafeStage = 0;
                     break;
                 case SortieTactic.Homing:
                     _vx = 0f;
-                    _vy = speed;                // старт вниз, дальше доворот на игрока
-                    _turn = 2.2f;               // рад/сек — скорость доворота
+                    _vy = speed;                 // старт вниз, дальше доворот на игрока
+                    _turn = cfg.HomingTurnSpeed; // рад/сек — скорость доворота
                     break;
                 case SortieTactic.Boomerang:
-                    _vx = side() * speed * 0.35f;
-                    _vy = speed * 0.9f;         // вниз
-                    _accel = -(speed * 1.15f);  // торможение → разворот вверх
+                    _vx = side() * speed * cfg.BoomerangSideFrac;
+                    _vy = speed * cfg.BoomerangDownFrac;         // вниз
+                    _accel = -(speed * cfg.BoomerangBrakeFrac);  // торможение → разворот вверх
                     break;
                 default: // Random
                 {
-                    var dir = Utils.MathUtil.DirFromAngleDeg(155f + (float)(R() * 50f)) * speed;
+                    var dir = Utils.MathUtil.DirFromAngleDeg(
+                        cfg.RandomCourseMinDeg + (float)(R() * (cfg.RandomCourseMaxDeg - cfg.RandomCourseMinDeg))) * speed;
                     _vx = dir.X;
                     _vy = dir.Y;
                     break;

@@ -18,6 +18,27 @@ blue:
   attackShootInterval: 3.0   # синий в атаке
   attackChance: 0.2          # шанс сорваться из роения в атаку на каждой «идее» (0..1)
 
+# Вылеты из улья (sortie): форма каждой тактики пике. Доли (…Frac) — от attackSpeed врага.
+sortie:
+  maxDiveTime: 9.0                 # страховка: сек в пике до принудительного возврата
+  snake:     { amplitude: 100, descendFrac: 0.85, waveSpeedFrac: 0.5 }
+  ellipse:   { radius: 110, descendFrac: 0.3 }
+  zigzag:    { amplitude: 90, descendFrac: 0.85, waveSpeedFrac: 0.6 }
+  spiral:    { startRadius: 34, radiusGrow: 65, omegaDivisor: 85, descendFrac: 0.55 }
+  swoop:     { sideFrac: 0.7, downFrac: 0.4, accelFrac: 1.3 }
+  strafe:    { turnYFrac: 0.42 }   # до этой доли высоты спускаемся, потом штурмуем поперёк
+  homing:    { turnSpeed: 2.2 }    # рад/сек — скорость доворота на игрока
+  boomerang: { sideFrac: 0.35, downFrac: 0.9, brakeFrac: 1.15 }
+  random:    { courseMinDeg: 155, courseMaxDeg: 205 }
+
+# Улей (формация): барражирование и готовность к вылету.
+hive:
+  swayAmplitude: 70      # качание всего улья по X, пикс
+  swaySpeed: 1.0         # рад/сек
+  settleRadius: 50       # юнит «осел» возле ячейки (готов к вылету), пикс
+  defaultSortieInterval: 4.0   # дефолты, если бой не задал sortieInterval/sortieCount
+  defaultSortieCount: 1
+
 # Босс: фазы по доле HP, телеграф перед залпом, паттерны стрельбы.
 boss:
   hoverYFrac: 0.18       # точка зависания (доля высоты экрана)

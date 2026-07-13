@@ -33,7 +33,10 @@ namespace RiotGalaxy.Core.Weapons
         public Weapon(GameObject owner)
         {
             _owner = owner;
-            Options = new WeaponOptions(1, 0.25f, 1.2f, 10f, 250f); // дефолт для врагов
+            // Снаряд врагов — из weapons.yaml (enemyShot). Копия: Options мутабельны,
+            // общий экземпляр между всеми врагами делить нельзя.
+            var e = WeaponConfig.EnemyShot;
+            Options = new WeaponOptions(e.burst, e.burstInterval, e.reloadSpeed, e.damage, e.shellSpeed);
         }
 
         /// <summary>Настроить оружие игрока по описанию и (1-based) уровню.</summary>
@@ -116,7 +119,7 @@ namespace RiotGalaxy.Core.Weapons
             Vector2 dir = DirFromAngle(angle);
             Vector2 spawn = _owner.Position + dir * (_owner.Height * 0.5f);
 
-            Shell shell = new Shell(spawn, Def?.Sprite ?? "Images/wpn_bullet", Def?.Piercing ?? false);
+            Shell shell = new Shell(spawn, Def?.Sprite ?? WeaponConfig.EnemyShotSprite, Def?.Piercing ?? false);
             shell.Speed = Options.shellSpeed;
             shell.Damage = (int)(Options.damage * OwnerDamageMult);
             shell.Direction = dir;
