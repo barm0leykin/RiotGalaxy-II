@@ -30,6 +30,17 @@ namespace RiotGalaxy.Core.AI
         private bool _arrived;
         private readonly bool[] _addsSpawned; // подмога каждой фазы — один раз
 
+        /// <summary>Отложенный выстрел «волны» (shotDelay в атаке): таймер + параметры снаряда.</summary>
+        private struct PendingShot
+        {
+            public float Delay;
+            public float Angle;
+            public string Sprite;   // null — обычный вражеский снаряд
+            public bool Piercing;
+        }
+        private readonly System.Collections.Generic.List<PendingShot> _pending
+            = new System.Collections.Generic.List<PendingShot>();
+
         public BossAI(Enemy owner) : base(owner)
         {
             owner.ShootSafe = true;   // стрельбу ведёт BossAI, не таймер Enemy
@@ -80,6 +91,22 @@ namespace RiotGalaxy.Core.AI
             // ── смена фазы по HP ───────────────────────────────────────────
             int ph = PhaseIndexForHp();
             if (ph != _phase) { _phase = ph; OnEnterPhase(ph); }
+
+            // ── отложенные выстрелы «волны» (идут независимо от телеграфа) ──
+            for (int i = _pending.Count - 1; i >= 0; i--)
+            {
+                var shot = _pending[i];
+                shot.Delay -= dt;
+                if (shot.Delay <= 0f)
+                {
+                    owner.Gun?.FireShell(shot.Angle, shot.Sprite, shot.Piercing);
+                    _pending.RemoveAt(i);
+                }
+                else
+                {
+                    _pending[i] = shot;
+                }
+            }
 
             // ── движение: свип по X (во время телеграфа почти стоим) + покачивание ─
             float sweep = _telegraph ? 0.15f : 1f;
@@ -138,15 +165,24 @@ namespace RiotGalaxy.Core.AI
             if (phase.ShellDamage > 0f) opts.damage = phase.ShellDamage;
         }
 
-        /// <summary>Исполнить все паттерны залпа текущей фазы.</summary>
+        /// <summary>
+        /// Исполнить все паттерны залпа текущей фазы. Паттерн собирает список углов (и опц.
+        /// спрайт/пробивание снаряда для type: weapon); shotDelay > 0 превращает залп в «волну» —
+        /// снаряды выходят поочерёдно (очередь _pending), иначе выпускаются разом.
+        /// </summary>
         private void FirePhaseAttacks(Utils.AiConfig.PhaseDef phase)
         {
             var gun = owner.Gun;
             if (gun == null) return;
             var player = GameManager.Instance.Player;
+            var angles = new System.Collections.Generic.List<float>();
 
             foreach (var a in phase.Attacks)
             {
+                angles.Clear();
+                string sprite = null;
+                bool piercing = false;
+
                 switch (a.Type.Trim().ToLowerInvariant())
                 {
                     case "aimedburst": // очередь вокруг направления на игрока (шаг spreadDeg)
@@ -156,28 +192,80 @@ namespace RiotGalaxy.Core.AI
                         float step = MathHelper.ToRadians(a.SpreadDeg);
                         float start = aim - step * (a.Count - 1) / 2f;
                         for (int i = 0; i < a.Count; i++)
-                            gun.FireShell(start + step * i);
+                            angles.Add(start + step * i);
                         break;
                     }
-                    case "fandown": // веер вниз полной шириной spreadDeg
+                    case "fandown": // веер вниз полной шириной spreadDeg (с shotDelay — «волна» слева направо)
                     {
                         int n = Math.Max(2, a.Count);
                         float spread = MathHelper.ToRadians(a.SpreadDeg);
                         float start = MathHelper.Pi - spread / 2f; // π = вниз
                         for (int i = 0; i < n; i++)
-                            gun.FireShell(start + spread * i / (n - 1));
+                            angles.Add(start + spread * i / (n - 1));
                         break;
                     }
-                    case "radial": // залп по кругу
+                    case "radial": // залп по кругу (с shotDelay — «вертушка»)
                     {
                         int n = Math.Max(1, a.Count);
                         for (int i = 0; i < n; i++)
-                            gun.FireShell(MathHelper.TwoPi * i / n);
+                            angles.Add(MathHelper.TwoPi * i / n);
+                        break;
+                    }
+                    case "spiral": // вращающаяся серия: угол крутится на spreadDeg за снаряд (задать shotDelay!)
+                    {
+                        float step = MathHelper.ToRadians(a.SpreadDeg);
+                        for (int i = 0; i < Math.Max(1, a.Count); i++)
+                            angles.Add(MathHelper.Pi + step * i); // старт вниз, дальше по кругу
+                        break;
+                    }
+                    case "weapon": // стреляем «оружием игрока» из weapons.yaml (спрайт/пирсинг/джиттер/веер)
+                    {
+                        var def = Weapons.WeaponConfig.Get(a.WeaponId);
+                        sprite = def?.Sprite;
+                        piercing = def?.Piercing ?? false;
+                        float aim = AimAngle(player);
+                        for (int i = 0; i < Math.Max(1, a.Count); i++)
+                        {
+                            if (def != null && def.FanCount > 1)
+                            {
+                                // Веерное оружие (spread): каждый «выстрел» — веер целиком.
+                                float fstep = MathHelper.ToRadians(def.FanStepDeg);
+                                float fstart = aim - fstep * (def.FanCount - 1) / 2f;
+                                for (int f = 0; f < def.FanCount; f++)
+                                    angles.Add(fstart + fstep * f);
+                            }
+                            else
+                            {
+                                // Одиночный ствол: разброс оружия (пулемёт) на каждый снаряд.
+                                int jitter = def?.JitterDeg ?? 0;
+                                float jr = jitter > 0
+                                    ? MathHelper.ToRadians(owner.AiRandom.Next(-jitter, jitter + 1)) : 0f;
+                                angles.Add(aim + jr);
+                            }
+                        }
                         break;
                     }
                     default: // aimedShot — одиночный прицельный
-                        gun.FireShell(AimAngle(player));
+                        angles.Add(AimAngle(player));
                         break;
+                }
+
+                if (a.ShotDelay > 0f)
+                {
+                    // «Волна»: поочерёдный выпуск с интервалом shotDelay.
+                    for (int i = 0; i < angles.Count; i++)
+                        _pending.Add(new PendingShot
+                        {
+                            Delay = a.ShotDelay * (i + 1),
+                            Angle = angles[i],
+                            Sprite = sprite,
+                            Piercing = piercing,
+                        });
+                }
+                else
+                {
+                    foreach (float ang in angles)
+                        gun.FireShell(ang, sprite, piercing);
                 }
             }
             GameManager.Instance.Shake(3f);

@@ -93,6 +93,16 @@ namespace RiotGalaxy.Core.Weapons
             SpawnShell(angleRad);
         }
 
+        /// <summary>
+        /// Прямой выстрел с переопределением снаряда (для паттернов босса type: weapon):
+        /// спрайт/пробивание — например, лазер (piercing) или пуля пулемёта.
+        /// </summary>
+        public void FireShell(float angleRad, string spriteOverride, bool piercing)
+        {
+            if (Options == null) return;
+            SpawnShell(angleRad, spriteOverride, piercing);
+        }
+
         /// <summary>Один «тик» стрельбы: веер (если задан) или одиночный снаряд (с разбросом).</summary>
         private void FireOnce()
         {
@@ -114,12 +124,16 @@ namespace RiotGalaxy.Core.Weapons
             }
         }
 
-        private void SpawnShell(float angle)
+        private void SpawnShell(float angle) => SpawnShell(angle, null, null);
+
+        private void SpawnShell(float angle, string spriteOverride, bool? piercingOverride)
         {
             Vector2 dir = DirFromAngle(angle);
             Vector2 spawn = _owner.Position + dir * (_owner.Height * 0.5f);
 
-            Shell shell = new Shell(spawn, Def?.Sprite ?? WeaponConfig.EnemyShotSprite, Def?.Piercing ?? false);
+            Shell shell = new Shell(spawn,
+                spriteOverride ?? Def?.Sprite ?? WeaponConfig.EnemyShotSprite,
+                piercingOverride ?? Def?.Piercing ?? false);
             shell.Speed = Options.shellSpeed;
             shell.Damage = (int)(Options.damage * OwnerDamageMult);
             shell.Direction = dir;

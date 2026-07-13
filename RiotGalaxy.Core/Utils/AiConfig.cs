@@ -77,9 +77,11 @@ namespace RiotGalaxy.Core.Utils
         /// <summary>Один паттерн стрельбы в залпе фазы.</summary>
         public class AttackDef
         {
-            public string Type = "aimedShot"; // aimedBurst | aimedFan | fanDown | radial | aimedShot
+            public string Type = "aimedShot"; // aimedBurst | aimedFan | fanDown | radial | spiral | weapon | aimedShot
             public int Count = 1;             // снарядов в паттерне
-            public float SpreadDeg = 10f;     // aimedBurst/aimedFan: шаг между снарядами; fanDown: полная ширина
+            public float SpreadDeg = 10f;     // aimedBurst/aimedFan/spiral: шаг между снарядами; fanDown: полная ширина
+            public float ShotDelay;           // >0 → «волна»: снаряды выходят поочерёдно с этим интервалом (сек)
+            public string WeaponId;           // type: weapon — id из weapons.yaml (minigun/laser/spread/...)
         }
 
         /// <summary>Фаза босса: активна, пока HpFrac > HpAbove (список фаз — от сильного HP к слабому).</summary>
@@ -269,6 +271,8 @@ namespace RiotGalaxy.Core.Utils
                                     Type = a.Type,
                                     Count = a.Count > 0 ? a.Count : 1,
                                     SpreadDeg = a.SpreadDeg > 0f ? a.SpreadDeg : 10f,
+                                    ShotDelay = a.ShotDelay,
+                                    WeaponId = a.WeaponId,
                                 });
                     if (phase.Attacks.Count == 0)
                         phase.Attacks.Add(new AttackDef()); // хотя бы одиночный прицельный
@@ -298,7 +302,11 @@ namespace RiotGalaxy.Core.Utils
                     AddsCount = p.AddsCount, AddsType = p.AddsType,
                 };
                 foreach (var a in p.Attacks)
-                    phase.Attacks.Add(new AttackDef { Type = a.Type, Count = a.Count, SpreadDeg = a.SpreadDeg });
+                    phase.Attacks.Add(new AttackDef
+                    {
+                        Type = a.Type, Count = a.Count, SpreadDeg = a.SpreadDeg,
+                        ShotDelay = a.ShotDelay, WeaponId = a.WeaponId,
+                    });
                 b.Phases.Add(phase);
             }
             return b;
@@ -394,6 +402,8 @@ namespace RiotGalaxy.Core.Utils
             public string Type { get; set; }
             public int Count { get; set; }
             public float SpreadDeg { get; set; }
+            public float ShotDelay { get; set; }
+            public string WeaponId { get; set; }
         }
     }
 }
