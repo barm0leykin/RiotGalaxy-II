@@ -16,7 +16,6 @@ namespace RiotGalaxy.Core.Screens
     public class MainMenuScreen : Screen
     {
         private int _selected;
-        private int _hover = -1;
 
         private List<(string label, Action act)> _items = new List<(string, Action)>();
 
@@ -58,22 +57,9 @@ namespace RiotGalaxy.Core.Screens
             BuildItems();
             int n = _items.Count;
 
-            // Наведение мышью
-            _hover = -1;
-            for (int i = 0; i < n; i++)
-                if (RowRect(i).Contains(MousePoint)) { _hover = i; _selected = i; break; }
-
-            // Навигация клавиатурой
-            if (KeyPressed(Keys.Down) || KeyPressed(Keys.S)) _selected = (_selected + 1) % n;
-            if (KeyPressed(Keys.Up) || KeyPressed(Keys.W)) _selected = (_selected - 1 + n) % n;
-
-            // Активация
-            if (_hover >= 0 && MouseClicked())
-                _items[_hover].act();
-            else if (KeyPressed(Keys.Enter) || KeyPressed(Keys.Space))
-                _items[_selected].act();
-            else if (KeyPressed(Keys.Escape))
-                _items[n - 1].act(); // последний пункт — «Выход»
+            UpdateListNav(n, ref _selected, RowRect,
+                activate: i => _items[i].act(),
+                back: () => _items[n - 1].act()); // последний пункт — «Выход»
         }
 
         public override void Draw(SpriteBatch spriteBatch)
@@ -113,7 +99,7 @@ namespace RiotGalaxy.Core.Screens
 
             for (int i = 0; i < _items.Count; i++)
             {
-                bool active = (i == _hover) || (i == _selected);
+                bool active = i == _selected;
                 var r = RowRect(i);
                 if (active) DrawSelectionBar(sb, r, NeonCyan);
                 DrawCentered(sb, _items[i].label, r.Y + (r.Height - Font.MeasureString(_items[i].label).Y * ItemScale) / 2f,

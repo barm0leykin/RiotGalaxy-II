@@ -30,22 +30,8 @@ namespace RiotGalaxy.Core.Screens
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-            int n = _missions.Count;
-            if (n == 0) { if (KeyPressed(Keys.Escape)) Back(); return; }
-
-            for (int i = 0; i < n; i++)
-                if (RowRect(i).Contains(MousePoint)) _selected = i;
-
-            if (KeyPressed(Keys.Down) || KeyPressed(Keys.S)) _selected = (_selected + 1) % n;
-            if (KeyPressed(Keys.Up) || KeyPressed(Keys.W)) _selected = (_selected - 1 + n) % n;
-
-            if (MouseClicked())
-                for (int i = 0; i < n; i++)
-                    if (RowRect(i).Contains(MousePoint)) { Play(i); return; }
-
-            if (KeyPressed(Keys.Enter) || KeyPressed(Keys.Space)) Play(_selected);
+            UpdateListNav(_missions.Count, ref _selected, RowRect, activate: Play, back: Back);
             if (KeyPressed(Keys.B)) PlayBoss(_selected); // B — сразу к боссу миссии
-            if (KeyPressed(Keys.Escape)) Back();
         }
 
         private void Play(int i) => GameManager.Instance.DevStartMission(i);

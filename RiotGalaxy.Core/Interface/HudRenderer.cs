@@ -107,12 +107,7 @@ namespace RiotGalaxy.Core.Interface
             fill = MathHelper.Clamp(fill, 0f, 1f);
             sb.Draw(pixel, r, new Color(20, 20, 28, 200));                                  // фон
             sb.Draw(pixel, new Rectangle(r.X, r.Y, (int)(r.Width * fill), r.Height), fillColor); // заливка
-            var border = new Color(90, 130, 210, 220);                                      // рамка-акцент
-            const int t = 2;
-            sb.Draw(pixel, new Rectangle(r.X, r.Y, r.Width, t), border);
-            sb.Draw(pixel, new Rectangle(r.X, r.Bottom - t, r.Width, t), border);
-            sb.Draw(pixel, new Rectangle(r.X, r.Y, t, r.Height), border);
-            sb.Draw(pixel, new Rectangle(r.Right - t, r.Y, t, r.Height), border);
+            Utils.Draw2D.Border(sb, pixel, r, new Color(90, 130, 210, 220));                // рамка-акцент
         }
 
         /// <summary>Текст по центру прямоугольника (для подписи на полосе HP).</summary>

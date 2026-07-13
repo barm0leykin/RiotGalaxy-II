@@ -114,35 +114,25 @@ namespace RiotGalaxy.Core.Screens
             return idx;
         }
 
+        // Кэш кадра: Update пересобирает (цены/уровни меняются после покупки), Draw читает.
+        private List<Entry> _entries = new List<Entry>();
+        private List<int> _items = new List<int>();
+        private List<Rectangle> _rects = new List<Rectangle>();
+        private Rectangle _backRect;
+
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-            var entries = BuildEntries();
-            var items = ItemIndices(entries);
-            int back = items.Count;                 // «Назад» — последний выбираемый
-            var (rects, backRect, _) = Layout(entries.Count);
+            _entries = BuildEntries();
+            _items = ItemIndices(_entries);
+            (_rects, _backRect, _) = Layout(_entries.Count);
+            int back = _items.Count;                // «Назад» — последний выбираемый
 
-            // Наведение мышью
-            for (int s = 0; s < items.Count; s++)
-                if (rects[items[s]].Contains(MousePoint)) _sel = s;
-            if (backRect.Contains(MousePoint)) _sel = back;
-
-            if (KeyPressed(Keys.Down) || KeyPressed(Keys.S)) _sel = Math.Min(back, _sel + 1);
-            if (KeyPressed(Keys.Up) || KeyPressed(Keys.W)) _sel = Math.Max(0, _sel - 1);
-
-            if (MouseClicked())
-            {
-                if (backRect.Contains(MousePoint)) { Back(); return; }
-                for (int s = 0; s < items.Count; s++)
-                    if (rects[items[s]].Contains(MousePoint)) { TryBuy(entries[items[s]]); return; }
-            }
-
-            if (KeyPressed(Keys.Enter) || KeyPressed(Keys.Space))
-            {
-                if (_sel == back) { Back(); return; }
-                if (_sel >= 0 && _sel < items.Count) TryBuy(entries[items[_sel]]);
-            }
-            if (KeyPressed(Keys.Escape)) Back();
+            // Единый список навигации: товары + «Назад» последним пунктом.
+            Rectangle NavRect(int s) => s == back ? _backRect : _rects[_items[s]];
+            UpdateListNav(back + 1, ref _sel, NavRect,
+                activate: s => { if (s == back) Back(); else TryBuy(_entries[_items[s]]); },
+                back: Back);
         }
 
         private void Back() => GameManager.Instance.CloseShop();
@@ -156,10 +146,18 @@ namespace RiotGalaxy.Core.Screens
         public override void Draw(SpriteBatch spriteBatch)
         {
             var sb = spriteBatch;
-            var entries = BuildEntries();
-            var items = ItemIndices(entries);
+            // Кэш кадра из Update (первый кадр — построить здесь).
+            if (_entries.Count == 0)
+            {
+                _entries = BuildEntries();
+                _items = ItemIndices(_entries);
+                (_rects, _backRect, _) = Layout(_entries.Count);
+            }
+            var entries = _entries;
+            var items = _items;
             int back = items.Count;
-            var (rects, backRect, _) = Layout(entries.Count);
+            var rects = _rects;
+            var backRect = _backRect;
             var p = Panel;
 
             int selEntry = (_sel >= 0 && _sel < items.Count) ? items[_sel] : -1;

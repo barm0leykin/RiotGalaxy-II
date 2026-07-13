@@ -23,19 +23,7 @@ namespace RiotGalaxy.Core.Screens
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
-
-            // Наведение мышью/тачем.
-            for (int i = 0; i < ItemKeys.Length; i++)
-                if (ItemRect(i).Contains(MousePoint)) _selected = i;
-
-            if (KeyPressed(Keys.Down) || KeyPressed(Keys.S)) _selected = (_selected + 1) % ItemKeys.Length;
-            if (KeyPressed(Keys.Up) || KeyPressed(Keys.W)) _selected = (_selected - 1 + ItemKeys.Length) % ItemKeys.Length;
-
-            if (MouseClicked())
-                for (int i = 0; i < ItemKeys.Length; i++)
-                    if (ItemRect(i).Contains(MousePoint)) { Activate(i); return; }
-
-            if (KeyPressed(Keys.Enter) || KeyPressed(Keys.Space)) Activate(_selected);
+            UpdateListNav(ItemKeys.Length, ref _selected, ItemRect, activate: Activate);
         }
 
         private void Activate(int index)

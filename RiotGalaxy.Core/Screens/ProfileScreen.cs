@@ -60,25 +60,16 @@ namespace RiotGalaxy.Core.Screens
                 return;
             }
 
-            // Наведение мышью/тачем на слот.
-            for (int i = 0; i < SaveData.ProfileCount; i++)
-                if (SlotRect(i).Contains(MousePoint)) _slot = i;
-
-            if (KeyPressed(Keys.Down) || KeyPressed(Keys.S)) _slot = (_slot + 1) % SaveData.ProfileCount;
-            if (KeyPressed(Keys.Up) || KeyPressed(Keys.W)) _slot = (_slot - 1 + SaveData.ProfileCount) % SaveData.ProfileCount;
-
-            // Сброс: клавиша R или кнопка «Сбросить».
-            if (KeyPressed(Keys.R)) { _confirmReset = true; return; }
-
-            if (MouseClicked())
+            // Сброс: клавиша R или кнопка «Сбросить» (проверяем до навигации по слотам).
+            if (KeyPressed(Keys.R) || (MouseClicked() && ResetRect.Contains(MousePoint)))
             {
-                if (ResetRect.Contains(MousePoint)) { _confirmReset = true; return; }
-                for (int i = 0; i < SaveData.ProfileCount; i++)
-                    if (SlotRect(i).Contains(MousePoint)) { Play(i); return; }
+                _confirmReset = true;
+                return;
             }
 
-            if (KeyPressed(Keys.Enter) || KeyPressed(Keys.Space)) Play(_slot);
-            if (KeyPressed(Keys.Escape)) GameManager.Instance.ChangeGameState(GameManager.GameState.MainMenu);
+            UpdateListNav(SaveData.ProfileCount, ref _slot, SlotRect,
+                activate: Play,
+                back: () => GameManager.Instance.ChangeGameState(GameManager.GameState.MainMenu));
         }
 
         /// <summary>Выбрать слот и перейти в меню с его прогрессом.</summary>

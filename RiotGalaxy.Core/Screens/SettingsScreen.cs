@@ -53,19 +53,23 @@ namespace RiotGalaxy.Core.Screens
             GameManager.Instance.ChangeGameState(GameManager.GameState.MainMenu);
         }
 
+        // Прямоугольники пунктов для навигации (0=громкость, 1=язык, 2=назад).
+        private Rectangle ItemRect(int i) => i == Volume ? VolumeRect : i == Language ? LangRect : BackRect;
+
         public override void Update(GameTime gameTime)
         {
             base.Update(gameTime);
 
-            // Наведение мышью/тачем задаёт выбранный пункт.
-            if (VolumeRect.Contains(MousePoint) || MinusRect.Contains(MousePoint) || PlusRect.Contains(MousePoint))
+            // Кнопки [-]/[+] громкости — поверх общей навигации (и hover, и клик).
+            if (MinusRect.Contains(MousePoint) || PlusRect.Contains(MousePoint))
+            {
                 _selected = Volume;
-            else if (LangRect.Contains(MousePoint)) _selected = Language;
-            else if (BackRect.Contains(MousePoint)) _selected = Back;
-
-            // Навигация курсором.
-            if (KeyPressed(Keys.Down) || KeyPressed(Keys.S)) _selected = (_selected + 1) % 3;
-            if (KeyPressed(Keys.Up) || KeyPressed(Keys.W)) _selected = (_selected + 2) % 3;
+                if (MouseClicked())
+                {
+                    ChangeVolume(MinusRect.Contains(MousePoint) ? -Step : Step);
+                    return;
+                }
+            }
 
             // Изменение значения выбранного пункта стрелками ←/→.
             bool left = KeyPressed(Keys.Left) || KeyPressed(Keys.A);
@@ -80,23 +84,14 @@ namespace RiotGalaxy.Core.Screens
                 ToggleLanguage();
             }
 
-            // Активация выбранного (Enter/Пробел).
-            if (KeyPressed(Keys.Enter) || KeyPressed(Keys.Space))
-            {
-                if (_selected == Language) ToggleLanguage();
-                else if (_selected == Back) Exit();
-            }
-
-            // Клик мышью/тачем.
-            if (MouseClicked())
-            {
-                if (MinusRect.Contains(MousePoint)) ChangeVolume(-Step);
-                else if (PlusRect.Contains(MousePoint)) ChangeVolume(Step);
-                else if (LangRect.Contains(MousePoint)) ToggleLanguage();
-                else if (BackRect.Contains(MousePoint)) Exit();
-            }
-
-            if (KeyPressed(Keys.Escape)) Exit();
+            UpdateListNav(3, ref _selected, ItemRect,
+                activate: i =>
+                {
+                    if (i == Language) ToggleLanguage();
+                    else if (i == Back) Exit();
+                    // Volume активации по Enter не имеет — регулируется ←/→ и кнопками
+                },
+                back: Exit);
         }
 
         public override void Draw(SpriteBatch spriteBatch)

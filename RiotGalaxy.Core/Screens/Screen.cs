@@ -151,13 +151,7 @@ namespace RiotGalaxy.Core.Screens
 
         protected void FillRect(SpriteBatch sb, Rectangle r, Color c) { if (Px != null) sb.Draw(Px, r, c); }
         protected void BorderRect(SpriteBatch sb, Rectangle r, Color c, int t = 2)
-        {
-            if (Px == null) return;
-            sb.Draw(Px, new Rectangle(r.X, r.Y, r.Width, t), c);
-            sb.Draw(Px, new Rectangle(r.X, r.Bottom - t, r.Width, t), c);
-            sb.Draw(Px, new Rectangle(r.X, r.Y, t, r.Height), c);
-            sb.Draw(Px, new Rectangle(r.Right - t, r.Y, t, r.Height), c);
-        }
+            => Utils.Draw2D.Border(sb, Px, r, c, t);
 
         /// <summary>Аддитивный проход: переоткрываем UI-батч в Additive, рисуем свечение,
         /// возвращаемся к AlphaBlend. Всё свечение экрана — одним вызовом, ДО чёткого текста.</summary>
@@ -250,6 +244,37 @@ namespace RiotGalaxy.Core.Screens
             if (Font != null)
                 sb.DrawString(Font, text, new Vector2(r.X + 18, r.Y), accent, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
             FillRect(sb, new Rectangle(r.X + 18, r.Bottom - 4, r.Width - 36, 2), WithA(accent, 130));
+        }
+
+        /// <summary>
+        /// Единая навигация вертикального меню-списка (было скопировано в 6 экранах):
+        /// hover мыши/тача по itemRect(i) выбирает пункт; ↓/S и ↑/W двигают выбор циклично;
+        /// клик по пункту и Enter/Space активируют; Esc — back (если задан).
+        /// Специфику (слайдеры ←/→, доп. клавиши) экраны добавляют поверх.
+        /// </summary>
+        protected void UpdateListNav(int count, ref int selected,
+            System.Func<int, Rectangle> itemRect, System.Action<int> activate, System.Action back = null)
+        {
+            if (count <= 0)
+            {
+                if (back != null && KeyPressed(Keys.Escape)) back();
+                return;
+            }
+
+            for (int i = 0; i < count; i++)
+                if (itemRect(i).Contains(MousePoint)) { selected = i; break; }
+
+            if (KeyPressed(Keys.Down) || KeyPressed(Keys.S)) selected = (selected + 1) % count;
+            if (KeyPressed(Keys.Up) || KeyPressed(Keys.W)) selected = (selected - 1 + count) % count;
+
+            if (MouseClicked())
+            {
+                for (int i = 0; i < count; i++)
+                    if (itemRect(i).Contains(MousePoint)) { activate(i); return; }
+            }
+
+            if (KeyPressed(Keys.Enter) || KeyPressed(Keys.Space)) { activate(selected); return; }
+            if (back != null && KeyPressed(Keys.Escape)) back();
         }
 
         /// <summary>Прямоугольник плашки на всю ширину панели для центрированного пункта (topY — верх текста).</summary>
