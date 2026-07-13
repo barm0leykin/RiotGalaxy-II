@@ -90,8 +90,6 @@ namespace RiotGalaxy.Core.GameObjects
             movement.Acceleration = Utils.GameOptions.PlayerAcceleration;
             movement.BrakingSpeed = Utils.GameOptions.PlayerBrakeSpeed;
             Movement = movement;
-            Shooting = new PlayerShootingComponent(this);
-            Collision = new PlayerCollisionComponent(this);
 
             // Стартовое оружие — стартер из реестра (бластер: слабый, скорострельный).
             Gun = new Weapon(this);

@@ -198,9 +198,6 @@ namespace RiotGalaxy.Core.Managers
         // Доступ к загрузчику контента (нужен игровым объектам для загрузки спрайтов)
         public ContentManager Content => _content;
 
-        // Фоновое изображение (задник)
-        private Texture2D _background;
-        
         // Обработчик ввода пользователя
         public InputManager userInputHandler;
 
@@ -252,16 +249,6 @@ namespace RiotGalaxy.Core.Managers
             // (на Android он недоступен в конструкторе Game1 — см. Initialize).
             _spriteBatch = new SpriteBatch(_graphics.GraphicsDevice);
             UpdateRenderTransform(); // первичный расчёт letterbox-матрицы (до первого Draw)
-
-            // Загружаем фоновое изображение (1280x768, точно под разрешение игры)
-            try
-            {
-                _background = _content.Load<Texture2D>("Backgrounds/background_blue");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"=== Failed to load background: {ex.Message} ===");
-            }
 
             // Загружаем звуковые эффекты (fire1, explode1)
             AudioManager.Instance.LoadContent(_content);

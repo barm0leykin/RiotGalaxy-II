@@ -30,23 +30,11 @@ namespace RiotGalaxy.Core.Managers
         /// <summary>Уровень пройден: все враги уровня заспавнены и уничтожены.</summary>
         public bool LevelComplete => _level != null && _level.AllSpawned && EnemiesRemaining <= 0;
 
-        /// <summary>Есть ли следующий уровень в кампании.</summary>
-        public bool HasNextLevel => CurrentLevel < TotalLevels;
-
         /// <summary>Подсчитать число уровней по файлам Content/Levels/level*.yaml.</summary>
         public void InitTotalLevels()
         {
             TotalLevels = Utils.Level.CountLevels();
             if (TotalLevels < 1) TotalLevels = 1;
-        }
-
-        public void ResetToFirst() => CurrentLevel = 1;
-
-        /// <summary>Перейти к следующему уровню и загрузить его данные.</summary>
-        public void GoToNextLevel(int screenW, int screenH)
-        {
-            CurrentLevel++;
-            Load(CurrentLevel, screenW, screenH);
         }
 
         /// <summary>Учёт убитого врага (вызывается при удалении врага из игры).</summary>

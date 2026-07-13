@@ -97,8 +97,6 @@ namespace RiotGalaxy.Core.GameObjects
                 Size = new Vector2(Size.X * s.Scale, Size.Y * s.Scale); // хитбокс крупнее
             }
 
-            Collision = new EnemyCollisionComponent(this);
-
             // Движение: машина состояний (blue/red) ИЛИ движение с отскоком (+ опц. блуждание).
             switch ((s.Ai ?? "none").Trim().ToLowerInvariant())
             {

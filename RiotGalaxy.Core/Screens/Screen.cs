@@ -113,20 +113,6 @@ namespace RiotGalaxy.Core.Screens
             if (px != null) sb.Draw(px, new Rectangle(0, 0, ScreenW, ScreenH), new Color(0, 0, 0, alpha));
         }
 
-        /// <summary>Тёмная панель с рамкой-акцентом — рамка вокруг контента меню.</summary>
-        protected void DrawPanel(SpriteBatch sb, Rectangle r)
-        {
-            var px = GameManager.Instance.SimpleTexture;
-            if (px == null) return;
-            sb.Draw(px, r, new Color(12, 18, 38, 215));        // тёмная заливка
-            var border = new Color(90, 130, 210, 210);          // синеватая рамка-акцент
-            const int t = 2;
-            sb.Draw(px, new Rectangle(r.X, r.Y, r.Width, t), border);
-            sb.Draw(px, new Rectangle(r.X, r.Bottom - t, r.Width, t), border);
-            sb.Draw(px, new Rectangle(r.X, r.Y, t, r.Height), border);
-            sb.Draw(px, new Rectangle(r.Right - t, r.Y, t, r.Height), border);
-        }
-
         /// <summary>Центрированная панель в долях экрана (0..1).</summary>
         protected Rectangle PanelRect(float widthFrac, float topFrac, float bottomFrac)
         {
@@ -135,14 +121,6 @@ namespace RiotGalaxy.Core.Screens
             int top = (int)(ScreenH * topFrac);
             int bottom = (int)(ScreenH * bottomFrac);
             return new Rectangle(x, top, w, bottom - top);
-        }
-
-        /// <summary>Текст пункта меню: выбранный — жёлтый и в маркерах «» », прочие — белые.</summary>
-        protected void DrawMenuItem(SpriteBatch sb, string text, float y, bool selected, float scale = 0f)
-        {
-            if (scale <= 0f) scale = ItemScale;
-            string label = selected ? "» " + text + " «" : text;
-            DrawCentered(sb, label, y, selected ? Color.Yellow : Color.White, scale);
         }
 
         // ══════════════════════════════════════════════════════════════════
@@ -228,15 +206,8 @@ namespace RiotGalaxy.Core.Screens
             Glow(sb, new Rectangle(r.X - 14, r.Y - 3, 26, r.Height + 6), Scale(accent, 0.3f));
         }
 
-        /// <summary>Свечение текста (внутри GlowPass): МЯГКИЙ ОРЕОЛ за текстом (radial-glow), без
-        /// смещённых копий глифов — чтобы не двоить и не «мылить» пиксельный шрифт. pos — левый верх текста.</summary>
-        protected void GlowText(SpriteBatch sb, string text, Vector2 pos, Color c, float scale)
-        {
-            if (Font == null || string.IsNullOrEmpty(text)) return;
-            var size = Font.MeasureString(text) * scale;
-            TextHalo(sb, pos.X + size.X / 2f, pos.Y + size.Y / 2f, size, c);
-        }
-        /// <summary>Свечение центрированного текста (внутри GlowPass): мягкий ореол за строкой.</summary>
+        /// <summary>Свечение центрированного текста (внутри GlowPass): мягкий ореол за строкой
+        /// (radial-glow, без смещённых копий глифов — не двоит и не «мылит» пиксельный шрифт).</summary>
         protected void GlowTextCentered(SpriteBatch sb, string text, float y, Color c, float scale)
         {
             if (Font == null || string.IsNullOrEmpty(text)) return;
@@ -279,13 +250,6 @@ namespace RiotGalaxy.Core.Screens
             if (Font != null)
                 sb.DrawString(Font, text, new Vector2(r.X + 18, r.Y), accent, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
             FillRect(sb, new Rectangle(r.X + 18, r.Bottom - 4, r.Width - 36, 2), WithA(accent, 130));
-        }
-
-        /// <summary>Левый текст без центрирования (для подписей строк меню в плашке).</summary>
-        protected void DrawLeft(SpriteBatch sb, string text, Vector2 pos, Color color, float scale)
-        {
-            if (Font != null && !string.IsNullOrEmpty(text))
-                sb.DrawString(Font, text, pos, color, 0f, Vector2.Zero, scale, SpriteEffects.None, 0f);
         }
 
         /// <summary>Прямоугольник плашки на всю ширину панели для центрированного пункта (topY — верх текста).</summary>

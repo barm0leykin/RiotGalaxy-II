@@ -45,11 +45,6 @@ namespace RiotGalaxy.Core.Managers
         // GUI кнопки (аналог MyButton из CocosSharp)
         public List<MyButton> GuiButtons { get; private set; }
         
-        /// <summary>
-        /// Доступ к GUIButtons для совместимости с другими частями кода
-        /// </summary>
-        public List<MyButton> GUIButtons => GuiButtons;
-        
         // Приватный конструктор для singleton
         private InputManager()
         {
@@ -182,40 +177,6 @@ namespace RiotGalaxy.Core.Managers
         }
 
         /// <summary>
-        /// Добавление GUI кнопки
-        /// Аналог AddButnHandler из CocosSharp InputHandler
-        /// </summary>
-        public void AddButnHandler(MyButton btn)
-        {
-            GuiButtons.Add(btn);
-        }
-
-        /// <summary>
-        /// Удаление GUI кнопки
-        /// Аналог DelBtnHandler из CocosSharp InputHandler
-        /// </summary>
-        public void DelBtnHandler(MyButton btn)
-        {
-            GuiButtons.Remove(btn);
-        }
-
-        /// <summary>
-        /// Добавление GUI кнопки (новый метод для совместимости)
-        /// </summary>
-        public void AddButtonHandler(MyButton btn)
-        {
-            AddButnHandler(btn);
-        }
-
-        /// <summary>
-        /// Удаление GUI кнопки (новый метод для совместимости)
-        /// </summary>
-        public void RemoveButtonHandler(MyButton btn)
-        {
-            DelBtnHandler(btn);
-        }
-
-        /// <summary>
         /// Обработка игрового ввода
         /// Аналог HandleScGameInput из CocosSharp InputHandler
         /// </summary>
@@ -287,10 +248,10 @@ namespace RiotGalaxy.Core.Managers
                 else
                 {
                     _touchOnUI = false;
-                    if (GameManager.Instance.CurrentGameState == GameManager.GameState.Paused) // мб игра на паузе?
+                    if (GameManager.Instance.CurrentGameState == GameManager.GameState.Paused)
                     {
-                        CommandPauseWeaponMenu cmd = new CommandPauseWeaponMenu();
-                        cmd.Execute();
+                        // Тап по экрану в паузе (мимо кнопок) — продолжить игру (важно для Android).
+                        GameManager.Instance.ChangeGameState(GameManager.GameState.Playing);
                     }
                     else
                     {
@@ -323,19 +284,6 @@ namespace RiotGalaxy.Core.Managers
             {
                 // Используем компонент движения игрока
                 playerMovement.SetMoveDirection(inputPosition);
-            }
-        }
-
-        /// <summary>
-        /// Остановка движения игрока
-        /// </summary>
-        private void StopPlayerMovement()
-        {
-            var player = GameManager.Instance.Player;
-            if (player != null && player.Movement is PlayerMovementComponent playerMovement)
-            {
-                // Используем компонент движения игрока
-                playerMovement.MoveStop();
             }
         }
 
@@ -384,14 +332,6 @@ namespace RiotGalaxy.Core.Managers
         /// Аналог HandleTouchesEnded из CocosSharp
         /// </summary>
         private void HandleTouchesEnded(Vector2 position)
-        {
-            isTouch = false;
-        }
-
-        /// <summary>
-        /// Аналог HandleTouchesCanceled из CocosSharp
-        /// </summary>
-        private void HandleTouchesCanceled(Vector2 position)
         {
             isTouch = false;
         }

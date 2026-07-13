@@ -1,4 +1,3 @@
-using RiotGalaxy.Core.GameObjects;
 using RiotGalaxy.Core.Managers;
 
 namespace RiotGalaxy.Core.Commands
@@ -14,13 +13,6 @@ namespace RiotGalaxy.Core.Commands
         public CommandChWeapon(string id) { _id = id; }
         public void Execute() => GameManager.Instance.Player?.ChangeWeapon(_id);
     }
-
-    // Совместимые команды-обёртки под конкретные id (для существующих кнопок).
-    public class CommandChWeaponBlaster : CommandChWeapon { public CommandChWeaponBlaster() : base("blaster") { } }
-    public class CommandChWeaponCannon  : CommandChWeapon { public CommandChWeaponCannon()  : base("cannon")  { } }
-    public class CommandChWeaponMinigun : CommandChWeapon { public CommandChWeaponMinigun() : base("minigun") { } }
-    public class CommandChWeaponLaser   : CommandChWeapon { public CommandChWeaponLaser()   : base("laser")   { } }
-    public class CommandChWeaponSpread  : CommandChWeapon { public CommandChWeaponSpread()  : base("spread")  { } }
 
     /// <summary>Тестовая команда: перейти к следующему уровню.</summary>
     public class CommandNextLevel : ICommand

@@ -29,10 +29,8 @@ namespace RiotGalaxy.Core.GameObjects
         // Родительский объект для поддержки иерархии
         public GameObject Parent { get; set; }
         
-        // Компоненты объекта
+        // Компоненты объекта (стрельбу ведёт Weapon/Gun, столкновения — Managers.CollisionSystem)
         public MovementComponent Movement { get; set; }
-        public ShootingComponent Shooting { get; set; }
-        public CollisionComponent Collision { get; set; }
         
         // Состояние объекта
         public bool IsVisible { get; set; } = true;
@@ -64,8 +62,6 @@ namespace RiotGalaxy.Core.GameObjects
                 
             // Обновляем компоненты
             Movement?.Update(gameTime);
-            Shooting?.Update(gameTime);
-            Collision?.Update(gameTime);
         }
         
         /// <summary>

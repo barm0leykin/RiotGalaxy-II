@@ -109,9 +109,6 @@ namespace RiotGalaxy.Core.Utils
             Load();
         }
 
-        /// <summary>Есть ли сохранённый прогресс в слоте.</summary>
-        public static bool ProfileExists(int slot) => File.Exists(FilePathFor(slot));
-
         /// <summary>Краткая сводка слота без смены текущего профиля (для экрана выбора).</summary>
         public static (bool exists, int high, int currency, int level) Peek(int slot)
         {
