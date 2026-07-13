@@ -93,6 +93,12 @@ dialogue.hint: "{0}/{1}  ·  tap / space — next · Esc — skip"
 # Battle messages (MessageLog)
 battle.cleared_collect: "Zone cleared! Grab the stars…"
 battle.cleared_bonus: "Zone cleared: +{0}"
+bonus.hp_gain: "+{0} HP"
+bonus.hp_full: "HP full"
+bonus.power: "Damage boost!"
+bonus.nuke: "Nuke! Waste them all"
+bonus.rapid: "Rapid fire!"
+bonus.speed: "Speed up!"
 player.weapon_changed: "Weapon: {0}"
 player.weapon_locked: "{0}: locked (shop)"
 

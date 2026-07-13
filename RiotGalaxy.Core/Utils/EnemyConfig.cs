@@ -117,7 +117,9 @@ namespace RiotGalaxy.Core.Utils
             }
         }
 
-        private static bool TryParseType(string name, out EnemyType type)
+        /// <summary>Разбор имени типа врага (yaml) — ЕДИНСТВЕННЫЙ источник соответствия
+        /// строка→EnemyType (используется и enemies.yaml, и уровнями через Level).</summary>
+        public static bool TryParseType(string name, out EnemyType type)
         {
             switch (name.Trim().ToLowerInvariant())
             {

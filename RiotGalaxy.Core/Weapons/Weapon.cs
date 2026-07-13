@@ -46,8 +46,7 @@ namespace RiotGalaxy.Core.Weapons
 
         public void Aim(float angleRad) => _aimAngle = angleRad;
 
-        private static Vector2 DirFromAngle(float a) =>
-            new Vector2((float)Math.Sin(a), -(float)Math.Cos(a));
+        private static Vector2 DirFromAngle(float a) => Utils.MathUtil.DirFromAngle(a);
 
         public void Update(GameTime gameTime)
         {

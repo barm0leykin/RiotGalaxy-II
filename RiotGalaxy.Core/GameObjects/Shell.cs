@@ -33,23 +33,6 @@ namespace RiotGalaxy.Core.GameObjects
         }
 
         /// <summary>
-        /// Загрузка спрайта снаряда из Content Pipeline (аналог draw.LoadGraphics).
-        /// </summary>
-        protected void LoadSprite(string asset)
-        {
-            try
-            {
-                Texture = GameManager.Instance.Content.Load<Texture2D>(asset);
-                if (Texture != null)
-                    Size = new Vector2(Texture.Width, Texture.Height);
-            }
-            catch (Exception ex)
-            {
-                Utils.Log.Error($"=== Shell sprite '{asset}' load failed: {ex.Message} ===");
-            }
-        }
-
-        /// <summary>
         /// Движение и проверка выхода за экран. Аналог Shell.Activity из CocosSharp.
         /// </summary>
         public override void Update(GameTime gameTime)

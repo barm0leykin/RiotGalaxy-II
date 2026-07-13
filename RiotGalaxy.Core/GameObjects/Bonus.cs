@@ -62,25 +62,10 @@ namespace RiotGalaxy.Core.GameObjects
             }
         }
 
-        protected void LoadSprite(string asset)
-        {
-            try
-            {
-                Texture = GameManager.Instance.Content.Load<Texture2D>(asset);
-                if (Texture != null)
-                    Size = new Vector2(Texture.Width, Texture.Height);
-            }
-            catch (Exception ex)
-            {
-                Utils.Log.Error($"=== Bonus sprite '{asset}' load failed: {ex.Message} ===");
-            }
-        }
-
         /// <summary>Направление движения (градусы): 0 = вверх, 180 = вниз.</summary>
         protected void SetDirection(float angleDeg)
         {
-            float rad = MathHelper.ToRadians(angleDeg);
-            Velocity = new Vector2((float)Math.Sin(rad), -(float)Math.Cos(rad)) * CurrentSpeed;
+            Velocity = Utils.MathUtil.DirFromAngleDeg(angleDeg) * CurrentSpeed;
         }
 
         public override void Update(GameTime gameTime)
@@ -115,28 +100,29 @@ namespace RiotGalaxy.Core.GameObjects
                     int before = player.Health;
                     player.Heal(Utils.BonusConfig.Current.HpUpAmount);
                     int gained = player.Health - before;
-                    Managers.MessageLog.Add(gained > 0 ? $"+{gained} HP" : "HP полное", Color.Lime);
+                    Managers.MessageLog.Add(gained > 0 ? Utils.Loc.F("bonus.hp_gain", gained)
+                                                       : Utils.Loc.T("bonus.hp_full"), Color.Lime);
                     break;
                 case BonusType.BULLET_UP:
                     // Оружие качается в магазине; этот подбор даёт временное усиление урона.
                     player.ApplyBuff("power");
-                    Managers.MessageLog.Add("Усиленный урон!", Color.OrangeRed);
+                    Managers.MessageLog.Add(Utils.Loc.T("bonus.power"), Color.OrangeRed);
                     break;
                 case BonusType.NUKE_BOMB:
                     GameManager.Instance.KillAllEnemies();
-                    Managers.MessageLog.Add("Бомба! Всех в труху", Color.Orange);
+                    Managers.MessageLog.Add(Utils.Loc.T("bonus.nuke"), Color.Orange);
                     break;
                 case BonusType.POWER:
                     player.ApplyBuff("power");
-                    Managers.MessageLog.Add("Усиленный урон!", Color.OrangeRed);
+                    Managers.MessageLog.Add(Utils.Loc.T("bonus.power"), Color.OrangeRed);
                     break;
                 case BonusType.RAPID:
                     player.ApplyBuff("rapid");
-                    Managers.MessageLog.Add("Скорострельность!", Color.Cyan);
+                    Managers.MessageLog.Add(Utils.Loc.T("bonus.rapid"), Color.Cyan);
                     break;
                 case BonusType.SPEED:
                     player.ApplyBuff("speed");
-                    Managers.MessageLog.Add("Ускорение!", Color.LightGreen);
+                    Managers.MessageLog.Add(Utils.Loc.T("bonus.speed"), Color.LightGreen);
                     break;
             }
         }
@@ -191,7 +177,7 @@ namespace RiotGalaxy.Core.GameObjects
                     CurrentSpeed = FallSpeed;
                     target = 180f;
                 }
-                _angleDeg = ApproachAngle(_angleDeg, target, magnet.TurnSpeed * dt);
+                _angleDeg = Utils.MathUtil.ApproachAngleDeg(_angleDeg, target, magnet.TurnSpeed * dt);
                 SetDirection(_angleDeg);
             }
 
@@ -201,22 +187,6 @@ namespace RiotGalaxy.Core.GameObjects
             var gm = GameManager.Instance;
             if (Position.Y > gm.ScreenHeight + 50 || Position.Y < -50)
                 IsAlive = false;
-        }
-
-        /// <summary>Плавный доворот current→target за шаг maxStep (град), кратчайшим путём.</summary>
-        private static float ApproachAngle(float current, float target, float maxStep)
-        {
-            // Кратчайшая разница в диапазоне (-180, 180] — иначе на границе ±180° доворот «длинным путём»
-            float diff = Mod360(target - current + 180f) - 180f;
-            if (Math.Abs(diff) <= maxStep)
-                return Mod360(target);
-            return Mod360(current + Math.Sign(diff) * maxStep);
-        }
-
-        private static float Mod360(float a)
-        {
-            a %= 360f;
-            return a < 0 ? a + 360f : a;
         }
 
         public override void Apply(PlayerShip player)

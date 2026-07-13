@@ -130,10 +130,9 @@ namespace RiotGalaxy.Core.Components
                     break;
                 default: // Random
                 {
-                    float deg = 155f + (float)(R() * 50f);
-                    float rad = MathHelper.ToRadians(deg);
-                    _vx = (float)Math.Sin(rad) * speed;
-                    _vy = -(float)Math.Cos(rad) * speed;
+                    var dir = Utils.MathUtil.DirFromAngleDeg(155f + (float)(R() * 50f)) * speed;
+                    _vx = dir.X;
+                    _vy = dir.Y;
                     break;
                 }
             }
@@ -218,7 +217,7 @@ namespace RiotGalaxy.Core.Components
                             {
                                 float ang = (float)Math.Atan2(v.Y, v.X);
                                 float tang = (float)Math.Atan2(des.Y, des.X);
-                                float diff = WrapAngle(tang - ang);
+                                float diff = MathHelper.WrapAngle(tang - ang);
                                 float step = _turn * dt;
                                 ang += Math.Abs(diff) < step ? diff : Math.Sign(diff) * step;
                                 v = new Vector2((float)Math.Cos(ang), (float)Math.Sin(ang)) * _speed;
@@ -272,17 +271,13 @@ namespace RiotGalaxy.Core.Components
             }
             else // Return — летим к своей ячейке
             {
-                Vector2 target = _hive.CellWorldPos(_cx, _cy);
-                Vector2 to = target - _owner.Position;
-                float dist = to.Length();
-                float step = _speed * dt;
-
-                if (dist <= step || dist < 0.001f)
+                Vector2 pos = _owner.Position;
+                bool arrived = Utils.MathUtil.MoveTowards(ref pos, _hive.CellWorldPos(_cx, _cy), _speed * dt);
+                _owner.Position = pos;
+                if (arrived)
                 {
-                    _owner.Position = target;
                     // Единая скорость строя (как при JoinFormation), не sortie-скорость.
-                    float formSpeed = (_owner is Enemy en)
-                        ? Utils.EnemyConfig.Get(en.Type).FormationSpeed() : _speed;
+                    float formSpeed = (_owner is Enemy en) ? en.FormationSpeed : _speed;
                     _owner.Movement = new FormationMovement(_owner, formSpeed, _hive, _cx, _cy);
                     if (_owner is Enemy e)
                     {
@@ -290,19 +285,7 @@ namespace RiotGalaxy.Core.Components
                         _hive.NotifyReturned(e);
                     }
                 }
-                else
-                {
-                    _owner.Position += to / dist * step;
-                }
             }
-        }
-
-        /// <summary>Кратчайшая разница углов в диапазоне (-π, π].</summary>
-        private static float WrapAngle(float a)
-        {
-            while (a > Math.PI) a -= 2f * (float)Math.PI;
-            while (a < -Math.PI) a += 2f * (float)Math.PI;
-            return a;
         }
 
         /// <summary>Разобрать строку тактики (из enemies.yaml). Неизвестное → Random.</summary>

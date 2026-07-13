@@ -220,26 +220,12 @@ namespace RiotGalaxy.Core.Utils
 
         private static EnemyType ParseEnemy(string name)
         {
-            switch (name.Trim().ToLowerInvariant())
-            {
-                case "blue": return EnemyType.BLUE;
-                case "green": return EnemyType.GREEN;
-                case "red": return EnemyType.RED;
-                case "scout":
-                case "smscout": return EnemyType.SM_SCOUT;
-                case "boss": return EnemyType.BOSS;
-                case "ukro": return EnemyType.UKRO;
-                case "kamik":
-                case "kamikaze": return EnemyType.KAMIK;
-                case "heavy": return EnemyType.HEAVY;
-                case "ukroboss": return EnemyType.UKRO_BOSS;
-                case "korma": return EnemyType.KORMA;
-                case "briz": return EnemyType.BRIZ;
-                case "trapp": return EnemyType.TRAPP;
-                case "reaper": return EnemyType.REAPER;
-                case "overmind": return EnemyType.OVERMIND;
-                default: return EnemyType.SM_SCOUT;
-            }
+            // Единый парсер — EnemyConfig.TryParseType. Нераспознанный тип: раньше молча
+            // превращался в разведчика — теперь то же, но с предупреждением в лог.
+            if (EnemyConfig.TryParseType(name, out var type))
+                return type;
+            Log.Error($"Уровень: неизвестный тип врага '{name}' — спавню разведчика (scout)");
+            return EnemyType.SM_SCOUT;
         }
 
         // POCO под level{N}.yaml

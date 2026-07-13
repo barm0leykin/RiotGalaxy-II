@@ -37,6 +37,9 @@ namespace RiotGalaxy.Core.GameObjects
         public bool IsBossType => Type == EnemyType.BOSS || Type == EnemyType.UKRO_BOSS
                                || Type == EnemyType.TRAPP || Type == EnemyType.REAPER || Type == EnemyType.OVERMIND;
 
+        /// <summary>Единая (не случайная) скорость в строю/на маршруте — иначе юниты наезжают друг на друга.</summary>
+        public float FormationSpeed => Utils.EnemyConfig.Get(Type).FormationSpeed();
+
         /// <summary>Цвет взрыва/искр попадания — под палитру спрайта врага.</summary>
         public Color ExplosionColor => Type switch
         {
@@ -158,7 +161,7 @@ namespace RiotGalaxy.Core.GameObjects
             Ai = null;          // формация управляет движением сама
             ShootSafe = true;   // в строю улья не стреляем (как в Galaga) — огонь только в вылете
             // Единая скорость для всех в строю (не случайная), иначе юниты наезжают друг на друга.
-            Movement = new FormationMovement(this, Utils.EnemyConfig.Get(Type).FormationSpeed(), hive, cx, cy);
+            Movement = new FormationMovement(this, FormationSpeed, hive, cx, cy);
             Move = null;
         }
 
@@ -167,7 +170,7 @@ namespace RiotGalaxy.Core.GameObjects
         {
             Ai = null; // маршрут управляет движением сам
             // Единая скорость на маршруте (не случайная) — чтобы враги на одной линии не наезжали.
-            Movement = new RouteMovement(this, Utils.EnemyConfig.Get(Type).FormationSpeed(), route, end, hive);
+            Movement = new RouteMovement(this, FormationSpeed, route, end, hive);
             Move = null;
         }
 
@@ -263,23 +266,6 @@ namespace RiotGalaxy.Core.GameObjects
             angle = MathHelper.Pi + delta;
             Gun.Aim(angle);
             Gun.Fire();
-        }
-
-        /// <summary>
-        /// Загрузка спрайта врага из Content Pipeline (аналог draw.LoadGraphics).
-        /// </summary>
-        protected void LoadSprite(string asset)
-        {
-            try
-            {
-                Texture = GameManager.Instance.Content.Load<Texture2D>(asset);
-                if (Texture != null)
-                    Size = new Vector2(Texture.Width, Texture.Height);
-            }
-            catch (Exception ex)
-            {
-                Utils.Log.Error($"=== Enemy sprite '{asset}' load failed: {ex.Message} ===");
-            }
         }
 
         /// <summary>

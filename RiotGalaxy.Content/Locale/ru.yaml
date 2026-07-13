@@ -94,6 +94,12 @@ dialogue.hint: "{0}/{1}  ·  тап / пробел — далее · Esc — п�
 # Сообщения боя (MessageLog)
 battle.cleared_collect: "Зона зачищена! Собирай звёзды…"
 battle.cleared_bonus: "Зона зачищена: +{0}"
+bonus.hp_gain: "+{0} HP"
+bonus.hp_full: "HP полное"
+bonus.power: "Усиленный урон!"
+bonus.nuke: "Бомба! Всех в труху"
+bonus.rapid: "Скорострельность!"
+bonus.speed: "Ускорение!"
 player.weapon_changed: "Оружие: {0}"
 player.weapon_locked: "{0}: не открыто (магазин)"
 

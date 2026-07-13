@@ -25,10 +25,10 @@ namespace RiotGalaxy.Core.Components
         /// </summary>
         public void SetDirection(float angleDeg)
         {
-            float rad = MathHelper.ToRadians(angleDeg);
             float speed = (_owner is Enemy e) ? e.CurrentSpeed : _speed;
-            _vx = (float)Math.Sin(rad) * speed;   // angle 0 -> (0, -speed) = вверх
-            _vy = -(float)Math.Cos(rad) * speed;  // angle 180 -> (0, +speed) = вниз
+            var dir = Utils.MathUtil.DirFromAngleDeg(angleDeg) * speed;
+            _vx = dir.X;
+            _vy = dir.Y;
         }
 
         public override void Update(GameTime gameTime)

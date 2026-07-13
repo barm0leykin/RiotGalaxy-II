@@ -59,9 +59,27 @@ namespace RiotGalaxy.Core.GameObjects
         {
             if (!IsEnabled || !IsAlive)
                 return;
-                
+
             // Обновляем компоненты
             Movement?.Update(gameTime);
+        }
+
+        /// <summary>
+        /// Загрузить спрайт из Content Pipeline: Texture + Size по размеру текстуры.
+        /// Ошибка логируется, объект остаётся с заглушкой (общий код Enemy/Bonus/Shell).
+        /// </summary>
+        protected void LoadSprite(string asset)
+        {
+            try
+            {
+                Texture = Managers.GameManager.Instance.Content.Load<Texture2D>(asset);
+                if (Texture != null)
+                    Size = new Vector2(Texture.Width, Texture.Height);
+            }
+            catch (System.Exception ex)
+            {
+                Utils.Log.Error($"=== {GetType().Name} sprite '{asset}' load failed: {ex.Message} ===");
+            }
         }
         
         /// <summary>

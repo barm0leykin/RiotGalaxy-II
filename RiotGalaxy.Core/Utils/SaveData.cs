@@ -76,10 +76,9 @@ namespace RiotGalaxy.Core.Utils
             Save();
         }
 
-        public static void Load()
+        /// <summary>Сброс всех полей к дефолтам (общий код Load/ResetProfile).</summary>
+        private static void ApplyDefaults()
         {
-            // Сначала сбрасываем к дефолтам — важно при переключении на пустой слот,
-            // чтобы прогресс прошлого профиля не «протёк» в новый.
             HighScore = 0;
             MaxLevelReached = 1;
             Currency = 0;
@@ -88,6 +87,13 @@ namespace RiotGalaxy.Core.Utils
             CampaignMission = -1;
             CampaignStep = 0;
             CampaignScore = 0;
+        }
+
+        public static void Load()
+        {
+            // Сначала сбрасываем к дефолтам — важно при переключении на пустой слот,
+            // чтобы прогресс прошлого профиля не «протёк» в новый.
+            ApplyDefaults();
 
             var data = Yaml.LoadFile<SaveYaml>(FilePath);
             if (data == null)
@@ -123,11 +129,7 @@ namespace RiotGalaxy.Core.Utils
         {
             if (slot == CurrentProfile)
             {
-                HighScore = 0;
-                MaxLevelReached = 1;
-                Currency = 0;
-                Upgrades = new Dictionary<string, int>();
-                WeaponLevels = new Dictionary<string, int>();
+                ApplyDefaults();
                 Save();
             }
             else

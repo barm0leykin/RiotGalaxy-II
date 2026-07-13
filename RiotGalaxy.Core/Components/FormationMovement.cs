@@ -23,15 +23,10 @@ namespace RiotGalaxy.Core.Components
         public override void Update(GameTime gameTime)
         {
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
-            Vector2 target = _hive.CellWorldPos(_cx, _cy);
-            Vector2 to = target - _owner.Position;
-            float dist = to.Length();
-            float step = _speed * dt;
-
-            if (dist <= step || dist < 0.001f)
-                _owner.Position = target;            // в формации — следуем за ячейкой
-            else
-                _owner.Position += to / dist * step; // летим к своей ячейке
+            // Летим к своей ячейке; по достижении — «прилипаем» (ячейка движется с ульём).
+            Vector2 pos = _owner.Position;
+            Utils.MathUtil.MoveTowards(ref pos, _hive.CellWorldPos(_cx, _cy), _speed * dt);
+            _owner.Position = pos;
         }
     }
 }

@@ -28,6 +28,7 @@ namespace RiotGalaxy.Core.Effects
         private const int Capacity = 1024;
         private readonly Particle[] _pool = new Particle[Capacity];
         private readonly Random _rng = new Random();
+        private int _next; // кольцевой курсор поиска свободной частицы (O(1) амортизированно)
 
         public ParticleSystem()
         {
@@ -35,12 +36,17 @@ namespace RiotGalaxy.Core.Effects
                 _pool[i] = new Particle();
         }
 
-        /// <summary>Достаёт свободную частицу из пула (или null, если пул переполнен).</summary>
+        /// <summary>Достаёт свободную частицу из пула (или null, если пул переполнен).
+        /// Кольцевой поиск от последней выданной — вместо линейного с нуля по всему пулу.</summary>
         private Particle Acquire()
         {
-            for (int i = 0; i < Capacity; i++)
-                if (!_pool[i].Active)
-                    return _pool[i];
+            for (int step = 0; step < Capacity; step++)
+            {
+                var p = _pool[_next];
+                _next = (_next + 1) % Capacity;
+                if (!p.Active)
+                    return p;
+            }
             return null; // пул заполнен — частицу просто пропускаем (визуальный эффект, не критично)
         }
 
