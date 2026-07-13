@@ -39,25 +39,110 @@ hive:
   defaultSortieInterval: 4.0   # дефолты, если бой не задал sortieInterval/sortieCount
   defaultSortieCount: 1
 
-# Босс: фазы по доле HP, телеграф перед залпом, паттерны стрельбы.
-boss:
+# ─── БОССЫ ────────────────────────────────────────────────────────────────────
+# У каждого босса свой конфиг (bosses.<тип из enemies.yaml>); незаданное — из bossDefault.
+#
+# Фазы (phases) — список от полного HP к низкому. Фаза активна, пока hpFrac > hpAbove
+# (у последней hpAbove: 0). У каждой фазы:
+#   attackInterval — пауза между залпами, сек;  sweepSpeed — скорость свипа
+#   shellSpeed / shellDamage — «оружие фазы»: скорость/урон снаряда (0 — не менять)
+#   addsCount / addsType     — подмога при входе в фазу (тип — имя из enemies.yaml)
+#   attacks — список паттернов одного залпа (исполняются все разом):
+#     { type: aimedBurst, count: N, spreadDeg: S } — очередь вокруг направления на игрока (шаг S)
+#     { type: fanDown,    count: N, spreadDeg: S } — веер вниз полной шириной S
+#     { type: radial,     count: N }               — залп по кругу
+#     { type: aimedShot }                          — одиночный прицельный
+bossDefault:
   hoverYFrac: 0.18       # точка зависания (доля высоты экрана)
   centerXFrac: 0.5       # центр свипа (доля ширины)
   sweepAmpFrac: 0.32     # амплитуда свипа (доля ширины)
   entrySpeed: 90         # скорость влёта, пикс/сек
   firstAttackDelay: 1.2  # пауза перед первой атакой, сек
-  phase2HpFrac: 0.66     # ниже этой доли HP — фаза 2
-  phase3HpFrac: 0.33     # ниже — фаза 3
-  attackIntervals: [2.2, 1.8, 1.4]   # пауза между атаками по фазам 1..3, сек
-  sweepSpeeds: [0.8, 1.2, 1.7]       # скорость свипа по фазам
   telegraphTime: 0.6     # вспышка-предупреждение перед залпом, сек
   phaseAttackDelay: 0.6  # пауза до атаки после смены фазы
-  burstCount: 3          # фаза 1: снарядов в прицельной очереди
-  burstSpreadDeg: 10     # шаг веера очереди, град
-  fanCount: 7            # фаза 2: снарядов в веере вниз
-  fanSpreadDeg: 110      # ширина веера, град
-  radialCount: 12        # фаза 3: снарядов в радиальном залпе
   bobAmplitude: 18       # вертикальное покачивание, пикс
   bobSpeed: 0.6          # частота покачивания
-  addsCount: 2           # подмога (разведчики) в фазе 3
   addsOffsetX: 70        # разлёт подмоги от центра босса, пикс
+  phases:
+    - hpAbove: 0.66
+      attackInterval: 2.2
+      sweepSpeed: 0.8
+      attacks:
+        - { type: aimedBurst, count: 3, spreadDeg: 10 }
+    - hpAbove: 0.33
+      attackInterval: 1.8
+      sweepSpeed: 1.2
+      attacks:
+        - { type: fanDown, count: 7, spreadDeg: 110 }
+        - { type: aimedShot }
+    - hpAbove: 0
+      attackInterval: 1.4
+      sweepSpeed: 1.7
+      addsCount: 2
+      attacks:
+        - { type: radial, count: 12 }
+
+bosses:
+  # m1–m4, Акт I: яхта Зонального — «классика» (дефолтные фазы), чуть медленнее.
+  boss:
+    phases:
+      - { hpAbove: 0.66, attackInterval: 2.4, sweepSpeed: 0.8,
+          attacks: [ { type: aimedBurst, count: 3, spreadDeg: 10 } ] }
+      - { hpAbove: 0.33, attackInterval: 2.0, sweepSpeed: 1.1,
+          attacks: [ { type: fanDown, count: 7, spreadDeg: 110 }, { type: aimedShot } ] }
+      - { hpAbove: 0, attackInterval: 1.6, sweepSpeed: 1.5, addsCount: 2, addsType: scout,
+          attacks: [ { type: radial, count: 10 } ] }
+
+  # m9, финал Акта II: полевой командир укропитеков — агрессивные веера, подмога камикадзе.
+  ukroboss:
+    sweepAmpFrac: 0.38
+    phases:
+      - { hpAbove: 0.7, attackInterval: 2.0, sweepSpeed: 1.0,
+          attacks: [ { type: aimedFan, count: 5, spreadDeg: 14 } ] }
+      - { hpAbove: 0.4, attackInterval: 1.7, sweepSpeed: 1.3, addsCount: 2, addsType: kamik,
+          attacks: [ { type: fanDown, count: 9, spreadDeg: 130 } ] }
+      - { hpAbove: 0, attackInterval: 1.3, sweepSpeed: 1.8, addsCount: 3, addsType: kamik, shellSpeed: 290,
+          attacks: [ { type: radial, count: 10 }, { type: aimedShot } ] }
+
+  # m11: флагман Трапизон (DJ Trapp) — широкие медленные веера-«стена», мало манёвра.
+  trapp:
+    sweepAmpFrac: 0.22
+    bobAmplitude: 10
+    telegraphTime: 0.8
+    phases:
+      - { hpAbove: 0.66, attackInterval: 2.6, sweepSpeed: 0.6, shellSpeed: 200,
+          attacks: [ { type: fanDown, count: 11, spreadDeg: 150 } ] }
+      - { hpAbove: 0.33, attackInterval: 2.2, sweepSpeed: 0.8, shellSpeed: 220,
+          attacks: [ { type: fanDown, count: 13, spreadDeg: 160 }, { type: aimedShot } ] }
+      - { hpAbove: 0, attackInterval: 1.8, sweepSpeed: 1.0, addsCount: 2, addsType: korma, shellSpeed: 240,
+          attacks: [ { type: fanDown, count: 15, spreadDeg: 170 }, { type: aimedBurst, count: 3, spreadDeg: 12 } ] }
+
+  # m12: бризанский «Жнец» — быстрый и вертлявый, прицельные очереди + радиалы, подмога briz.
+  reaper:
+    sweepAmpFrac: 0.4
+    bobAmplitude: 26
+    bobSpeed: 0.9
+    telegraphTime: 0.5
+    phases:
+      - { hpAbove: 0.7, attackInterval: 1.8, sweepSpeed: 1.4, shellSpeed: 300,
+          attacks: [ { type: aimedBurst, count: 4, spreadDeg: 8 } ] }
+      - { hpAbove: 0.4, attackInterval: 1.5, sweepSpeed: 1.7, addsCount: 2, addsType: briz, shellSpeed: 320,
+          attacks: [ { type: aimedBurst, count: 5, spreadDeg: 9 }, { type: radial, count: 8 } ] }
+      - { hpAbove: 0, attackInterval: 1.1, sweepSpeed: 2.1, shellSpeed: 340,
+          attacks: [ { type: radial, count: 14 }, { type: aimedShot } ] }
+
+  # m13, финал кампании: Сверхразум J-D-bI — 4 ФАЗЫ, всё сразу и жирнее к концу.
+  overmind:
+    sweepAmpFrac: 0.36
+    telegraphTime: 0.7
+    firstAttackDelay: 1.5
+    phases:
+      - { hpAbove: 0.75, attackInterval: 2.2, sweepSpeed: 0.9,
+          attacks: [ { type: aimedBurst, count: 3, spreadDeg: 10 } ] }
+      - { hpAbove: 0.5, attackInterval: 1.8, sweepSpeed: 1.2, addsCount: 2, addsType: briz,
+          attacks: [ { type: fanDown, count: 9, spreadDeg: 120 }, { type: aimedShot } ] }
+      - { hpAbove: 0.25, attackInterval: 1.5, sweepSpeed: 1.6, addsCount: 2, addsType: korma, shellSpeed: 300,
+          attacks: [ { type: radial, count: 12 }, { type: aimedBurst, count: 3, spreadDeg: 12 } ] }
+      - { hpAbove: 0, attackInterval: 1.1, sweepSpeed: 2.0, addsCount: 2, addsType: kamik,
+          shellSpeed: 330, shellDamage: 14,
+          attacks: [ { type: radial, count: 16 }, { type: fanDown, count: 7, spreadDeg: 90 } ] }

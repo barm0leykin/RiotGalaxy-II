@@ -100,7 +100,7 @@ RiotGalaxy.Core/
 ├── Interface/               # MyButton + живые кнопки, HudRenderer.cs (боевой HUD)
 ├── Effects/                 # ParticleSystem, StarField, ScreenShake, BloomRenderer, BackgroundRenderer
 ├── Utils/                   # Level.cs, *Config.cs (yaml), Yaml.cs, Textures.cs, MathUtil.cs, Draw2D.cs, Log.cs
-└── AI/                      # машина состояний врагов: EnemyAI.cs, AIState.cs, BossAI.cs (параметры — ai.yaml)
+└── AI/                      # машина состояний врагов: EnemyAI, AIState, BossAI (пер-босс конфиги+фазы — ai.yaml)
 ```
 
 Эта раскладка повторяет архитектуру оригинала на CocosSharp (см. [prd.md](../prd.md)):

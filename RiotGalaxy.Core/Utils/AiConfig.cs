@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+
 namespace RiotGalaxy.Core.Utils
 {
     /// <summary>
@@ -68,31 +70,71 @@ namespace RiotGalaxy.Core.Utils
         }
         public static HiveParams Hive = new HiveParams();
 
-        // ── Босс (BossAI) ────────────────────────────────────────────────────
-        public class BossParams
+        // ── Боссы (BossAI) ───────────────────────────────────────────────────
+        // Каждый босс — свой конфиг (bosses.<тип> в ai.yaml), незаданное берётся из bossDefault.
+        // Фазы — список от полного HP к низкому; у каждой свои атаки/темп/оружие/подмога.
+
+        /// <summary>Один паттерн стрельбы в залпе фазы.</summary>
+        public class AttackDef
+        {
+            public string Type = "aimedShot"; // aimedBurst | aimedFan | fanDown | radial | aimedShot
+            public int Count = 1;             // снарядов в паттерне
+            public float SpreadDeg = 10f;     // aimedBurst/aimedFan: шаг между снарядами; fanDown: полная ширина
+        }
+
+        /// <summary>Фаза босса: активна, пока HpFrac > HpAbove (список фаз — от сильного HP к слабому).</summary>
+        public class PhaseDef
+        {
+            public float HpAbove;                  // порог: фаза активна при hpFrac > HpAbove
+            public float AttackInterval = 2f;      // пауза между залпами, сек
+            public float SweepSpeed = 1f;          // скорость горизонтального свипа
+            public List<AttackDef> Attacks = new List<AttackDef>(); // паттерны одного залпа (все разом)
+            public float ShellSpeed;               // >0 → «оружие фазы»: скорость снаряда
+            public float ShellDamage;              // >0 → урон снаряда
+            public int AddsCount;                  // >0 → подмога при входе в фазу
+            public string AddsType = "scout";      // тип подмоги (имя из enemies.yaml)
+        }
+
+        /// <summary>Полный конфиг босса: движение + телеграф + список фаз.</summary>
+        public class BossDef
         {
             public float HoverYFrac = 0.18f;      // точка зависания, доля высоты экрана
             public float CenterXFrac = 0.5f;      // центр свипа, доля ширины
             public float SweepAmpFrac = 0.32f;    // амплитуда свипа, доля ширины
             public float EntrySpeed = 90f;        // скорость влёта, пикс/сек
             public float FirstAttackDelay = 1.2f; // пауза перед первой атакой, сек
-            public float Phase2HpFrac = 0.66f;    // ниже этой доли HP — фаза 2
-            public float Phase3HpFrac = 0.33f;    // ниже — фаза 3
-            public float[] AttackIntervals = { 2.2f, 1.8f, 1.4f }; // по фазам 1..3, сек
-            public float[] SweepSpeeds = { 0.8f, 1.2f, 1.7f };     // скорость свипа по фазам
             public float TelegraphTime = 0.6f;    // вспышка перед залпом, сек
             public float PhaseAttackDelay = 0.6f; // пауза до атаки после смены фазы
-            public int BurstCount = 3;            // фаза 1: снарядов в прицельной очереди
-            public float BurstSpreadDeg = 10f;    // шаг веера очереди
-            public int FanCount = 7;              // фаза 2: снарядов в веере вниз
-            public float FanSpreadDeg = 110f;     // ширина веера
-            public int RadialCount = 12;          // фаза 3: снарядов в радиальном залпе
             public float BobAmplitude = 18f;      // вертикальное покачивание, пикс
             public float BobSpeed = 0.6f;         // частота покачивания
-            public int AddsCount = 2;             // подмога в фазе 3
             public float AddsOffsetX = 70f;       // разлёт подмоги от центра босса
+            public List<PhaseDef> Phases = DefaultPhases();
+
+            /// <summary>Классические 3 фазы (прежнее захардкоженное поведение).</summary>
+            public static List<PhaseDef> DefaultPhases() => new List<PhaseDef>
+            {
+                new PhaseDef { HpAbove = 0.66f, AttackInterval = 2.2f, SweepSpeed = 0.8f,
+                    Attacks = { new AttackDef { Type = "aimedBurst", Count = 3, SpreadDeg = 10f } } },
+                new PhaseDef { HpAbove = 0.33f, AttackInterval = 1.8f, SweepSpeed = 1.2f,
+                    Attacks = { new AttackDef { Type = "fanDown", Count = 7, SpreadDeg = 110f },
+                                new AttackDef { Type = "aimedShot" } } },
+                new PhaseDef { HpAbove = 0f, AttackInterval = 1.4f, SweepSpeed = 1.7f, AddsCount = 2,
+                    Attacks = { new AttackDef { Type = "radial", Count = 12 } } },
+            };
         }
-        public static BossParams Boss = new BossParams();
+
+        /// <summary>Дефолтный босс (bossDefault в yaml) — база для всех.</summary>
+        public static BossDef BossDefault = new BossDef();
+
+        // Пер-босс конфиги: ключ — имя типа врага (boss/ukroboss/trapp/reaper/overmind).
+        private static Dictionary<string, BossDef> _bosses = new Dictionary<string, BossDef>();
+
+        /// <summary>Конфиг босса по типу врага; нет персонального — дефолтный.</summary>
+        public static BossDef GetBoss(GameObjects.EnemyType type)
+        {
+            string key = type.ToString().ToLowerInvariant().Replace("_", ""); // UKRO_BOSS → ukroboss
+            return _bosses.TryGetValue(key, out var def) ? def : BossDefault;
+        }
 
         public static void Load()
         {
@@ -177,31 +219,89 @@ namespace RiotGalaxy.Core.Utils
                 if (d.Hive.DefaultSortieInterval > 0f) Hive.DefaultSortieInterval = d.Hive.DefaultSortieInterval;
                 if (d.Hive.DefaultSortieCount > 0) Hive.DefaultSortieCount = d.Hive.DefaultSortieCount;
             }
-            if (d.Boss != null)
+            if (d.BossDefault != null)
+                BossDefault = ConvertBoss(d.BossDefault, new BossDef());
+
+            _bosses = new Dictionary<string, BossDef>();
+            if (d.Bosses != null)
+                foreach (var kv in d.Bosses)
+                    if (kv.Value != null && !string.IsNullOrEmpty(kv.Key))
+                        // База пер-босса — копия дефолта (незаданные поля наследуются).
+                        _bosses[kv.Key.Trim().ToLowerInvariant()] = ConvertBoss(kv.Value, CloneBoss(BossDefault));
+
+            Log.Debug($"AiConfig loaded (ai.yaml): боссов с личным конфигом — {_bosses.Count}");
+        }
+
+        /// <summary>Наложить yaml-поля боссa на базу (>0 → переопределить; фазы — целиком, если заданы).</summary>
+        private static BossDef ConvertBoss(BossYaml y, BossDef b)
+        {
+            if (y.HoverYFrac > 0f) b.HoverYFrac = y.HoverYFrac;
+            if (y.CenterXFrac > 0f) b.CenterXFrac = y.CenterXFrac;
+            if (y.SweepAmpFrac > 0f) b.SweepAmpFrac = y.SweepAmpFrac;
+            if (y.EntrySpeed > 0f) b.EntrySpeed = y.EntrySpeed;
+            if (y.FirstAttackDelay > 0f) b.FirstAttackDelay = y.FirstAttackDelay;
+            if (y.TelegraphTime > 0f) b.TelegraphTime = y.TelegraphTime;
+            if (y.PhaseAttackDelay > 0f) b.PhaseAttackDelay = y.PhaseAttackDelay;
+            if (y.BobAmplitude > 0f) b.BobAmplitude = y.BobAmplitude;
+            if (y.BobSpeed > 0f) b.BobSpeed = y.BobSpeed;
+            if (y.AddsOffsetX > 0f) b.AddsOffsetX = y.AddsOffsetX;
+            if (y.Phases != null && y.Phases.Count > 0)
             {
-                var b = d.Boss;
-                if (b.HoverYFrac > 0f) Boss.HoverYFrac = b.HoverYFrac;
-                if (b.CenterXFrac > 0f) Boss.CenterXFrac = b.CenterXFrac;
-                if (b.SweepAmpFrac > 0f) Boss.SweepAmpFrac = b.SweepAmpFrac;
-                if (b.EntrySpeed > 0f) Boss.EntrySpeed = b.EntrySpeed;
-                if (b.FirstAttackDelay > 0f) Boss.FirstAttackDelay = b.FirstAttackDelay;
-                if (b.Phase2HpFrac > 0f) Boss.Phase2HpFrac = b.Phase2HpFrac;
-                if (b.Phase3HpFrac > 0f) Boss.Phase3HpFrac = b.Phase3HpFrac;
-                if (b.AttackIntervals != null && b.AttackIntervals.Length == 3) Boss.AttackIntervals = b.AttackIntervals;
-                if (b.SweepSpeeds != null && b.SweepSpeeds.Length == 3) Boss.SweepSpeeds = b.SweepSpeeds;
-                if (b.TelegraphTime > 0f) Boss.TelegraphTime = b.TelegraphTime;
-                if (b.PhaseAttackDelay > 0f) Boss.PhaseAttackDelay = b.PhaseAttackDelay;
-                if (b.BurstCount > 0) Boss.BurstCount = b.BurstCount;
-                if (b.BurstSpreadDeg > 0f) Boss.BurstSpreadDeg = b.BurstSpreadDeg;
-                if (b.FanCount > 0) Boss.FanCount = b.FanCount;
-                if (b.FanSpreadDeg > 0f) Boss.FanSpreadDeg = b.FanSpreadDeg;
-                if (b.RadialCount > 0) Boss.RadialCount = b.RadialCount;
-                if (b.BobAmplitude > 0f) Boss.BobAmplitude = b.BobAmplitude;
-                if (b.BobSpeed > 0f) Boss.BobSpeed = b.BobSpeed;
-                if (b.AddsCount > 0) Boss.AddsCount = b.AddsCount;
-                if (b.AddsOffsetX > 0f) Boss.AddsOffsetX = b.AddsOffsetX;
+                b.Phases = new List<PhaseDef>();
+                foreach (var p in y.Phases)
+                {
+                    if (p == null) continue;
+                    var phase = new PhaseDef
+                    {
+                        HpAbove = p.HpAbove,
+                        AttackInterval = p.AttackInterval > 0f ? p.AttackInterval : 2f,
+                        SweepSpeed = p.SweepSpeed > 0f ? p.SweepSpeed : 1f,
+                        ShellSpeed = p.ShellSpeed,
+                        ShellDamage = p.ShellDamage,
+                        AddsCount = p.AddsCount,
+                        AddsType = string.IsNullOrEmpty(p.AddsType) ? "scout" : p.AddsType,
+                    };
+                    if (p.Attacks != null)
+                        foreach (var a in p.Attacks)
+                            if (a != null && !string.IsNullOrEmpty(a.Type))
+                                phase.Attacks.Add(new AttackDef
+                                {
+                                    Type = a.Type,
+                                    Count = a.Count > 0 ? a.Count : 1,
+                                    SpreadDeg = a.SpreadDeg > 0f ? a.SpreadDeg : 10f,
+                                });
+                    if (phase.Attacks.Count == 0)
+                        phase.Attacks.Add(new AttackDef()); // хотя бы одиночный прицельный
+                    b.Phases.Add(phase);
+                }
             }
-            Log.Debug("AiConfig loaded (ai.yaml)");
+            return b;
+        }
+
+        /// <summary>Копия конфига босса (фазы копируются по значению — база не мутируется).</summary>
+        private static BossDef CloneBoss(BossDef src)
+        {
+            var b = new BossDef
+            {
+                HoverYFrac = src.HoverYFrac, CenterXFrac = src.CenterXFrac, SweepAmpFrac = src.SweepAmpFrac,
+                EntrySpeed = src.EntrySpeed, FirstAttackDelay = src.FirstAttackDelay,
+                TelegraphTime = src.TelegraphTime, PhaseAttackDelay = src.PhaseAttackDelay,
+                BobAmplitude = src.BobAmplitude, BobSpeed = src.BobSpeed, AddsOffsetX = src.AddsOffsetX,
+                Phases = new List<PhaseDef>(),
+            };
+            foreach (var p in src.Phases)
+            {
+                var phase = new PhaseDef
+                {
+                    HpAbove = p.HpAbove, AttackInterval = p.AttackInterval, SweepSpeed = p.SweepSpeed,
+                    ShellSpeed = p.ShellSpeed, ShellDamage = p.ShellDamage,
+                    AddsCount = p.AddsCount, AddsType = p.AddsType,
+                };
+                foreach (var a in p.Attacks)
+                    phase.Attacks.Add(new AttackDef { Type = a.Type, Count = a.Count, SpreadDeg = a.SpreadDeg });
+                b.Phases.Add(phase);
+            }
+            return b;
         }
 
         /// <summary>Хелпер: применить тройку «амплитуда/спуск/частота» волновой тактики (>0 → переопределить).</summary>
@@ -222,7 +322,8 @@ namespace RiotGalaxy.Core.Utils
             public BlueYaml Blue { get; set; }
             public SortieYaml Sortie { get; set; }
             public HiveYaml Hive { get; set; }
-            public BossYaml Boss { get; set; }
+            public BossYaml BossDefault { get; set; }
+            public Dictionary<string, BossYaml> Bosses { get; set; }
         }
         private class SortieYaml
         {
@@ -270,21 +371,29 @@ namespace RiotGalaxy.Core.Utils
             public float SweepAmpFrac { get; set; }
             public float EntrySpeed { get; set; }
             public float FirstAttackDelay { get; set; }
-            public float Phase2HpFrac { get; set; }
-            public float Phase3HpFrac { get; set; }
-            public float[] AttackIntervals { get; set; }
-            public float[] SweepSpeeds { get; set; }
             public float TelegraphTime { get; set; }
             public float PhaseAttackDelay { get; set; }
-            public int BurstCount { get; set; }
-            public float BurstSpreadDeg { get; set; }
-            public int FanCount { get; set; }
-            public float FanSpreadDeg { get; set; }
-            public int RadialCount { get; set; }
             public float BobAmplitude { get; set; }
             public float BobSpeed { get; set; }
-            public int AddsCount { get; set; }
             public float AddsOffsetX { get; set; }
+            public List<PhaseYaml> Phases { get; set; }
+        }
+        private class PhaseYaml
+        {
+            public float HpAbove { get; set; }
+            public float AttackInterval { get; set; }
+            public float SweepSpeed { get; set; }
+            public float ShellSpeed { get; set; }
+            public float ShellDamage { get; set; }
+            public int AddsCount { get; set; }
+            public string AddsType { get; set; }
+            public List<AttackYaml> Attacks { get; set; }
+        }
+        private class AttackYaml
+        {
+            public string Type { get; set; }
+            public int Count { get; set; }
+            public float SpreadDeg { get; set; }
         }
     }
 }

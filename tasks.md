@@ -255,6 +255,10 @@
       6) рендер-слой из GameManager: `BloomRenderer`/`ScreenShake`/`BackgroundRenderer`,
       CollisionSystem/LevelDirector без Instance изнутри; 7) `CampaignFlow` (поток кампании) +
       `BonusSpawner`. GameManager: 1258 → ~890 строк; публичный API — фасады (call-sites целы).
+      9-й коммит: **пер-босс конфиги с фазами-списками** — `ai.yaml`: `bossDefault` + `bosses.<тип>`
+      (boss/ukroboss/trapp/reaper/overmind); у каждой фазы свои атаки (aimedBurst/aimedFan/fanDown/
+      radial/aimedShot), темп, скорость свипа, «оружие» (скорость/урон снаряда) и подмога (тип+кол-во);
+      фаз может быть сколько угодно (overmind — 4); засечки HP-бара босса — по порогам фаз из конфига.
       Хвост (8-й коммит): формы sortie-тактик и параметры улья → `ai.yaml` (секции sortie/hive);
       снаряд врагов → `weapons.yaml` (enemyShot) вместо хардкода в Weapon; генераторы
       fallback-текстур корабля/щита → `Utils.Textures` (+фикс: текстура щита создавалась

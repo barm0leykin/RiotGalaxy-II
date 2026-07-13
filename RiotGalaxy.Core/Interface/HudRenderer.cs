@@ -61,9 +61,15 @@ namespace RiotGalaxy.Core.Interface
                 screenWidth, Margin + (int)(font.LineSpacing * Big) + 4, Color.Gold, Big);
         }
 
+        // Цвета заливки шкалы по номеру фазы (дальше последнего — самый тревожный).
+        private static readonly Color[] PhaseColors =
+        {
+            new Color(220, 70, 70), new Color(240, 140, 40), new Color(255, 40, 40), new Color(255, 0, 60),
+        };
+
         /// <summary>
-        /// Шкала HP босса — по центру сверху, с именем (описание боя) и засечками фаз (66%/33%),
-        /// цвет заливки совпадает с фазой BossAI. Вызывается из GameManager.DrawGameplay, если есть босс.
+        /// Шкала HP босса — по центру сверху, с именем (описание боя) и засечками границ фаз
+        /// (пороги — из пер-босс конфига ai.yaml). Вызывается из GameManager.DrawGameplay, если есть босс.
         /// </summary>
         public void DrawBossBar(SpriteBatch sb, SpriteFont font, Texture2D pixel, Enemy boss, string name, int screenWidth)
         {
@@ -74,15 +80,18 @@ namespace RiotGalaxy.Core.Interface
             var rect = new Rectangle((screenWidth - w) / 2, y, w, h);
             float frac = boss.MaxHp > 0 ? (float)boss.Hp / boss.MaxHp : 0f;
 
-            // Цвет по фазе (как в BossAI: >66% / >33% / ниже).
-            Color fill = frac > 0.66f ? new Color(220, 70, 70)
-                       : frac > 0.33f ? new Color(240, 140, 40)
-                                      : new Color(255, 40, 40);
+            // Пороги фаз этого босса (ai.yaml): цвет — по текущей фазе, засечки — по границам.
+            var phases = Utils.AiConfig.GetBoss(boss.Type).Phases;
+            int phaseIdx = phases.Count - 1;
+            for (int i = 0; i < phases.Count; i++)
+                if (frac > phases[i].HpAbove) { phaseIdx = i; break; }
+            Color fill = PhaseColors[System.Math.Min(phaseIdx, PhaseColors.Length - 1)];
             DrawBar(sb, pixel, rect, frac, fill);
 
-            // Засечки границ фаз.
-            DrawTick(sb, pixel, rect, 0.66f);
-            DrawTick(sb, pixel, rect, 0.33f);
+            // Засечки границ фаз (кроме нулевого порога последней).
+            foreach (var p in phases)
+                if (p.HpAbove > 0f)
+                    DrawTick(sb, pixel, rect, p.HpAbove);
 
             // Имя босса по центру над полосой.
             if (!string.IsNullOrEmpty(name))
