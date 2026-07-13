@@ -48,13 +48,15 @@ namespace RiotGalaxy.Core.Managers
 
         // Оркестратор кампании: миссия = цепочка брифингов/боёв/босса/магазина.
         private readonly MissionDirector _mission = new MissionDirector();
+        private CampaignFlow _campaign; // поток кампании (создаётся в конструкторе)
         private System.Action _shopThen;     // продолжение после закрытия магазина (поток миссии)
 
         private int _lastScore; // итоговый счёт для экранов GameOver/Victory
         public int LastScore => _lastScore;
+        /// <summary>Зафиксировать итоговый счёт (зовёт CampaignFlow при финале кампании).</summary>
+        public void SetLastScore(int score) => _lastScore = score;
 
         // Окно сбора звёзд после зачистки уровня (сек до перехода); 0 — не активно.
-        private float _levelClearTimer;
 
         // Время текущего кадра (для DrawGameplay, вызываемого из GameplayScreen.Draw).
         private GameTime _drawTime = new GameTime();
@@ -168,6 +170,7 @@ namespace RiotGalaxy.Core.Managers
             CurrentGameState = GameState.MainMenu;
             GameObjects = new List<GameObject>();
             _levels = new LevelDirector(GameObjects);
+            _campaign = new CampaignFlow(this, _mission, _levels);
             ScreenWidth = 1280;
             ScreenHeight = 768;
 
@@ -347,7 +350,7 @@ namespace RiotGalaxy.Core.Managers
         }
 
         /// <summary>Биом текущей миссии: явный `biome:` из YAML или по номеру акта (m1–5/6–9/далее).</summary>
-        private void ApplyBiomeForCurrentMission()
+        public void ApplyBiomeForCurrentMission()
         {
             int n = _mission.MissionNumber;
             string biome = !string.IsNullOrEmpty(_mission.CurrentBiome) ? _mission.CurrentBiome
@@ -567,18 +570,8 @@ namespace RiotGalaxy.Core.Managers
             Barks.Update(deltaTime);
             ProcessGameObjects(gameTime);
 
-            // Бой зачищен → даём несколько секунд на сбор звёзд, затем следующий шаг миссии.
-            if (_levelClearTimer > 0f)
-            {
-                _levelClearTimer -= deltaTime;
-                if (_levelClearTimer <= 0f || !GameObjects.Exists(o => o is BonusStar))
-                    OnBattleCleared();
-            }
-            else if (_levels.LevelComplete)
-            {
-                _levelClearTimer = Utils.BonusConfig.Current.LevelClearCollectSeconds;
-                MessageLog.Add(Utils.Loc.T("battle.cleared_collect"), Color.Gold);
-            }
+            // Зачистка боя и переход к следующему шагу миссии — ведёт CampaignFlow.
+            _campaign.Update(deltaTime);
         }
 
         /// <summary>
@@ -666,111 +659,17 @@ namespace RiotGalaxy.Core.Managers
 
         #region Вспомогательные методы
 
-        /// <summary>
-        /// Начать кампанию с начала: создать игрока, сбросить кампанию и запустить первый шаг
-        /// миссии (брифинг/бой). Вызывается из меню и при рестарте (GameOver/Victory).
-        /// </summary>
-        public void StartCampaign()
-        {
-            try
-            {
-                Utils.SaveData.ClearCheckpoint(); // новая игра с начала — старый чекпоинт не нужен
-                SetupNewPlayer();
-                _mission.StartCampaign();
-                RunNextStep();
-            }
-            catch (Exception ex)
-            {
-                Utils.Log.Error($"Error starting campaign: {ex.Message}");
-            }
-        }
+        // ── Кампания: тонкие фасады над CampaignFlow (call-sites в экранах/командах не меняются) ──
+        public void StartCampaign() => _campaign.StartCampaign();
+        public void ContinueCampaign() => _campaign.ContinueCampaign();
+        public void RestartMission() => _campaign.RestartMission();
+        public void DevStartMission(int missionIndex) => _campaign.DevStartMission(missionIndex);
+        public void DevStartMissionAtBoss(int missionIndex) => _campaign.DevStartMissionAtBoss(missionIndex);
 
-        /// <summary>
-        /// Продолжить кампанию с сохранённой позиции (миссия/волна) — после выхода в меню.
-        /// Если чекпоинта нет/он битый — старт с начала.
-        /// </summary>
-        public void ContinueCampaign()
+        /// <summary>Создать свежего игрока и очистить сцену (бой ещё не загружается).
+        /// Зовёт CampaignFlow при старте/рестарте; игроком и сценой владеет GameManager.</summary>
+        public void ResetPlayerAndScene()
         {
-            try
-            {
-                SetupNewPlayer();
-                if (Utils.SaveData.HasCheckpoint &&
-                    _mission.ResumeAt(Utils.SaveData.CampaignMission, Utils.SaveData.CampaignStep))
-                {
-                    if (Player != null) Player.Score = Utils.SaveData.CampaignScore;
-                }
-                else
-                {
-                    _mission.StartCampaign();
-                }
-                RunNextStep();
-            }
-            catch (Exception ex)
-            {
-                Utils.Log.Error($"Error continuing campaign: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// Рестарт ТЕКУЩЕЙ миссии с начала (после гибели игрока): свежий корабль, та же миссия
-        /// с первого шага. Мета-прогресс (кредиты/апгрейды/оружие) остаётся в профиле.
-        /// </summary>
-        public void RestartMission()
-        {
-            try
-            {
-                SetupNewPlayer();
-                _mission.RestartMission();
-                RunNextStep();
-            }
-            catch (Exception ex)
-            {
-                Utils.Log.Error($"Error restarting mission: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// DEV: начать кампанию с выбранной миссии (для тестирования). Свежий игрок, прыжок
-        /// на первый шаг миссии missionIndex. Доступно из dev-меню (скрыто в релизе).
-        /// </summary>
-        public void DevStartMission(int missionIndex)
-        {
-            try
-            {
-                SetupNewPlayer();
-                if (!_mission.ResumeAt(missionIndex, 0))
-                    _mission.StartCampaign();
-                RunNextStep();
-            }
-            catch (Exception ex)
-            {
-                Utils.Log.Error($"Error dev-start mission {missionIndex}: {ex.Message}");
-            }
-        }
-
-        /// <summary>
-        /// DEV: начать миссию сразу с её босса (пропустив брифинги/бои) — для быстрой проверки
-        /// боссов/шкалы HP/таунтов. Если у миссии нет босса — обычный старт с её начала.
-        /// </summary>
-        public void DevStartMissionAtBoss(int missionIndex)
-        {
-            try
-            {
-                SetupNewPlayer();
-                if (!_mission.ResumeAtBoss(missionIndex) && !_mission.ResumeAt(missionIndex, 0))
-                    _mission.StartCampaign();
-                RunNextStep();
-            }
-            catch (Exception ex)
-            {
-                Utils.Log.Error($"Error dev-start boss {missionIndex}: {ex.Message}");
-            }
-        }
-
-        /// <summary>Создать свежего игрока и очистить сцену (бой ещё не загружается).</summary>
-        private void SetupNewPlayer()
-        {
-            _levelClearTimer = 0f;
             GameObjects.Clear();
 
             Player = new PlayerShip(new Vector2(ScreenWidth / 2, ScreenHeight - 100));
@@ -790,94 +689,8 @@ namespace RiotGalaxy.Core.Managers
             CreateSkillButtons();
         }
 
-        /// <summary>
-        /// Выполнить следующий шаг миссии: брифинг → диалог, бой/босс → загрузить и играть,
-        /// магазин → открыть. Конец кампании → Victory.
-        /// </summary>
-        private void RunNextStep()
-        {
-            var step = _mission.Advance(out _);
-            if (step == null)
-            {
-                FinishCampaign(); // кампания пройдена
-                return;
-            }
-
-            // Биом (небо/звёзды) по текущей миссии — на каждом шаге, идемпотентно. Так работает и
-            // для dev-прыжка/«Продолжить» (там миссия задаётся через ResumeAt, без флага «старт»).
-            ApplyBiomeForCurrentMission();
-
-            switch (step.Kind)
-            {
-                case StepKind.Briefing:
-                    PlayDialogueThen(step.Arg, RunNextStep); // после брифинга — следующий шаг
-                    break;
-                case StepKind.Battle:
-                case StepKind.Boss:
-                    EnterBattle(step.Arg);
-                    break;
-                case StepKind.Shop:
-                    BankCurrency();                 // зафиксировать заработок перед тратой
-                    OpenShopThen(RunNextStep);
-                    break;
-            }
-        }
-
-        /// <summary>Загрузить и начать бой миссии (общий путь для battle/boss-шагов).</summary>
-        private void EnterBattle(string battleName)
-        {
-            ClearNonPlayerObjects();
-            Player?.ApplyUpgrades();                 // покупки из магазина вступают в силу
-            _levels.LoadBattle(battleName, ScreenWidth, ScreenHeight);
-            _levelClearTimer = 0f;
-            Barks.Reset();                            // барки пилота — с чистого листа на каждый бой
-            Barks.Fire("battleStart");
-
-            // Чекпоинт «последней волны» — чтобы «Продолжить» возобновляло именно этот бой.
-            Utils.SaveData.SetCheckpoint(_mission.MissionIndex, _mission.StepIndex, Player?.Score ?? 0);
-
-            if (CurrentGameState != GameState.Playing)
-                ChangeGameState(GameState.Playing);  // из брифинга/магазина — показать игровой экран
-        }
-
-        /// <summary>Кампания пройдена: зафиксировать счёт/рекорд и кредиты, показать экран победы.</summary>
-        private void FinishCampaign()
-        {
-            if (Player != null)
-                _lastScore = Player.Score;
-            BankCurrency();                        // кредиты уже забанкованы в shop-шаге; на всякий случай
-            Utils.SaveData.ReportScore(_lastScore);
-            Utils.SaveData.ClearCheckpoint();      // кампания пройдена — «Продолжить» больше не нужно (Save внутри)
-            ChangeGameState(GameState.Victory);
-        }
-
-        /// <summary>Бой зачищен: начислить бонус, забанковать кредиты, перейти к следующему шагу.</summary>
-        private void OnBattleCleared()
-        {
-            _levelClearTimer = 0f;
-            if (Player != null)
-            {
-                var bc = Utils.BonusConfig.Current;
-                int clearBonus = bc.LevelClearBonusBase + bc.LevelClearBonusPerLevel * _levels.CurrentBattle;
-                Player.Currency += clearBonus;
-                MessageLog.Add(Utils.Loc.F("battle.cleared_bonus", clearBonus), Color.Gold);
-            }
-            Barks.Fire("waveCleared");
-            BankCurrency();
-            RunNextStep();
-        }
-
-        /// <summary>Перевести заработанные кредиты игрока в профиль (для магазина/сейва).</summary>
-        private void BankCurrency()
-        {
-            if (Player == null) return;
-            Utils.SaveData.Currency += Player.Currency;
-            Player.Currency = 0;
-            Utils.SaveData.Save();
-        }
-
         /// <summary>Удалить все объекты кроме игрока (между боями).</summary>
-        private void ClearNonPlayerObjects()
+        public void ClearNonPlayerObjects()
         {
             GameObjects.RemoveAll(o => !(o is PlayerShip));
         }
@@ -888,7 +701,7 @@ namespace RiotGalaxy.Core.Managers
         public void DebugNextLevel()
         {
             if (CurrentGameState == GameState.Playing)
-                OnBattleCleared();
+                _campaign.OnBattleCleared();
         }
 
         /// <summary>
@@ -1022,54 +835,15 @@ namespace RiotGalaxy.Core.Managers
                 TriggerEnemyDeathEvent(obj);
 
                 // Выпадение бонусов: звёзды (кредиты) — со всех; авторский бонус — из YAML уровня.
-                SpawnBonusOnEnemyDeath(obj.Position, enemy.Reward);
-                SpawnAuthoredDrop(enemy);
+                BonusSpawner.SpawnStars(obj.Position, enemy.Reward, GameObjects);
+                BonusSpawner.SpawnAuthoredDrop(enemy, GameObjects);
             }
 
             // Выполняем базовое удаление объекта
             obj.IsAlive = false; // Помечаем объект как мертвый
         }
 
-        private static readonly Random _bonusRnd = new Random();
-
-        /// <summary>Случайные усиления для опционального ambient-дропа (по умолчанию выключен).</summary>
-        private static readonly BonusType[] _buffTypes = { BonusType.POWER, BonusType.RAPID, BonusType.SPEED };
-
-        /// <summary>
-        /// Звёзды (кредиты) из убитого врага: дробятся на несколько (тяжёлые сыплют больше).
-        /// Усиления здесь НЕ выпадают случайно — они авторские (см. SpawnAuthoredDrop). Опциональный
-        /// ambient-бафф включается только если bonuses.yaml buffDropChance > 0 (по умолчанию 0).
-        /// </summary>
-        private void SpawnBonusOnEnemyDeath(Vector2 pos, int starCredits)
-        {
-            var bc = Utils.BonusConfig.Current;
-            int count = Math.Max(1, (int)Math.Round(starCredits / (float)Math.Max(1, bc.StarValue)));
-            count = Math.Min(count, Math.Max(1, bc.MaxStarsPerKill));
-            int baseVal = starCredits / count;
-            int rem = starCredits - baseVal * count;
-            for (int i = 0; i < count; i++)
-            {
-                int val = baseVal + (i < rem ? 1 : 0);
-                var off = new Vector2((float)(_bonusRnd.NextDouble() * 2 - 1) * 26f,
-                                      (float)(_bonusRnd.NextDouble() * 2 - 1) * 26f);
-                GameObjects.Add(new BonusStar(pos + off, Math.Max(1, val)));
-            }
-
-            // Опциональный «фоновый» случайный бафф — по умолчанию выключен (buffDropChance: 0).
-            if (bc.BuffDropChance > 0 && _bonusRnd.Next(100) < bc.BuffDropChance)
-                GameObjects.Add(new Bonus(_buffTypes[_bonusRnd.Next(_buffTypes.Length)], pos));
-        }
-
-        /// <summary>Авторский бонус из YAML уровня (drop/dropChance), привязанный к врагу.</summary>
-        private void SpawnAuthoredDrop(Enemy enemy)
-        {
-            if (enemy == null || string.IsNullOrEmpty(enemy.DropBonus))
-                return;
-            if (enemy.DropChance < 100 && _bonusRnd.Next(100) >= enemy.DropChance)
-                return;
-            if (Bonus.TryParseType(enemy.DropBonus, out var bt))
-                GameObjects.Add(new Bonus(bt, enemy.Position));
-        }
+        // Спавн бонусов при смерти врага вынесен в BonusSpawner (звёзды + авторские дропы).
 
         private void CleanupGameplay()
         {

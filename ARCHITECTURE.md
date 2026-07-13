@@ -68,37 +68,39 @@ RiotGalaxy-II/                      # корень репозитория
 ```text
 RiotGalaxy.Core/
 ├── Game1.cs                 # главный класс игры (наследник Game) — делегирует в GameManager
-├── Managers/                # глобальные системы (синглтоны)
-│   ├── GameManager.cs       #   состояния, список объектов, игровой цикл, отрисовка
-│   ├── CollisionSystem.cs   #   разрешение столкновений (вынесено из GameManager)
+├── Managers/                # глобальные системы
+│   ├── GameManager.cs       #   оркестратор: состояния, список объектов, петля Update/Draw, letterbox
+│   ├── CampaignFlow.cs      #   поток кампании: старт/продолжить/рестарт, шаги миссии, банк кредитов
+│   ├── CollisionSystem.cs   #   разрешение столкновений (зависимости — через конструктор)
 │   ├── LevelDirector.cs     #   ОДИН бой: World/Hive, спавн врагов по таймлайну, счётчики
-│   ├── MissionDirector.cs   #   кампания: миссия = цепочка брифингов/боёв/босса/магазина
-│   ├── InputManager.cs      #   ввод (клавиатура/мышь), GUI-кнопки
+│   ├── MissionDirector.cs   #   кампания-ДАННЫЕ: миссия = цепочка брифингов/боёв/босса/магазина
+│   ├── BonusSpawner.cs      #   звёзды-кредиты и авторские дропы при смерти врага
+│   ├── InputManager.cs      #   геймплейный ввод (движение/огонь/скиллы), GUI-кнопки
+│   ├── MessageLog.cs, Barks.cs  # тост-лог и реплики пилота
 │   └── AudioManager.cs      #   загрузка/проигрывание звуков
 ├── GameObjects/             # всё, что живёт на экране
-│   ├── GameObject.cs        #   базовый класс (позиция/размер/текстура/Update/Draw)
+│   ├── GameObject.cs        #   базовый класс (позиция/размер/текстура/Update/Draw/LoadSprite)
 │   ├── PlayerShip.cs        #   корабль игрока (HP, щит, оружие, очки)
 │   ├── Enemy.cs             #   ОДИН класс врага, конфигурируется из enemies.yaml по типу
 │   ├── Shell.cs             #   ОДИН класс снаряда (спрайт/пробивание — параметры)
 │   ├── Bonus.cs             #   простые бонусы (тип+эффект) + BonusStar (уникальный)
 │   └── World.cs (+ Cell), Hive.cs, Route.cs   # сетка мира, формации, маршруты
-├── Weapons/                 # система оружия (паттерн «Стратегия»)
-│   ├── Weapon.cs            #   база + WeaponCannon/Minigun/Laser/NoWeapon
+├── Weapons/                 # система оружия (data-driven)
+│   ├── Weapon.cs            #   ОДИН класс оружия, параметры уровней из weapons.yaml
 │   └── WeaponOptions.cs, WeaponConfig.cs (грузит weapons.yaml)
-├── Components/              # компоненты поведения (паттерн «Стратегия»)
+├── Components/              # компоненты движения (паттерн «Стратегия»)
 │   ├── MovementComponent.cs, EnemyBounceMovement.cs
-│   ├── FormationMovement.cs, RouteMovement.cs
-│   └── ShootingComponent.cs, CollisionComponent.cs
-├── Screens/                 # ВСЕ состояния — экраны (см. §14)
+│   └── FormationMovement.cs, RouteMovement.cs, SortieMovement.cs
+├── Screens/                 # ВСЕ состояния — экраны (см. §14); Screen.cs — неон-кит + UpdateListNav
 │   ├── Screen.cs, ScreenSystem.cs
-│   ├── SplashScreen / MainMenuScreen / SettingsScreen / NextLevelScreen
+│   ├── SplashScreen / MainMenuScreen / SettingsScreen / NextLevelScreen / ProfileScreen / ShopScreen / DevMenuScreen
 │   ├── GameplayScreen / PausedScreen / GameOverScreen / VictoryScreen
 │   └── DialogueScreen (диалоги/брифинги; контент — Content/Dialogues/*.yaml)
-├── Commands/                # паттерн «Команда» (смена оружия, kill all, next level…)
-├── Interface/               # MyButton + кнопки (тестовая панель), HudRenderer.cs (боевой HUD)
-├── Effects/                 # ParticleSystem.cs (взрывы/искры), StarField.cs (параллакс), см. §6
-├── Utils/                   # Level.cs, GameOptions/GameSettings/EnemyConfig/BonusConfig/EffectsConfig.cs, Yaml.cs, Textures.cs, Log.cs
-└── AI/                      # машина состояний врагов: EnemyAI.cs, AIState.cs (см. §12)
+├── Commands/                # паттерн «Команда» для живых кнопок HUD (оружие/скиллы/тестовые)
+├── Interface/               # MyButton + живые кнопки, HudRenderer.cs (боевой HUD)
+├── Effects/                 # ParticleSystem, StarField, ScreenShake, BloomRenderer, BackgroundRenderer
+├── Utils/                   # Level.cs, *Config.cs (yaml), Yaml.cs, Textures.cs, MathUtil.cs, Draw2D.cs, Log.cs
+└── AI/                      # машина состояний врагов: EnemyAI.cs, AIState.cs, BossAI.cs (параметры — ai.yaml)
 ```
 
 Эта раскладка повторяет архитектуру оригинала на CocosSharp (см. [prd.md](../prd.md)):
@@ -206,16 +208,25 @@ Victory): Esc/P — пауза и снятие, Space — рестарт на э
 - **Список игровых объектов** — `List<GameObject> GameObjects`. В `Playing` каждый кадр:
   спавн врагов по таймлайну уровня (`LevelDirector`), `Update` каждого объекта, разрешение
   столкновений (`CollisionSystem`, O(n²/2)), удаление «мёртвых» (`ProcessObjectRemoval`).
-- **Уровни/прогрессия** — два уровня оркестрации:
+- **Уровни/прогрессия** — три слоя оркестрации:
   [LevelDirector.cs](RiotGalaxy.Core/Managers/LevelDirector.cs) гоняет ОДИН бой (World/Hive, спавн,
-  счётчики), а [MissionDirector.cs](RiotGalaxy.Core/Managers/MissionDirector.cs) ведёт кампанию:
-  **миссия = последовательность шагов** (брифинг → бой → … → босс → брифинг → магазин).
-  Поток шагов в `GameManager`: `StartCampaign` → `RunNextStep` (диспетчер) → `EnterBattle` /
-  брифинг (`PlayDialogueThen`) / магазин (`OpenShopThen`); по зачистке боя — `OnBattleCleared`
-  → следующий шаг; конец кампании — `FinishCampaign` → Victory. См. §15.
-- **Столкновения** — вынесено в [CollisionSystem.cs](RiotGalaxy.Core/Managers/CollisionSystem.cs).
-- **Отрисовку** — держит `SpriteBatch`, рисует фон/параллакс; объекты, HUD и кнопки рисует
-  `GameplayScreen` → `DrawGameplay` (HUD — [Interface/HudRenderer.cs](RiotGalaxy.Core/Interface/HudRenderer.cs)).
+  счётчики; список объектов и размеры экрана получает явно, без Instance),
+  [MissionDirector.cs](RiotGalaxy.Core/Managers/MissionDirector.cs) хранит ДАННЫЕ кампании
+  (**миссия = последовательность шагов**: брифинг → бой → … → босс → брифинг → магазин),
+  а [CampaignFlow.cs](RiotGalaxy.Core/Managers/CampaignFlow.cs) ведёт ПОТОК: `StartCampaign` /
+  `ContinueCampaign` / `RestartMission` / `DevStartMission*` → `RunNextStep` (диспетчер шагов) →
+  `EnterBattle` / брифинг (`gm.PlayDialogueThen`) / магазин (`gm.OpenShopThen`); по зачистке боя —
+  `OnBattleCleared` → банк кредитов → следующий шаг; конец кампании — `FinishCampaign` → Victory.
+  Публичные методы кампании в GameManager — тонкие фасады над CampaignFlow. См. §15.
+- **Столкновения** — [CollisionSystem.cs](RiotGalaxy.Core/Managers/CollisionSystem.cs)
+  (зависимости — частицы и тряска — через конструктор). Бонусы при смерти врага —
+  [BonusSpawner.cs](RiotGalaxy.Core/Managers/BonusSpawner.cs).
+- **Отрисовку** — держит `SpriteBatch` и letterbox-матрицу; фон (небо биома + звёзды) —
+  [Effects/BackgroundRenderer.cs](RiotGalaxy.Core/Effects/BackgroundRenderer.cs), bloom —
+  [Effects/BloomRenderer.cs](RiotGalaxy.Core/Effects/BloomRenderer.cs) (BeginScene/EndScene вокруг сцены),
+  тряска — [Effects/ScreenShake.cs](RiotGalaxy.Core/Effects/ScreenShake.cs) (`GM.Shake` — фасад);
+  объекты, HUD и кнопки рисует `GameplayScreen` → `DrawGameplay`
+  (HUD — [Interface/HudRenderer.cs](RiotGalaxy.Core/Interface/HudRenderer.cs)).
 - **Экран** — `ScreenWidth/Height` (из `options.yaml`, по умолчанию 1280×768).
 
 ### Как рисуется кадр (`GameManager.Draw`)
