@@ -288,6 +288,7 @@ namespace RiotGalaxy.Core.Managers
             Utils.UpgradeConfig.Load();    // определения апгрейдов (магазин)
             Utils.SkillsConfig.Load();     // активные навыки
             Utils.BarkConfig.Load();       // реплики пилота в бою (barks)
+            Utils.AiConfig.Load();         // параметры ИИ/боссов (ai.yaml)
             Utils.SaveData.CurrentProfile = Utils.GameSettings.LastProfile; // последний выбранный слот
             Utils.SaveData.Load(); // профиль игрока: рекорд/прогресс/валюта/апгрейды/оружие
 

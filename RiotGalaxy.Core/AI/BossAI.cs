@@ -33,16 +33,19 @@ namespace RiotGalaxy.Core.AI
         {
             owner.ShootSafe = true;   // стрельбу ведёт BossAI, не таймер Enemy
             owner.Movement = null;    // движением тоже рулим вручную
-            _hoverY  = GameManager.Instance.ScreenHeight * 0.18f;
-            _centerX = GameManager.Instance.ScreenWidth * 0.5f;
-            _amp     = GameManager.Instance.ScreenWidth * 0.32f;
-            _attackTimer = 1.2f;      // пауза перед первой атакой
+            var b = Utils.AiConfig.Boss; // все параметры — ai.yaml (секция boss)
+            _hoverY  = GameManager.Instance.ScreenHeight * b.HoverYFrac;
+            _centerX = GameManager.Instance.ScreenWidth * b.CenterXFrac;
+            _amp     = GameManager.Instance.ScreenWidth * b.SweepAmpFrac;
+            _attackTimer = b.FirstAttackDelay; // пауза перед первой атакой
         }
 
+        private static Utils.AiConfig.BossParams P => Utils.AiConfig.Boss;
+
         private float HpFrac => owner.MaxHp > 0 ? (float)owner.Hp / owner.MaxHp : 0f;
-        private int PhaseForHp => HpFrac > 0.66f ? 1 : (HpFrac > 0.33f ? 2 : 3);
-        private float AttackInterval => _phase == 1 ? 2.2f : (_phase == 2 ? 1.8f : 1.4f);
-        private float SweepSpeed => _phase == 1 ? 0.8f : (_phase == 2 ? 1.2f : 1.7f);
+        private int PhaseForHp => HpFrac > P.Phase2HpFrac ? 1 : (HpFrac > P.Phase3HpFrac ? 2 : 3);
+        private float AttackInterval => P.AttackIntervals[Math.Clamp(_phase, 1, 3) - 1];
+        private float SweepSpeed => P.SweepSpeeds[Math.Clamp(_phase, 1, 3) - 1];
 
         public override void Update(float dt)
         {
@@ -53,7 +56,7 @@ namespace RiotGalaxy.Core.AI
             {
                 var p = owner.Position;
                 p.X = _centerX;
-                p.Y += 90f * dt;
+                p.Y += P.EntrySpeed * dt;
                 owner.Position = p;
                 if (p.Y >= _hoverY)
                 {
@@ -72,7 +75,7 @@ namespace RiotGalaxy.Core.AI
             float sweep = _telegraph ? 0.15f : 1f;
             var pos = owner.Position;
             pos.X = _centerX + _amp * (float)Math.Sin(_t * SweepSpeed) * sweep;
-            pos.Y = _hoverY + (float)Math.Sin(_t * 0.6f) * 18f;
+            pos.Y = _hoverY + (float)Math.Sin(_t * P.BobSpeed) * P.BobAmplitude;
             owner.Position = pos;
 
             // ── телеграф → залп ────────────────────────────────────────────
@@ -95,7 +98,7 @@ namespace RiotGalaxy.Core.AI
             {
                 _attackTimer = AttackInterval;
                 _telegraph = true;
-                _telegraphT = 0.6f;
+                _telegraphT = P.TelegraphTime;
             }
         }
 
@@ -104,8 +107,8 @@ namespace RiotGalaxy.Core.AI
             GameManager.Instance.ShowBossTaunt(ph == 3 ? "phase3" : "phase2"); // реплика смены фазы
             Barks.Fire("bossPhase");                                          // ответ пилота
             GameManager.Instance.Shake(ph == 3 ? 8f : 4f);
-            if (ph == 3 && !_addsSpawned) { _addsSpawned = true; SpawnAdds(2); }
-            _attackTimer = 0.6f; // быстрее перейти к атаке новой фазы
+            if (ph == 3 && !_addsSpawned) { _addsSpawned = true; SpawnAdds(P.AddsCount); }
+            _attackTimer = P.PhaseAttackDelay; // быстрее перейти к атаке новой фазы
         }
 
         private void FirePattern(int ph)
@@ -116,26 +119,27 @@ namespace RiotGalaxy.Core.AI
 
             switch (ph)
             {
-                case 1: // прицельная очередь из 3 (узкий веер вокруг направления на игрока)
+                case 1: // прицельная очередь (узкий веер вокруг направления на игрока)
                     {
                         float a = AimAngle(player);
-                        for (int i = -1; i <= 1; i++)
-                            gun.FireShell(a + MathHelper.ToRadians(10f * i));
+                        int half = P.BurstCount / 2;
+                        for (int i = -half; i <= half; i++)
+                            gun.FireShell(a + MathHelper.ToRadians(P.BurstSpreadDeg * i));
                         break;
                     }
-                case 2: // веер вниз (7) + 1 прицельный
+                case 2: // веер вниз + 1 прицельный
                     {
-                        const int n = 7;
-                        float spread = MathHelper.ToRadians(110f);
+                        int n = P.FanCount;
+                        float spread = MathHelper.ToRadians(P.FanSpreadDeg);
                         float start = MathHelper.Pi - spread / 2f; // π = вниз
                         for (int i = 0; i < n; i++)
                             gun.FireShell(start + spread * i / (n - 1));
                         gun.FireShell(AimAngle(player));
                         break;
                     }
-                default: // радиальный залп (12 по кругу)
+                default: // радиальный залп по кругу
                     {
-                        const int n = 12;
+                        int n = P.RadialCount;
                         for (int i = 0; i < n; i++)
                             gun.FireShell(MathHelper.TwoPi * i / n);
                         break;
@@ -159,7 +163,7 @@ namespace RiotGalaxy.Core.AI
         {
             for (int i = 0; i < count; i++)
             {
-                float dx = (i == 0) ? -70f : 70f;
+                float dx = (i % 2 == 0) ? -P.AddsOffsetX : P.AddsOffsetX;
                 var add = new Enemy(EnemyType.SM_SCOUT, new Vector2(owner.Position.X + dx, owner.Position.Y + 30f));
                 GameManager.Instance.GameObjects.Add(add);
             }

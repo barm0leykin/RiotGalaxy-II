@@ -21,7 +21,7 @@ namespace RiotGalaxy.Core.AI
         public virtual void Update(float dt) { }
     }
 
-    /// <summary>Взлёт/влёт на экран: полный ход, не стреляет, курс вниз (135..225°). Порт AIStateTakeOff.</summary>
+    /// <summary>Взлёт/влёт на экран: полный ход, не стреляет, курс вниз (ai.yaml: states.takeoff). Порт AIStateTakeOff.</summary>
     public class AIStateTakeOff : AIState
     {
         public AIStateTakeOff(Enemy owner) : base(owner) { }
@@ -37,18 +37,19 @@ namespace RiotGalaxy.Core.AI
 
         public override void NewIdea(float dt)
         {
-            owner.SetMoveDirection(135f + (float)owner.AiRandom.NextDouble() * 90f); // 135..225 — вниз
+            float min = Utils.AiConfig.TakeoffCourseMinDeg, max = Utils.AiConfig.TakeoffCourseMaxDeg;
+            owner.SetMoveDirection(min + (float)owner.AiRandom.NextDouble() * (max - min)); // курс вниз
         }
     }
 
-    /// <summary>Роение: медленно (1/5 скорости), стреляет, случайный курс. Порт AIStateSwarming.</summary>
+    /// <summary>Роение: медленно (доля скорости — ai.yaml), стреляет, случайный курс. Порт AIStateSwarming.</summary>
     public class AIStateSwarming : AIState
     {
         public AIStateSwarming(Enemy owner) : base(owner) { }
 
         public override void Enter()
         {
-            owner.CurrentSpeed = owner.MaxSpeed / 5f; // летаем медленнее
+            owner.CurrentSpeed = owner.MaxSpeed * Utils.AiConfig.SwarmingSpeedFrac; // летаем медленнее
             owner.ShootSafe = false;                  // можно стрелять
             owner.UseBounceMovement();
             NewIdea(0);
@@ -61,7 +62,7 @@ namespace RiotGalaxy.Core.AI
         }
     }
 
-    /// <summary>Атака: полный ход с отскоком, стреляет, курс вниз (155..205°). Порт AIStateAttack.</summary>
+    /// <summary>Атака: полный ход с отскоком, стреляет, курс вниз (ai.yaml: states.attack). Порт AIStateAttack.</summary>
     public class AIStateAttack : AIState
     {
         public AIStateAttack(Enemy owner) : base(owner) { }
@@ -76,7 +77,8 @@ namespace RiotGalaxy.Core.AI
 
         public override void NewIdea(float dt)
         {
-            owner.SetMoveDirection(155f + (float)owner.AiRandom.NextDouble() * 50f); // 155..205 — вниз
+            float min = Utils.AiConfig.AttackCourseMinDeg, max = Utils.AiConfig.AttackCourseMaxDeg;
+            owner.SetMoveDirection(min + (float)owner.AiRandom.NextDouble() * (max - min)); // курс круче вниз
             ReadyToChange = true;
         }
     }

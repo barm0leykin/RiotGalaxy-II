@@ -14,11 +14,11 @@ namespace RiotGalaxy.Core.AI
         protected AIState state;
         protected float ideaTime;
 
-        // Граница «зоны роения»: когда враг влетел в верхние 30% экрана.
-        // (В оригинале swarmingPosition = 0.7*height при Y-вверх; в MonoGame Y-вниз → 0.3*height.)
-        protected float SwarmY => GameManager.Instance.ScreenHeight * 0.3f;
+        // Граница «зоны роения»: когда враг влетел в верхнюю долю экрана (ai.yaml: common.swarmZoneFrac).
+        // (В оригинале swarmingPosition = 0.7*height при Y-вверх; в MonoGame Y-вниз.)
+        protected float SwarmY => GameManager.Instance.ScreenHeight * Utils.AiConfig.SwarmZoneFrac;
 
-        protected const float IdeaInterval = 3f;
+        protected static float IdeaInterval => Utils.AiConfig.IdeaInterval;
 
         protected EnemyAI(Enemy owner) => this.owner = owner;
 
@@ -39,7 +39,7 @@ namespace RiotGalaxy.Core.AI
         public override void Update(float dt) { }
     }
 
-    /// <summary>Красный: влетает (TakeOff) → роится и стреляет раз в 6 c. Порт ObjBehAIEnemyRed.</summary>
+    /// <summary>Красный: влетает (TakeOff) → роится и стреляет (интервалы — ai.yaml). Порт ObjBehAIEnemyRed.</summary>
     public class EnemyAIRed : EnemyAI
     {
         public EnemyAIRed(Enemy owner) : base(owner) => ChangeState(new AIStateTakeOff(owner));
@@ -59,13 +59,13 @@ namespace RiotGalaxy.Core.AI
             if (state is AIStateTakeOff && owner.Position.Y > SwarmY)
             {
                 ChangeState(new AIStateSwarming(owner));
-                owner.SetShootInterval(6f);
+                owner.SetShootInterval(Utils.AiConfig.RedSwarmShootInterval);
             }
         }
     }
 
     /// <summary>
-    /// Синий: TakeOff → Swarming (стрельба раз в 8 c) → иногда Attack (раз в 3 c);
+    /// Синий: TakeOff → Swarming → иногда Attack (интервалы/шанс — ai.yaml);
     /// улетел за верх — снова TakeOff. Порт ObjBehAIEnemyBlue.
     /// </summary>
     public class EnemyAIBlue : EnemyAI
@@ -83,10 +83,10 @@ namespace RiotGalaxy.Core.AI
                 ideaTime = 0f;
 
                 // Из роения иногда срываемся в атаку (стреляем чаще)
-                if (state is AIStateSwarming && owner.AiRandom.Next(1, 6) == 1)
+                if (state is AIStateSwarming && owner.AiRandom.NextDouble() < Utils.AiConfig.BlueAttackChance)
                 {
                     ChangeState(new AIStateAttack(owner));
-                    owner.SetShootInterval(3f);
+                    owner.SetShootInterval(Utils.AiConfig.BlueAttackShootInterval);
                 }
             }
 
@@ -94,7 +94,7 @@ namespace RiotGalaxy.Core.AI
             if (state is AIStateTakeOff && owner.Position.Y > SwarmY)
             {
                 ChangeState(new AIStateSwarming(owner));
-                owner.SetShootInterval(8f);
+                owner.SetShootInterval(Utils.AiConfig.BlueSwarmShootInterval);
             }
 
             // Атакуя, улетел за верхнюю границу → снова заходим на взлёт
