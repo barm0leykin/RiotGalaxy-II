@@ -30,12 +30,15 @@ profile.hint: "Arrows + Enter — play · R — reset · Esc — menu"
 # Shop (upgrades)
 shop.title: "Shop"
 shop.credits: "Credits: {0}"
-shop.row: "{0}   lv.{1}/{2}   ·   {3}"
-shop.unlock: "Unlock \"{0}\" · {1}"
 shop.max: "MAX"
 shop.back: "Done"
-shop.section_upgrades: "— Upgrades —"
-shop.section_weapons: "— Weapons —"
+shop.section_upgrades: "Upgrades"
+shop.section_weapons: "Weapons"
+shop.item_level: "{0}   lv. {1}/{2}"
+shop.item_locked: "{0}   ●"
+shop.unlock_price: "Unlock · {0}"
+shop.msg_upgraded: "{0}: lv. {1}"
+shop.msg_unlocked: "Unlocked: {0}"
 shop.hint: "Tap to buy · ↑↓ — select · Esc — exit"
 
 # Settings
@@ -86,3 +89,14 @@ buff.speed: "Speed+"
 
 # Dialogue
 dialogue.hint: "{0}/{1}  ·  tap / space — next · Esc — skip"
+
+# Battle messages (MessageLog)
+battle.cleared_collect: "Zone cleared! Grab the stars…"
+battle.cleared_bonus: "Zone cleared: +{0}"
+player.weapon_changed: "Weapon: {0}"
+player.weapon_locked: "{0}: locked (shop)"
+
+# Debug commands (Debug buttons)
+cmd.killall: "Kill all"
+cmd.fullheal: "Full heal"
+cmd.nextlevel: "Next level"

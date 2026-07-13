@@ -68,9 +68,9 @@ namespace RiotGalaxy.Core.GameObjects
         public bool IsInvulnerable { get; private set; }
         private float _invulnerabilityTime = 0f; // секунды; длительность — из options.yaml (GameOptions.PlayerInvulnTime)
         
-        // Состояние игрока (переопределяем базовый)
-        public new bool IsAlive { get; private set; } = true;
-        
+        // Жив/мёртв — базовый GameObject.IsAlive (раньше тут был `new bool IsAlive`,
+        // из-за shadowing мёртвый игрок оставался «живым» для кода, читающего через базовый тип).
+
         // События
         public event Action<int, int> HealthChanged; // oldHealth, newHealth
         public event Action PlayerDied;
@@ -393,11 +393,11 @@ namespace RiotGalaxy.Core.GameObjects
             if (!Utils.SaveData.IsWeaponOwned(id))
             {
                 var d = WeaponConfig.Get(id);
-                Managers.MessageLog.Add($"{d?.Name ?? id}: не открыто (магазин)", Color.Gray);
+                Managers.MessageLog.Add(Utils.Loc.F("player.weapon_locked", d?.Name ?? id), Color.Gray);
                 return;
             }
             EquipWeapon(id);
-            Managers.MessageLog.Add("Оружие: " + (WeaponConfig.Get(id)?.Name ?? id), Color.Cyan);
+            Managers.MessageLog.Add(Utils.Loc.F("player.weapon_changed", WeaponConfig.Get(id)?.Name ?? id), Color.Cyan);
         }
 
         /// <summary>Экипировать оружие по id с уровнем из профиля (без сообщения). null — стартер.</summary>
@@ -579,7 +579,7 @@ namespace RiotGalaxy.Core.GameObjects
             catch (Exception ex)
             {
                 // Фолбэк на заглушку, чтобы игра не падала, если ассет недоступен
-                Console.WriteLine($"=== Failed to load '{ShipSpriteAsset}', falling back to placeholder: {ex.Message} ===");
+                Utils.Log.Error($"=== Failed to load '{ShipSpriteAsset}', falling back to placeholder: {ex.Message} ===");
                 if (_graphicsDevice != null)
                     Texture = CreateSimpleTexture(Color.Lime);
             }

@@ -51,7 +51,7 @@ namespace RiotGalaxy.Core.Managers
             _level = new Utils.Level();
             if (!_level.Load(number))
             {
-                Console.WriteLine($"=== Level {number} not loaded ===");
+                Utils.Log.Error($"=== Level {number} not loaded ===");
                 EnemiesRemaining = 0;
                 return;
             }
@@ -70,7 +70,7 @@ namespace RiotGalaxy.Core.Managers
             _level = new Utils.Level();
             if (!_level.LoadFile(battleName))
             {
-                Console.WriteLine($"=== Battle '{battleName}' not loaded ===");
+                Utils.Log.Error($"=== Battle '{battleName}' not loaded ===");
                 EnemiesRemaining = 0;
                 return;
             }

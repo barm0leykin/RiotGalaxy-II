@@ -25,7 +25,10 @@ namespace RiotGalaxy.Core.Screens
 
         private Rectangle MinusRect => new Rectangle((int)(ScreenW / 2f - 240), (int)(ScreenH * 0.38f), 120, 100);
         private Rectangle PlusRect => new Rectangle((int)(ScreenW / 2f + 120), (int)(ScreenH * 0.38f), 120, 100);
-        private Rectangle VolumeRect => CenteredItemRect("Громкость", VolumeY, ItemScale);
+        // Hit-зона — по той же локализованной строке, что и отрисовка (иначе зоны расходятся).
+        private Rectangle VolumeRect => CenteredItemRect(VolumeLabel, VolumeY, ItemScale);
+        private static string VolumeLabel =>
+            Loc.F("settings.volume", (int)System.Math.Round(AudioManager.Instance.EffectsVolume * 100));
         private Rectangle LangRect => CenteredItemRect(LangLabel, LangY, ItemScale);
         private Rectangle BackRect => CenteredItemRect(Loc.T("settings.back"), BackY, ItemScale);
 
@@ -102,8 +105,7 @@ namespace RiotGalaxy.Core.Screens
             var p = PanelRect(0.62f, 0.12f, 0.88f);
             string title = Loc.T("settings.title");
             float titleY = ScreenH * 0.165f;
-            int percent = (int)System.Math.Round(AudioManager.Instance.EffectsVolume * 100);
-            string volLabel = Loc.F("settings.volume", percent);
+            string volLabel = VolumeLabel;
 
             DrawDimmer(sb, 175);
             DrawNeonPanel(sb, p, NeonCyan);

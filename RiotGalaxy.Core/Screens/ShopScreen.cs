@@ -33,7 +33,7 @@ namespace RiotGalaxy.Core.Screens
         private List<Entry> BuildEntries()
         {
             var e = new List<Entry>();
-            e.Add(new Entry { Kind = Kind.Header, Left = "Апгрейды", Accent = NeonCyan });
+            e.Add(new Entry { Kind = Kind.Header, Left = Loc.T("shop.section_upgrades"), Accent = NeonCyan });
             foreach (var u in UpgradeConfig.All)
             {
                 int lvl = SaveData.GetUpgradeLevel(u.Id);
@@ -42,7 +42,7 @@ namespace RiotGalaxy.Core.Screens
                 e.Add(new Entry
                 {
                     Kind = Kind.Item,
-                    Left = $"{u.Name}   ур. {lvl}/{u.MaxLevel}",
+                    Left = Loc.F("shop.item_level", u.Name, lvl, u.MaxLevel),
                     Right = max ? Loc.T("shop.max") : cost.ToString(),
                     Max = max, Cost = cost,
                     Buy = () =>
@@ -50,12 +50,12 @@ namespace RiotGalaxy.Core.Screens
                         SaveData.Currency -= cost;
                         SaveData.SetUpgradeLevel(u.Id, lvl + 1);
                         SaveData.Save();
-                        MessageLog.Add($"{u.Name}: ур. {lvl + 1}", Color.Lime);
+                        MessageLog.Add(Loc.F("shop.msg_upgraded", u.Name, lvl + 1), Color.Lime);
                     },
                 });
             }
 
-            e.Add(new Entry { Kind = Kind.Header, Left = "Оружие", Accent = NeonMag });
+            e.Add(new Entry { Kind = Kind.Header, Left = Loc.T("shop.section_weapons"), Accent = NeonMag });
             foreach (var w in WeaponConfig.All)
             {
                 int lvl = SaveData.GetWeaponLevel(w.Id);
@@ -65,8 +65,9 @@ namespace RiotGalaxy.Core.Screens
                 e.Add(new Entry
                 {
                     Kind = Kind.Item,
-                    Left = owned ? $"{w.Name}   ур. {lvl}/{w.MaxLevel}" : $"{w.Name}   ●",
-                    Right = !owned ? $"Открыть · {w.UnlockCost}"
+                    Left = owned ? Loc.F("shop.item_level", w.Name, lvl, w.MaxLevel)
+                                 : Loc.F("shop.item_locked", w.Name),
+                    Right = !owned ? Loc.F("shop.unlock_price", w.UnlockCost)
                           : max ? Loc.T("shop.max") : cost.ToString(),
                     Max = max, Cost = cost,
                     Buy = () =>
@@ -74,7 +75,8 @@ namespace RiotGalaxy.Core.Screens
                         SaveData.Currency -= cost;
                         SaveData.SetWeaponLevel(w.Id, lvl + 1);
                         SaveData.Save();
-                        MessageLog.Add(owned ? $"{w.Name}: ур. {lvl + 1}" : $"Открыто: {w.Name}", Color.Lime);
+                        MessageLog.Add(owned ? Loc.F("shop.msg_upgraded", w.Name, lvl + 1)
+                                             : Loc.F("shop.msg_unlocked", w.Name), Color.Lime);
                     },
                 });
             }

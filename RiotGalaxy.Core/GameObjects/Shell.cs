@@ -45,7 +45,7 @@ namespace RiotGalaxy.Core.GameObjects
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"=== Shell sprite '{asset}' load failed: {ex.Message} ===");
+                Utils.Log.Error($"=== Shell sprite '{asset}' load failed: {ex.Message} ===");
             }
         }
 

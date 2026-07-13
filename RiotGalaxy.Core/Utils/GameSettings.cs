@@ -43,7 +43,7 @@ namespace RiotGalaxy.Core.Utils
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"=== Settings save failed: {ex.Message} ===");
+                Log.Error($"=== Settings save failed: {ex.Message} ===");
             }
         }
 

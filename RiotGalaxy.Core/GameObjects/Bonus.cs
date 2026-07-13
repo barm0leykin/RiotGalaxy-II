@@ -72,7 +72,7 @@ namespace RiotGalaxy.Core.GameObjects
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"=== Bonus sprite '{asset}' load failed: {ex.Message} ===");
+                Utils.Log.Error($"=== Bonus sprite '{asset}' load failed: {ex.Message} ===");
             }
         }
 

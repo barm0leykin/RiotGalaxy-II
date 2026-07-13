@@ -1,9 +1,6 @@
-using System;
-using System.Threading.Tasks;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using RiotGalaxy.Core.Commands;
-using RiotGalaxy.Core.GameObjects;
 using RiotGalaxy.Core.Managers;
 
 namespace RiotGalaxy.Core.Interface
@@ -16,10 +13,10 @@ namespace RiotGalaxy.Core.Interface
     {
         protected ICommand cmd;
         public Texture2D sprite;
-        protected int delay = 1000;
-        bool blocked = false;
+        protected float debounceSeconds = 1f;      // защита от дребезга повторных нажатий
+        private double _readyAtGameTime;            // момент (TotalGameTime, сек), когда кнопка снова готова
         public string name;
-        
+
         public Vector2 Position { get; set; }
         public int Width { get; set; }
         public int Height { get; set; }
@@ -39,15 +36,14 @@ namespace RiotGalaxy.Core.Interface
             sprite = null;
         }
 
-        public async void Press()
+        /// <summary>Нажатие с дебаунсом по игровому времени (раньше был async void + Task.Delay —
+        /// fire-and-forget поток вне игрового цикла).</summary>
+        public void Press()
         {
-            if (!blocked)
-            {
-                cmd.Execute();
-                blocked = true;
-                await Task.Delay(delay);
-                blocked = false;
-            }            
+            double now = GameManager.Instance.TotalSeconds;
+            if (now < _readyAtGameTime) return;
+            _readyAtGameTime = now + debounceSeconds;
+            cmd.Execute();
         }
 
         public bool CheckCollision(Vector2 touchPoint)

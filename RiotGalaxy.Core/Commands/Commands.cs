@@ -20,7 +20,7 @@ namespace RiotGalaxy.Core.Commands
                     obj.IsAlive = false;
                 }
             }
-            MessageLog.Add("Уничтожить всех", Microsoft.Xna.Framework.Color.Orange);
+            MessageLog.Add(Utils.Loc.T("cmd.killall"), Microsoft.Xna.Framework.Color.Orange);
         }
     }
 
@@ -32,7 +32,7 @@ namespace RiotGalaxy.Core.Commands
             if (player != null)
             {
                 player.Health = player.MaxHealth;
-                MessageLog.Add("Полное лечение", Microsoft.Xna.Framework.Color.Lime);
+                MessageLog.Add(Utils.Loc.T("cmd.fullheal"), Microsoft.Xna.Framework.Color.Lime);
             }
         }
     }

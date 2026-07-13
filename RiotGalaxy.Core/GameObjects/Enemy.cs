@@ -278,7 +278,7 @@ namespace RiotGalaxy.Core.GameObjects
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"=== Enemy sprite '{asset}' load failed: {ex.Message} ===");
+                Utils.Log.Error($"=== Enemy sprite '{asset}' load failed: {ex.Message} ===");
             }
         }
 

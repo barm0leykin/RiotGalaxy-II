@@ -19,7 +19,7 @@ namespace RiotGalaxy.Core.Commands
     {
         public void Execute()
         {
-            MessageLog.Add("Следующий уровень", Microsoft.Xna.Framework.Color.Yellow);
+            MessageLog.Add(Utils.Loc.T("cmd.nextlevel"), Microsoft.Xna.Framework.Color.Yellow);
             GameManager.Instance.DebugNextLevel();
         }
     }

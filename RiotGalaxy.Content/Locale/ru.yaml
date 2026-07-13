@@ -31,12 +31,15 @@ profile.hint: "Стрелки + Enter — играть · R — сбросить
 # Магазин (апгрейды)
 shop.title: "Магазин"
 shop.credits: "Кредиты: {0}"
-shop.row: "{0}   ур.{1}/{2}   ·   {3}"
-shop.unlock: "Открыть «{0}» · {1}"
 shop.max: "МАКС"
 shop.back: "Готово"
-shop.section_upgrades: "— Апгрейды —"
-shop.section_weapons: "— Оружие —"
+shop.section_upgrades: "Апгрейды"
+shop.section_weapons: "Оружие"
+shop.item_level: "{0}   ур. {1}/{2}"
+shop.item_locked: "{0}   ●"
+shop.unlock_price: "Открыть · {0}"
+shop.msg_upgraded: "{0}: ур. {1}"
+shop.msg_unlocked: "Открыто: {0}"
 shop.hint: "Тап — купить · ↑↓ — выбор · Esc — выход"
 
 # Настройки
@@ -87,3 +90,14 @@ buff.speed: "Скорость+"
 
 # Диалоги
 dialogue.hint: "{0}/{1}  ·  тап / пробел — далее · Esc — пропустить"
+
+# Сообщения боя (MessageLog)
+battle.cleared_collect: "Зона зачищена! Собирай звёзды…"
+battle.cleared_bonus: "Зона зачищена: +{0}"
+player.weapon_changed: "Оружие: {0}"
+player.weapon_locked: "{0}: не открыто (магазин)"
+
+# Тестовые команды (Debug-кнопки)
+cmd.killall: "Уничтожить всех"
+cmd.fullheal: "Полное лечение"
+cmd.nextlevel: "Следующий уровень"

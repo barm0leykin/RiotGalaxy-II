@@ -260,7 +260,7 @@ namespace RiotGalaxy.Core.Managers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"=== Failed to load font 'TestFont': {ex.Message} ===");
+                Utils.Log.Error($"=== Failed to load font 'TestFont': {ex.Message} ===");
             }
 
             // Bloom-шейдер (только десктоп; на Android .xnb не собирается → останется null,
@@ -313,9 +313,13 @@ namespace RiotGalaxy.Core.Managers
         /// Основной игровой цикл - обновление состояния игры
         /// Адаптировано из GamePlay.cs (CocosSharp)
         /// </summary>
+        /// <summary>Игровое время с запуска, сек (для дебаунса кнопок и таймеров вне боя).</summary>
+        public double TotalSeconds { get; private set; }
+
         public void Update(GameTime gameTime)
         {
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+            TotalSeconds = gameTime.TotalGameTime.TotalSeconds;
 
             // Параллакс-фон анимируется во всех состояниях (живой фон в меню и в бою).
             _starField?.Update(deltaTime);
@@ -711,7 +715,7 @@ namespace RiotGalaxy.Core.Managers
             else if (_levels.LevelComplete)
             {
                 _levelClearTimer = Utils.BonusConfig.Current.LevelClearCollectSeconds;
-                MessageLog.Add("Зона зачищена! Собирай звёзды…", Color.Gold);
+                MessageLog.Add(Utils.Loc.T("battle.cleared_collect"), Color.Gold);
             }
         }
 
@@ -740,7 +744,9 @@ namespace RiotGalaxy.Core.Managers
                     GameObjects.RemoveAt(i);
                     continue;
                 }
-                if (!obj.IsAlive)
+                // Игрока из списка не удаляем: его смерть обрабатывается через GameOver,
+                // а объектом владеет GameManager (пересоздаётся в SetupNewPlayer).
+                if (!obj.IsAlive && obj is not PlayerShip)
                 {
                     ProcessObjectRemoval(obj);
                     GameObjects.RemoveAt(i);
@@ -813,7 +819,7 @@ namespace RiotGalaxy.Core.Managers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error starting campaign: {ex.Message}");
+                Utils.Log.Error($"Error starting campaign: {ex.Message}");
             }
         }
 
@@ -839,7 +845,7 @@ namespace RiotGalaxy.Core.Managers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error continuing campaign: {ex.Message}");
+                Utils.Log.Error($"Error continuing campaign: {ex.Message}");
             }
         }
 
@@ -857,7 +863,7 @@ namespace RiotGalaxy.Core.Managers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error restarting mission: {ex.Message}");
+                Utils.Log.Error($"Error restarting mission: {ex.Message}");
             }
         }
 
@@ -876,7 +882,7 @@ namespace RiotGalaxy.Core.Managers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error dev-start mission {missionIndex}: {ex.Message}");
+                Utils.Log.Error($"Error dev-start mission {missionIndex}: {ex.Message}");
             }
         }
 
@@ -895,7 +901,7 @@ namespace RiotGalaxy.Core.Managers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error dev-start boss {missionIndex}: {ex.Message}");
+                Utils.Log.Error($"Error dev-start boss {missionIndex}: {ex.Message}");
             }
         }
 
@@ -992,7 +998,7 @@ namespace RiotGalaxy.Core.Managers
                 var bc = Utils.BonusConfig.Current;
                 int clearBonus = bc.LevelClearBonusBase + bc.LevelClearBonusPerLevel * _levels.CurrentBattle;
                 Player.Currency += clearBonus;
-                MessageLog.Add($"Зона зачищена: +{clearBonus}", Color.Gold);
+                MessageLog.Add(Utils.Loc.F("battle.cleared_bonus", clearBonus), Color.Gold);
             }
             Barks.Fire("waveCleared");
             BankCurrency();
@@ -1024,8 +1030,8 @@ namespace RiotGalaxy.Core.Managers
         }
 
         /// <summary>
-        /// Создаёт панель тестовых кнопок (смена оружия, апгрейд, лечение, убить всех,
-        /// следующий уровень) и регистрирует их в InputManager. Внизу слева.
+        /// Создаёт панель кнопок боя внизу слева: смена оружия (живой UI, важен для тача) и —
+        /// только в Debug-сборке — тестовые кнопки (лечение/убить всех/следующий уровень).
         /// </summary>
         private void CreateDebugButtons()
         {
@@ -1038,9 +1044,12 @@ namespace RiotGalaxy.Core.Managers
             foreach (var w in Weapons.WeaponConfig.All)
                 AddDebugButton(new Interface.ButtonChWeapon(Vector2.Zero, w.Id), w.Icon, ref x, y, size, gap);
 
+#if DEBUG
+            // Тестовые кнопки — только в Debug-сборке (в релиз не попадают).
             AddDebugButton(new ButtonHpUp(Vector2.Zero), "Images/btn_hp_up", ref x, y, size, gap);
             AddDebugButton(new ButtonKillAll(Vector2.Zero), "Images/btn_killall", ref x, y, size, gap);
             AddDebugButton(new ButtonNextLevel(Vector2.Zero), "Images/btn_win", ref x, y, size, gap);
+#endif
         }
 
         private void AddDebugButton(MyButton b, string sprite, ref int x, int y, int size, int gap)
@@ -1048,7 +1057,7 @@ namespace RiotGalaxy.Core.Managers
             b.Width = b.Height = size;
             b.Position = new Vector2(x + size / 2f, y + size / 2f); // GetRect центрирует по Position
             try { b.sprite = _content.Load<Texture2D>(sprite); }
-            catch (Exception ex) { Console.WriteLine($"=== Button sprite '{sprite}' load failed: {ex.Message} ==="); }
+            catch (Exception ex) { Utils.Log.Error($"=== Button sprite '{sprite}' load failed: {ex.Message} ==="); }
             InputManager.Instance.GuiButtons.Add(b);
             x += size + gap;
         }
@@ -1066,7 +1075,7 @@ namespace RiotGalaxy.Core.Managers
             {
                 var b = new Interface.ButtonSkill(new Vector2(cx, cy), s.Id) { Width = size, Height = size };
                 try { b.sprite = _content.Load<Texture2D>(s.Icon); }
-                catch (Exception ex) { Console.WriteLine($"=== Skill icon '{s.Icon}' load failed: {ex.Message} ==="); }
+                catch (Exception ex) { Utils.Log.Error($"=== Skill icon '{s.Icon}' load failed: {ex.Message} ==="); }
                 InputManager.Instance.GuiButtons.Add(b);
                 cx -= size + gap;
             }

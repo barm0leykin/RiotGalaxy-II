@@ -39,7 +39,7 @@ namespace RiotGalaxy.Core.Managers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"=== Failed to load SoundEffect '{asset}': {ex.Message} ===");
+                Utils.Log.Error($"=== Failed to load SoundEffect '{asset}': {ex.Message} ===");
             }
         }
 
@@ -57,7 +57,7 @@ namespace RiotGalaxy.Core.Managers
                 catch (Exception ex)
                 {
                     // Например, NoAudioHardwareException на машинах без звука
-                    Console.WriteLine($"=== Failed to play effect '{key}': {ex.Message} ===");
+                    Utils.Log.Error($"=== Failed to play effect '{key}': {ex.Message} ===");
                 }
             }
         }

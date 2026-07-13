@@ -133,7 +133,7 @@ namespace RiotGalaxy.Core.Utils
             else
             {
                 try { File.WriteAllText(FilePathFor(slot), Yaml.Serializer.Serialize(new SaveYaml())); }
-                catch (Exception ex) { Console.WriteLine($"=== Reset profile {slot} failed: {ex.Message} ==="); }
+                catch (Exception ex) { Log.Error($"=== Reset profile {slot} failed: {ex.Message} ==="); }
             }
         }
 
@@ -156,7 +156,7 @@ namespace RiotGalaxy.Core.Utils
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"=== Save failed: {ex.Message} ===");
+                Log.Error($"=== Save failed: {ex.Message} ===");
             }
         }
 
