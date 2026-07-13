@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using Microsoft.Xna.Framework;
 using RiotGalaxy.Core.Components;
@@ -9,15 +10,20 @@ namespace RiotGalaxy.Core.Managers
     /// Оркестрация уровней: загрузка данных уровня и World/Hive, спавн врагов по таймлайну,
     /// счётчики врагов и прогрессия по кампании. Вынесено из GameManager.
     ///
-    /// Объекты добавляются в общий список GameManager.Instance.GameObjects; смену состояния
-    /// игры (Victory/NextLevel) принимает GameManager — здесь только данные уровня.
+    /// Объекты добавляются в общий список, переданный конструктором (владелец — GameManager);
+    /// смену состояния игры (Victory/NextLevel) принимает GameManager — здесь только данные уровня.
     /// </summary>
     public class LevelDirector
     {
+        private readonly List<GameObject> _objects; // общий список объектов (владелец — GameManager)
         private World _world;
         private Hive _hive;
         private Utils.Level _level;
+        private int _screenW, _screenH;             // запоминаются при загрузке боя
         private static readonly Random _spawnRnd = new Random();
+
+        /// <summary>Список объектов передаётся явно — LevelDirector не ходит в GameManager.Instance.</summary>
+        public LevelDirector(List<GameObject> objects) => _objects = objects;
 
         public int CurrentLevel { get; private set; } = 1;
         public int TotalLevels { get; private set; } = 1;
@@ -80,6 +86,8 @@ namespace RiotGalaxy.Core.Managers
         /// <summary>Общая часть загрузки боя: счётчики врагов + пересоздание мира/улья.</summary>
         private void AfterLoad(int screenW, int screenH)
         {
+            _screenW = screenW;
+            _screenH = screenH;
             EnemiesKilled = 0;
             EnemiesRemaining = _level.TotalEnemies;
             Utils.Log.Debug($"Battle loaded: \"{_level.Description}\", enemies={_level.TotalEnemies}");
@@ -110,7 +118,7 @@ namespace RiotGalaxy.Core.Managers
         private void SpawnEnemy(EnemyType type, bool formation, string routeName = null, string after = null,
                                 string drop = null, int dropChance = 100)
         {
-            int screenW = GameManager.Instance.ScreenWidth;
+            int screenW = _screenW;
 
             // Пытаемся занять ячейку улья для формации
             int cx = -1, cy = -1;
@@ -149,7 +157,7 @@ namespace RiotGalaxy.Core.Managers
             else if (route != null && route.HasPoints)
                 e.SetRoute(route, ParseRouteEnd(after), _hive);
 
-            GameManager.Instance.GameObjects.Add(e);
+            _objects.Add(e);
         }
 
         private static RouteEndBehavior ParseRouteEnd(string s)

@@ -13,6 +13,16 @@ namespace RiotGalaxy.Core.Managers
     /// </summary>
     public class CollisionSystem
     {
+        private readonly Effects.ParticleSystem _particles;
+        private readonly System.Action<float, float> _shake; // (magnitude, duration)
+
+        /// <summary>Зависимости передаются явно (владелец — GameManager), без Instance изнутри.</summary>
+        public CollisionSystem(Effects.ParticleSystem particles, System.Action<float, float> shake)
+        {
+            _particles = particles;
+            _shake = shake;
+        }
+
         /// <summary>Проверить и разрешить столкновения всех пар в списке.</summary>
         public void ResolveAll(List<GameObject> objects)
         {
@@ -65,8 +75,7 @@ namespace RiotGalaxy.Core.Managers
                 if (obj is Enemy enemy)
                     enemy.TakeDamage(enemy.Hp);
 
-            GameManager.Instance.Shake(Utils.EffectsConfig.NukeShake.Magnitude,
-                                       Utils.EffectsConfig.NukeShake.Duration);
+            _shake(Utils.EffectsConfig.NukeShake.Magnitude, Utils.EffectsConfig.NukeShake.Duration);
         }
 
         private void ShellHitsEnemy(Shell shell, Enemy enemy)
@@ -74,7 +83,7 @@ namespace RiotGalaxy.Core.Managers
             // Искра в точке попадания (если враг выживет — это hit-feedback; если умрёт,
             // ProcessObjectRemoval добавит полноценный взрыв сверху).
             if (enemy.Hp > shell.Damage)
-                GameManager.Instance.Particles.HitSpark(shell.Position, enemy.ExplosionColor);
+                _particles.HitSpark(shell.Position, enemy.ExplosionColor);
 
             // Всплывающее число урона над врагом.
             Effects.FloatingText.Add(shell.Damage.ToString(), enemy.Position, new Color(255, 240, 150));

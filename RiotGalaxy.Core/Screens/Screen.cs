@@ -18,7 +18,7 @@ namespace RiotGalaxy.Core.Screens
         // Кросс-платформенный указатель (мышь на desktop, палец на Android).
         // Позиция — в ВИРТУАЛЬНЫХ координатах (1280x768).
         private bool _ptrDown, _ptrPrevDown;
-        private Point _ptrPos;
+        private Point _ptrPos, _ptrPrevPos;
 
         protected int ScreenW => GameManager.Instance.ScreenWidth;
         protected int ScreenH => GameManager.Instance.ScreenHeight;
@@ -46,6 +46,7 @@ namespace RiotGalaxy.Core.Screens
 
             // Кросс-платформенный указатель
             _ptrPrevDown = _ptrDown;
+            _ptrPrevPos = _ptrPos;
 #if ANDROID
             var touches = TouchPanel.GetState();
             if (touches.Count > 0)
@@ -73,6 +74,10 @@ namespace RiotGalaxy.Core.Screens
 
         /// <summary>Позиция указателя в виртуальных координатах (1280x768).</summary>
         protected Point MousePoint => _ptrPos;
+
+        /// <summary>Указатель двигался в этом кадре. Hover применяем только при движении —
+        /// иначе замерший курсор каждый кадр перезаписывает выбор и «глушит» клавиатуру.</summary>
+        protected bool PointerMoved => _ptrPos != _ptrPrevPos;
 
         // Базовые масштабы UI (шрифт мелкий — 14pt; на телефоне нужно крупнее и с запасом под палец).
         protected const float TitleScale = 2.2f;    // заголовки экранов
@@ -261,8 +266,10 @@ namespace RiotGalaxy.Core.Screens
                 return;
             }
 
-            for (int i = 0; i < count; i++)
-                if (itemRect(i).Contains(MousePoint)) { selected = i; break; }
+            // Hover — только при движении указателя (замерший курсор не должен глушить клавиатуру).
+            if (PointerMoved)
+                for (int i = 0; i < count; i++)
+                    if (itemRect(i).Contains(MousePoint)) { selected = i; break; }
 
             if (KeyPressed(Keys.Down) || KeyPressed(Keys.S)) selected = (selected + 1) % count;
             if (KeyPressed(Keys.Up) || KeyPressed(Keys.W)) selected = (selected - 1 + count) % count;

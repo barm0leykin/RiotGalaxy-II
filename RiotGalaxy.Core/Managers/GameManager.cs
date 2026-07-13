@@ -44,7 +44,7 @@ namespace RiotGalaxy.Core.Managers
         public Utils.Dialogue CurrentDialogue => _dialogue;
 
         // Оркестратор уровней (World/Hive, спавн, прогрессия, счётчики врагов) — гоняет один бой.
-        private readonly LevelDirector _levels = new LevelDirector();
+        private LevelDirector _levels; // создаётся в конструкторе (нужен список GameObjects)
 
         // Оркестратор кампании: миссия = цепочка брифингов/боёв/босса/магазина.
         private readonly MissionDirector _mission = new MissionDirector();
@@ -93,25 +93,21 @@ namespace RiotGalaxy.Core.Managers
         private float _renderScale = 1f;
         private Vector2 _renderOffset = Vector2.Zero;
 
-        // Screenshake: тряска виртуального кадра при взрывах/боссе/нюке/уроне.
-        private Vector2 _shakeOffset = Vector2.Zero;
-        private float _shakeTime = 0f;
-        private float _shakeDuration = 0f;
-        private float _shakeMagnitude = 0f;
-        private readonly Random _shakeRng = new Random();
+        // Тряска экрана (вынесена в Effects.ScreenShake); смещение читает letterbox-матрица.
+        private readonly Effects.ScreenShake _shake = new Effects.ScreenShake();
 
         // Система частиц (взрывы, искры). Обновляется в UpdateGameplay, рисуется в DrawGameplay.
         public Effects.ParticleSystem Particles { get; } = new Effects.ParticleSystem();
 
-        // Параллакс-фон (звёзды). Анимируется во всех состояниях, рисуется под сценой.
-        private Effects.StarField _starField;
-        private Utils.BiomeConfig.Biome _biome = Utils.BiomeConfig.Get("act1"); // небо/звёзды текущего акта
+        // Фон: небо-градиент биома + параллакс-звёзды (вынесено в Effects.BackgroundRenderer).
+        private readonly Effects.BackgroundRenderer _background = new Effects.BackgroundRenderer();
 
         // Отрисовщик боевого HUD (вынесен из GameManager).
         private readonly Interface.HudRenderer _hud = new Interface.HudRenderer();
 
-        // Обработка столкновений (вынесена из GameManager).
-        private readonly CollisionSystem _collisions = new CollisionSystem();
+        // Обработка столкновений (вынесена из GameManager). Создаётся в LoadContent
+        // с явными зависимостями (частицы + тряска) — без обратной связи через Instance.
+        private CollisionSystem _collisions;
 
 
         // Вспомогательные текстуры
@@ -120,14 +116,8 @@ namespace RiotGalaxy.Core.Managers
         public Texture2D GlowTexture { get; set; }
         public GraphicsDevice GraphicsDevice => _graphics.GraphicsDevice;
 
-        // ── Bloom post-process (только десктоп; _bloom==null → выключен) ──
-        private Effect _bloom;
-        private RenderTarget2D _sceneRT;              // сцена в полном размере вьюпорта
-        private RenderTarget2D _bloomA, _bloomB;      // буферы свечения (половинное разрешение)
-        private int _rtW, _rtH;                        // текущий размер таргетов
-        private readonly Vector2[] _blurOffsets = new Vector2[15];
-        private readonly float[] _blurWeights = new float[15];
-        // Параметры bloom берём из Utils.GameOptions (options.yaml → секция bloom).
+        // Bloom post-process (вынесен в Effects.BloomRenderer; null-эффект → прямой рендер).
+        private Effects.BloomRenderer _bloomRenderer;
 
         /// <summary>Letterbox-матрица текущего кадра — чтобы экраны могли переоткрыть UI-батч
         /// с той же трансформацией (напр. аддитивный проход неонового свечения).</summary>
@@ -155,41 +145,12 @@ namespace RiotGalaxy.Core.Managers
             // чтобы амплитуда тряски одинаково выглядела при любом letterbox-масштабе.
             _renderMatrix = Matrix.CreateScale(scale, scale, 1f)
                           * Matrix.CreateTranslation(
-                                _renderOffset.X + _shakeOffset.X * scale,
-                                _renderOffset.Y + _shakeOffset.Y * scale, 0f);
+                                _renderOffset.X + _shake.Offset.X * scale,
+                                _renderOffset.Y + _shake.Offset.Y * scale, 0f);
         }
 
-        /// <summary>
-        /// Запустить тряску экрана. Слабая тряска не перебивает более сильную активную.
-        /// </summary>
-        /// <param name="magnitude">амплитуда в виртуальных пикселях</param>
-        /// <param name="duration">длительность, сек</param>
-        public void Shake(float magnitude, float duration = 0.3f)
-        {
-            if (magnitude <= 0f) return;
-            if (_shakeTime <= 0f || magnitude >= _shakeMagnitude)
-            {
-                _shakeMagnitude = magnitude;
-                _shakeDuration = duration;
-                _shakeTime = duration;
-            }
-        }
-
-        /// <summary>Затухание тряски и пересчёт случайного смещения кадра.</summary>
-        private void UpdateScreenShake(float dt)
-        {
-            if (_shakeTime <= 0f)
-            {
-                _shakeOffset = Vector2.Zero;
-                return;
-            }
-            _shakeTime -= dt;
-            float k = Math.Max(0f, _shakeTime / _shakeDuration); // 1 → 0, линейное затухание
-            float mag = _shakeMagnitude * k;
-            _shakeOffset = new Vector2(
-                (float)(_shakeRng.NextDouble() * 2.0 - 1.0) * mag,
-                (float)(_shakeRng.NextDouble() * 2.0 - 1.0) * mag);
-        }
+        /// <summary>Запустить тряску экрана (фасад над Effects.ScreenShake — call-sites не меняются).</summary>
+        public void Shake(float magnitude, float duration = 0.3f) => _shake.Start(magnitude, duration);
 
         /// <summary>Переводит координаты экрана (пиксели мыши/тача) в виртуальные (1280x768).</summary>
         public Vector2 ScreenToVirtual(Vector2 screenPoint) =>
@@ -206,6 +167,7 @@ namespace RiotGalaxy.Core.Managers
         {
             CurrentGameState = GameState.MainMenu;
             GameObjects = new List<GameObject>();
+            _levels = new LevelDirector(GameObjects);
             ScreenWidth = 1280;
             ScreenHeight = 768;
 
@@ -265,16 +227,20 @@ namespace RiotGalaxy.Core.Managers
 
             // Bloom-шейдер (только десктоп; на Android .xnb не собирается → останется null,
             // и пост-обработка просто выключится, свечение UI остаётся аддитивным).
+            Effect bloomEffect = null;
             try
             {
-                _bloom = _content.Load<Effect>("Effects/Bloom");
+                bloomEffect = _content.Load<Effect>("Effects/Bloom");
                 Utils.Log.Debug("Bloom effect loaded");
             }
             catch (Exception ex)
             {
-                _bloom = null;
                 Utils.Log.Debug($"Bloom effect not available: {ex.Message}");
             }
+            _bloomRenderer = new Effects.BloomRenderer(bloomEffect);
+
+            // Столкновения: явные зависимости (частицы + тряска) вместо Instance изнутри.
+            _collisions = new CollisionSystem(Particles, (m, d) => _shake.Start(m, d));
 
             // Загружаем конфиги из YAML (оружие, враги, параметры игры) и сохранённые настройки
             Utils.GameSettings.Load();           // в т.ч. выбранный язык
@@ -299,7 +265,7 @@ namespace RiotGalaxy.Core.Managers
 
             // Параллакс-фон из звёзд (процедурный, без ассетов). Слои — из EffectsConfig,
             // поэтому создаём после загрузки конфигов.
-            _starField = new Effects.StarField(ScreenWidth, ScreenHeight);
+            _background.Init(ScreenWidth, ScreenHeight);
             ApplyBiome("act1"); // биом по умолчанию (меню/старт), дальше меняется по акту миссии
 
             // Сколько уровней доступно (по файлам Content/Levels/level*.yaml)
@@ -323,7 +289,7 @@ namespace RiotGalaxy.Core.Managers
             TotalSeconds = gameTime.TotalGameTime.TotalSeconds;
 
             // Параллакс-фон анимируется во всех состояниях (живой фон в меню и в бою).
-            _starField?.Update(deltaTime);
+            _background.Update(deltaTime);
 
             // Все состояния — это экраны (ScreenSystem). Логику боя несёт GameplayScreen,
             // оверлеи паузы/итога — Paused/GameOver/VictoryScreen. Переходы между состояниями
@@ -345,127 +311,22 @@ namespace RiotGalaxy.Core.Managers
             if (SimpleTexture == null) SimpleTexture = Utils.Textures.CreateSolid(GraphicsDevice, Color.White);
             if (GlowTexture == null) GlowTexture = Utils.Textures.CreateGlow(GraphicsDevice);
 
-            int vpW = device.Viewport.Width, vpH = device.Viewport.Height;
-            bool useBloom = _bloom != null && Utils.GameOptions.BloomEnabled && vpW > 0 && vpH > 0;
-
             // При bloom рисуем сцену в offscreen-таргет, иначе — прямо в back buffer.
-            if (useBloom) { EnsureBloomTargets(device, vpW, vpH); device.SetRenderTarget(_sceneRT); }
+            bool useBloom = _bloomRenderer != null && _bloomRenderer.BeginScene(device);
             device.Clear(Color.Black);
 
             // ── Сцена (как обычно) ──
             _spriteBatch.Begin(SpriteSortMode.Deferred, null, null, null, null, null, _renderMatrix);
-            DrawSky();
-            _starField?.Draw(_spriteBatch, SimpleTexture); // параллакс-звёзды
+            _background.Draw(_spriteBatch, SimpleTexture, ScreenWidth, ScreenHeight); // небо + звёзды
             Screens.Draw(_spriteBatch);                    // все состояния (вкл. бой/UI)
             _spriteBatch.End();
 
             if (useBloom)
-            {
-                DrawBloom(device, vpW, vpH);   // сцена + свечение → back buffer
-            }
+                _bloomRenderer.EndScene(device, _spriteBatch); // сцена + свечение → back buffer
         }
 
-        /// <summary>Пересоздать bloom-таргеты при смене размера вьюпорта.</summary>
-        private void EnsureBloomTargets(GraphicsDevice device, int w, int h)
-        {
-            if (_sceneRT != null && _rtW == w && _rtH == h) return;
-            _sceneRT?.Dispose(); _bloomA?.Dispose(); _bloomB?.Dispose();
-            _rtW = w; _rtH = h;
-            _sceneRT = new RenderTarget2D(device, w, h, false, SurfaceFormat.Color, DepthFormat.None);
-            int bw = Math.Max(1, w / 2), bh = Math.Max(1, h / 2); // свечение — в половинном разрешении
-            _bloomA = new RenderTarget2D(device, bw, bh, false, SurfaceFormat.Color, DepthFormat.None);
-            _bloomB = new RenderTarget2D(device, bw, bh, false, SurfaceFormat.Color, DepthFormat.None);
-        }
-
-        /// <summary>Пост-обработка: extract ярких зон → блюр H/V → сцена + свечение в back buffer.</summary>
-        private void DrawBloom(GraphicsDevice device, int vpW, int vpH)
-        {
-            var full = new Rectangle(0, 0, vpW, vpH);
-            var bloomRect = new Rectangle(0, 0, _bloomA.Width, _bloomA.Height);
-
-            // 1) Extract: яркие зоны сцены → _bloomA (половинное разрешение).
-            device.SetRenderTarget(_bloomA);
-            device.Clear(Color.Transparent);
-            _bloom.CurrentTechnique = _bloom.Techniques["Extract"];
-            _bloom.Parameters["Threshold"].SetValue(Utils.GameOptions.BloomThreshold);
-            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, null, null, _bloom);
-            _spriteBatch.Draw(_sceneRT, bloomRect, Color.White);
-            _spriteBatch.End();
-
-            // 2) Гаусс по горизонтали: _bloomA → _bloomB.
-            SetBlurParameters(1f / _bloomA.Width, 0f);
-            device.SetRenderTarget(_bloomB);
-            device.Clear(Color.Transparent);
-            _bloom.CurrentTechnique = _bloom.Techniques["Blur"];
-            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, null, null, _bloom);
-            _spriteBatch.Draw(_bloomA, bloomRect, Color.White);
-            _spriteBatch.End();
-
-            // 3) Гаусс по вертикали: _bloomB → _bloomA.
-            SetBlurParameters(0f, 1f / _bloomA.Height);
-            device.SetRenderTarget(_bloomA);
-            device.Clear(Color.Transparent);
-            _spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.Opaque, SamplerState.LinearClamp, null, null, _bloom);
-            _spriteBatch.Draw(_bloomB, bloomRect, Color.White);
-            _spriteBatch.End();
-
-            // 4) Композиция в back buffer: сцена + аддитивно свечение.
-            device.SetRenderTarget(null);
-            device.Clear(Color.Black);
-            _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Opaque, SamplerState.LinearClamp, null, null);
-            _spriteBatch.Draw(_sceneRT, full, Color.White);
-            _spriteBatch.End();
-            _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.Additive, SamplerState.LinearClamp, null, null);
-            _spriteBatch.Draw(_bloomA, full, Color.White * Utils.GameOptions.BloomIntensity);
-            _spriteBatch.End();
-        }
-
-        /// <summary>Гауссовы веса/смещения для одного направления (dx,dy — размер тексела по оси).</summary>
-        private void SetBlurParameters(float dx, float dy)
-        {
-            float b = Utils.GameOptions.BloomBlurAmount;
-            int n = _blurOffsets.Length;
-            _blurWeights[0] = Gauss(0);
-            _blurOffsets[0] = Vector2.Zero;
-            float total = _blurWeights[0];
-            for (int i = 0; i < n / 2; i++)
-            {
-                float w = Gauss(i + 1);
-                _blurWeights[i * 2 + 1] = w;
-                _blurWeights[i * 2 + 2] = w;
-                total += w * 2;
-                // сдвиг между парой текселей — для «бесплатной» билинейной выборки двух за раз
-                float off = i * 2 + 1.5f;
-                var delta = new Vector2(dx, dy) * off;
-                _blurOffsets[i * 2 + 1] = delta;
-                _blurOffsets[i * 2 + 2] = -delta;
-            }
-            for (int i = 0; i < n; i++) _blurWeights[i] /= total; // нормируем
-            _bloom.Parameters["SampleOffsets"].SetValue(_blurOffsets);
-            _bloom.Parameters["SampleWeights"].SetValue(_blurWeights);
-
-            float Gauss(float x) => (float)(Math.Exp(-(x * x) / (2 * b * b)) / Math.Sqrt(2 * Math.PI * b * b));
-        }
-
-        /// <summary>Небо биома: вертикальный градиент верх→низ (полосами через SimpleTexture).</summary>
-        private void DrawSky()
-        {
-            const int strips = 32;
-            float h = ScreenHeight / (float)strips;
-            for (int i = 0; i < strips; i++)
-            {
-                Color c = Color.Lerp(_biome.SkyTop, _biome.SkyBottom, i / (float)(strips - 1));
-                _spriteBatch.Draw(SimpleTexture,
-                    new Rectangle(0, (int)(i * h), ScreenWidth, (int)Math.Ceiling(h) + 1), c);
-            }
-        }
-
-        /// <summary>Применить биом акта: цвет неба + оттенок звёзд.</summary>
-        private void ApplyBiome(string id)
-        {
-            _biome = Utils.BiomeConfig.Get(id);
-            if (_starField != null) _starField.Tint = _biome.Star;
-        }
+        /// <summary>Применить биом акта: цвет неба + оттенок звёзд (Effects.BackgroundRenderer).</summary>
+        private void ApplyBiome(string id) => _background.SetBiome(id);
 
         /// <summary>
         /// Показать реплику босса текущей миссии (which: intro/phase2/phase3/defeat) через MessageLog —
@@ -682,7 +543,7 @@ namespace RiotGalaxy.Core.Managers
             float deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
 
             // Эффекты обновляем всегда.
-            UpdateScreenShake(deltaTime);
+            _shake.Update(deltaTime);
             Particles.Update(deltaTime);
             Effects.FloatingText.Update(deltaTime);
 
