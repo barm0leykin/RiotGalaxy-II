@@ -39,7 +39,7 @@ namespace RiotGalaxy.Core.Interface
             if (gm.CurrentMissionNumber >= 1)
             {
                 string mission = Utils.Loc.F("hud.actmission", gm.CurrentAct, gm.CurrentMissionNumber,
-                                             gm.CurrentMissionTitle);
+                                             gm.CurrentWaveNumber, gm.CurrentMissionTitle);
                 spriteBatch.DrawString(font, mission, new Vector2(Margin, infoY),
                     new Color(150, 170, 210), 0f, Vector2.Zero, Small, SpriteEffects.None, 0f);
                 infoY += font.LineSpacing * Small + 4;

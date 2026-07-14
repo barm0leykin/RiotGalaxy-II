@@ -70,6 +70,8 @@ namespace RiotGalaxy.Core.Managers
 
         // Кампания (для HUD): номер/название миссии и номер акта (по номеру миссии).
         public int CurrentMissionNumber => _mission.MissionNumber;
+        /// <summary>Номер текущей волны внутри миссии (1-based) — для HUD «Миссия N/W».</summary>
+        public int CurrentWaveNumber => _mission.CurrentWaveNumber;
         public int TotalMissions => _mission.TotalMissions;
         public string CurrentMissionTitle => _mission.CurrentMissionTitle;
         public int CurrentAct { get { int n = _mission.MissionNumber; return n <= 5 ? 1 : n <= 9 ? 2 : 3; } }

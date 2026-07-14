@@ -41,6 +41,20 @@ namespace RiotGalaxy.Core.Managers
         public int MissionIndex => _mi;
         public int StepIndex => _si;
 
+        /// <summary>Номер текущей волны (боя/босса) внутри миссии, 1-based (для HUD «Миссия N/W»).</summary>
+        public int CurrentWaveNumber
+        {
+            get
+            {
+                if (_cur?.Steps == null) return 1;
+                int n = 0;
+                for (int i = 0; i <= _si && i < _cur.Steps.Count; i++)
+                    if (_cur.Steps[i].Kind == StepKind.Battle || _cur.Steps[i].Kind == StepKind.Boss)
+                        n++;
+                return System.Math.Max(1, n);
+            }
+        }
+
         /// <summary>Начать кампанию заново: загрузить список миссий, сбросить указатели.</summary>
         public void StartCampaign()
         {
