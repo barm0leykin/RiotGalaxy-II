@@ -44,7 +44,11 @@ hive:
 #
 # Фазы (phases) — список от полного HP к низкому. Фаза активна, пока hpFrac > hpAbove
 # (у последней hpAbove: 0). У каждой фазы:
-#   attackInterval — пауза между залпами, сек;  sweepSpeed — скорость свипа
+#   attackInterval — пауза между залпами, сек;  sweepSpeed — скорость паттерна движения
+#   movement — паттерн движения фазы: sweep (синус по X, дефолт) | static (висит на месте) |
+#           figure8 (восьмёрка) | circle (круг) | roam (роится: случайные точки).
+#           Босс ПЛЫВЁТ к точке паттерна со скоростью moveSpeed — телепортов нет,
+#           смена фазы/паттерна = плавный перелёт.
 #   shellSpeed / shellDamage — «оружие фазы»: скорость/урон снаряда (0 — не менять)
 #   addsCount / addsType     — подмога при входе в фазу (тип — имя из enemies.yaml)
 #   attacks — список паттернов одного залпа (исполняются все разом):
@@ -68,6 +72,8 @@ bossDefault:
   bobAmplitude: 18       # вертикальное покачивание, пикс
   bobSpeed: 0.6          # частота покачивания
   addsOffsetX: 70        # разлёт подмоги от центра босса, пикс
+  moveSpeed: 280         # макс. скорость перелёта к точке паттерна, пикс/сек (анти-телепорт)
+  vertAmpFrac: 0.08      # вертикальная амплитуда figure8/circle/roam (доля высоты экрана)
   phases:
     - hpAbove: 0.66
       attackInterval: 2.2
@@ -106,7 +112,8 @@ bosses:
           attacks: [ { type: aimedFan, count: 5, spreadDeg: 14 } ] }
       - { hpAbove: 0.4, attackInterval: 1.7, sweepSpeed: 1.3, addsCount: 2, addsType: kamik,
           attacks: [ { type: fanDown, count: 9, spreadDeg: 130 } ] }
-      - { hpAbove: 0, attackInterval: 1.3, sweepSpeed: 1.8, addsCount: 3, addsType: kamik, shellSpeed: 290,
+      - { hpAbove: 0, attackInterval: 1.3, sweepSpeed: 1.8, movement: figure8,
+          addsCount: 3, addsType: kamik, shellSpeed: 290,
           attacks: [ { type: radial, count: 10 },
                      { type: weapon, weaponId: minigun, count: 6, shotDelay: 0.09 } ] }
 
@@ -116,7 +123,7 @@ bosses:
     bobAmplitude: 10
     telegraphTime: 0.8
     phases:
-      - { hpAbove: 0.66, attackInterval: 2.6, sweepSpeed: 0.6, shellSpeed: 200,
+      - { hpAbove: 0.66, attackInterval: 2.6, movement: static, shellSpeed: 200,
           attacks: [ { type: fanDown, count: 11, spreadDeg: 150 } ] }
       - { hpAbove: 0.33, attackInterval: 2.2, sweepSpeed: 0.8, shellSpeed: 220,
           attacks: [ { type: fanDown, count: 13, spreadDeg: 160, shotDelay: 0.05 }, { type: aimedShot } ] }
@@ -130,12 +137,15 @@ bosses:
     bobAmplitude: 26
     bobSpeed: 0.9
     telegraphTime: 0.5
+    moveSpeed: 380
+    vertAmpFrac: 0.12
     phases:
       - { hpAbove: 0.7, attackInterval: 1.8, sweepSpeed: 1.4, shellSpeed: 300,
           attacks: [ { type: aimedBurst, count: 4, spreadDeg: 8 } ] }
-      - { hpAbove: 0.4, attackInterval: 1.5, sweepSpeed: 1.7, addsCount: 2, addsType: briz, shellSpeed: 320,
+      - { hpAbove: 0.4, attackInterval: 1.5, sweepSpeed: 1.7, movement: figure8,
+          addsCount: 2, addsType: briz, shellSpeed: 320,
           attacks: [ { type: aimedBurst, count: 5, spreadDeg: 9 }, { type: radial, count: 8 } ] }
-      - { hpAbove: 0, attackInterval: 1.6, sweepSpeed: 2.1, shellSpeed: 340,
+      - { hpAbove: 0, attackInterval: 1.6, movement: roam, shellSpeed: 340,
           attacks: [ { type: spiral, count: 16, spreadDeg: 40, shotDelay: 0.06 }, { type: aimedShot } ] }
 
   # m13, финал кампании: Сверхразум J-D-bI — 4 ФАЗЫ, всё сразу и жирнее к концу.
@@ -144,14 +154,15 @@ bosses:
     telegraphTime: 0.7
     firstAttackDelay: 1.5
     phases:
-      - { hpAbove: 0.75, attackInterval: 2.2, sweepSpeed: 0.9,
+      - { hpAbove: 0.75, attackInterval: 2.2, movement: static,
           attacks: [ { type: aimedBurst, count: 3, spreadDeg: 10 } ] }
       - { hpAbove: 0.5, attackInterval: 1.8, sweepSpeed: 1.2, addsCount: 2, addsType: briz,
           attacks: [ { type: fanDown, count: 9, spreadDeg: 120 }, { type: aimedShot } ] }
-      - { hpAbove: 0.25, attackInterval: 1.5, sweepSpeed: 1.6, addsCount: 2, addsType: korma, shellSpeed: 300,
+      - { hpAbove: 0.25, attackInterval: 1.5, sweepSpeed: 1.6, movement: figure8,
+          addsCount: 2, addsType: korma, shellSpeed: 300,
           attacks: [ { type: radial, count: 12 },
                      { type: weapon, weaponId: laser, count: 2, shotDelay: 0.3 } ] }
-      - { hpAbove: 0, attackInterval: 1.4, sweepSpeed: 2.0, addsCount: 2, addsType: kamik,
+      - { hpAbove: 0, attackInterval: 1.4, movement: roam, addsCount: 2, addsType: kamik,
           shellSpeed: 330, shellDamage: 14,
           attacks: [ { type: radial, count: 16, shotDelay: 0.04 },
                      { type: weapon, weaponId: laser, count: 3, shotDelay: 0.25 } ] }

@@ -89,7 +89,8 @@ namespace RiotGalaxy.Core.Utils
         {
             public float HpAbove;                  // порог: фаза активна при hpFrac > HpAbove
             public float AttackInterval = 2f;      // пауза между залпами, сек
-            public float SweepSpeed = 1f;          // скорость горизонтального свипа
+            public float SweepSpeed = 1f;          // скорость паттерна движения (частота синуса/обхода)
+            public string Movement = "sweep";      // sweep | static | figure8 | circle | roam
             public List<AttackDef> Attacks = new List<AttackDef>(); // паттерны одного залпа (все разом)
             public float ShellSpeed;               // >0 → «оружие фазы»: скорость снаряда
             public float ShellDamage;              // >0 → урон снаряда
@@ -110,6 +111,8 @@ namespace RiotGalaxy.Core.Utils
             public float BobAmplitude = 18f;      // вертикальное покачивание, пикс
             public float BobSpeed = 0.6f;         // частота покачивания
             public float AddsOffsetX = 70f;       // разлёт подмоги от центра босса
+            public float MoveSpeed = 280f;        // макс. скорость перелёта к точке паттерна, пикс/сек
+            public float VertAmpFrac = 0.08f;     // вертикальная амплитуда figure8/circle/roam (доля высоты)
             public List<PhaseDef> Phases = DefaultPhases();
 
             /// <summary>Классические 3 фазы (прежнее захардкоженное поведение).</summary>
@@ -247,6 +250,8 @@ namespace RiotGalaxy.Core.Utils
             if (y.BobAmplitude > 0f) b.BobAmplitude = y.BobAmplitude;
             if (y.BobSpeed > 0f) b.BobSpeed = y.BobSpeed;
             if (y.AddsOffsetX > 0f) b.AddsOffsetX = y.AddsOffsetX;
+            if (y.MoveSpeed > 0f) b.MoveSpeed = y.MoveSpeed;
+            if (y.VertAmpFrac > 0f) b.VertAmpFrac = y.VertAmpFrac;
             if (y.Phases != null && y.Phases.Count > 0)
             {
                 b.Phases = new List<PhaseDef>();
@@ -258,6 +263,7 @@ namespace RiotGalaxy.Core.Utils
                         HpAbove = p.HpAbove,
                         AttackInterval = p.AttackInterval > 0f ? p.AttackInterval : 2f,
                         SweepSpeed = p.SweepSpeed > 0f ? p.SweepSpeed : 1f,
+                        Movement = string.IsNullOrEmpty(p.Movement) ? "sweep" : p.Movement,
                         ShellSpeed = p.ShellSpeed,
                         ShellDamage = p.ShellDamage,
                         AddsCount = p.AddsCount,
@@ -291,6 +297,7 @@ namespace RiotGalaxy.Core.Utils
                 EntrySpeed = src.EntrySpeed, FirstAttackDelay = src.FirstAttackDelay,
                 TelegraphTime = src.TelegraphTime, PhaseAttackDelay = src.PhaseAttackDelay,
                 BobAmplitude = src.BobAmplitude, BobSpeed = src.BobSpeed, AddsOffsetX = src.AddsOffsetX,
+                MoveSpeed = src.MoveSpeed, VertAmpFrac = src.VertAmpFrac,
                 Phases = new List<PhaseDef>(),
             };
             foreach (var p in src.Phases)
@@ -298,6 +305,7 @@ namespace RiotGalaxy.Core.Utils
                 var phase = new PhaseDef
                 {
                     HpAbove = p.HpAbove, AttackInterval = p.AttackInterval, SweepSpeed = p.SweepSpeed,
+                    Movement = p.Movement,
                     ShellSpeed = p.ShellSpeed, ShellDamage = p.ShellDamage,
                     AddsCount = p.AddsCount, AddsType = p.AddsType,
                 };
@@ -384,6 +392,8 @@ namespace RiotGalaxy.Core.Utils
             public float BobAmplitude { get; set; }
             public float BobSpeed { get; set; }
             public float AddsOffsetX { get; set; }
+            public float MoveSpeed { get; set; }
+            public float VertAmpFrac { get; set; }
             public List<PhaseYaml> Phases { get; set; }
         }
         private class PhaseYaml
@@ -391,6 +401,7 @@ namespace RiotGalaxy.Core.Utils
             public float HpAbove { get; set; }
             public float AttackInterval { get; set; }
             public float SweepSpeed { get; set; }
+            public string Movement { get; set; }
             public float ShellSpeed { get; set; }
             public float ShellDamage { get; set; }
             public int AddsCount { get; set; }

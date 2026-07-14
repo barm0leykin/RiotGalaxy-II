@@ -22,7 +22,10 @@ namespace RiotGalaxy.Core.AI
         private readonly float _centerX;
         private readonly float _amp;
 
-        private float _t;             // общее время (свип/покачивание)
+        private float _t;             // общее время (покачивание)
+        private float _movePhase;     // фаза паттерна движения (аккумулируется — смена скорости без скачков)
+        private Vector2 _roamTarget;  // текущая цель блуждания (movement: roam)
+        private float _roamTimer;
         private float _attackTimer;
         private bool _telegraph;
         private float _telegraphT;
@@ -108,11 +111,14 @@ namespace RiotGalaxy.Core.AI
                 }
             }
 
-            // ── движение: свип по X (во время телеграфа почти стоим) + покачивание ─
-            float sweep = _telegraph ? 0.15f : 1f;
-            var pos = owner.Position;
-            pos.X = _centerX + _amp * (float)Math.Sin(_t * Phase.SweepSpeed) * sweep;
-            pos.Y = _hoverY + (float)Math.Sin(_t * _def.BobSpeed) * _def.BobAmplitude;
+            // ── движение: паттерн фазы даёт ЦЕЛЬ, босс плывёт к ней с ограниченной скоростью ──
+            // (никаких телепортов: смена фазы/паттерна — плавный перелёт; телеграф замедляет)
+            float slow = _telegraph ? 0.15f : 1f;
+            _movePhase += Phase.SweepSpeed * slow * dt;
+            Vector2 target = MovementTarget(dt);
+            target.Y += (float)Math.Sin(_t * _def.BobSpeed) * _def.BobAmplitude; // лёгкое покачивание поверх
+            Vector2 pos = owner.Position;
+            Utils.MathUtil.MoveTowards(ref pos, target, _def.MoveSpeed * slow * dt);
             owner.Position = pos;
 
             // ── телеграф → залп ────────────────────────────────────────────
@@ -136,6 +142,45 @@ namespace RiotGalaxy.Core.AI
                 _attackTimer = Phase.AttackInterval;
                 _telegraph = true;
                 _telegraphT = _def.TelegraphTime;
+            }
+        }
+
+        /// <summary>Целевая точка паттерна движения текущей фазы (movement в ai.yaml).</summary>
+        private Vector2 MovementTarget(float dt)
+        {
+            float vertAmp = GameManager.Instance.ScreenHeight * _def.VertAmpFrac;
+            switch (Phase.Movement.Trim().ToLowerInvariant())
+            {
+                case "static": // висит в точке зависания (крепкий босс-«крепость»)
+                    return new Vector2(_centerX, _hoverY);
+
+                case "figure8": // горизонтальная восьмёрка (Лиссажу 1:2)
+                    return new Vector2(
+                        _centerX + _amp * (float)Math.Sin(_movePhase),
+                        _hoverY + vertAmp * (float)Math.Sin(_movePhase * 2f));
+
+                case "circle": // круг: вниз-в сторону-вверх
+                    return new Vector2(
+                        _centerX + _amp * (float)Math.Sin(_movePhase),
+                        _hoverY + vertAmp * (1f - (float)Math.Cos(_movePhase)));
+
+                case "roam": // «роится»: случайные точки в верхней зоне, смена раз в ~1.5с/по прибытии
+                {
+                    _roamTimer -= dt;
+                    bool near = Vector2.DistanceSquared(owner.Position, _roamTarget) < 24f * 24f;
+                    if (_roamTimer <= 0f || near || _roamTarget == Vector2.Zero)
+                    {
+                        _roamTimer = 1.5f;
+                        var r = owner.AiRandom;
+                        _roamTarget = new Vector2(
+                            _centerX + _amp * (float)(r.NextDouble() * 2 - 1),
+                            _hoverY + vertAmp * (float)(r.NextDouble() * 2 - 1) + vertAmp);
+                    }
+                    return _roamTarget;
+                }
+
+                default: // sweep — классический синус по X на высоте зависания
+                    return new Vector2(_centerX + _amp * (float)Math.Sin(_movePhase), _hoverY);
             }
         }
 
