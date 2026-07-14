@@ -213,14 +213,17 @@
       небо-градиент (верх→низ) + оттенок звёзд, свой на акт (m1–5 act1 холодный синий, m6–9 act2
       багрянец, далее act3 фиолет); применяется при старте миссии (`GameManager.ApplyBiome`), можно
       переопределить полем `biome:` в миссии. *(Ещё: своя музыка/набор врагов на главу, меню выбора главы.)*
-- [x] **Боссы с фазами и телеграфом** — [BossAI.cs](RiotGalaxy.Core/AI/BossAI.cs) (`ai: boss` в enemies.yaml):
-      влёт → свип, 3 фазы по HP (66%/33%), паттерны (прицельная очередь → веер вниз → радиал),
-      перед залпом телеграф-вспышка ~0.6с + почти остановка, в фазе 3 — подмога + тряска. Применён к
-      `boss` (финалы Акта I) и `ukroboss` (финал Акта II). **Шкала HP босса** — по центру сверху
-      ([HudRenderer.DrawBossBar](RiotGalaxy.Core/Interface/HudRenderer.cs)): имя боя, засечки фаз 66%/33%,
-      цвет по фазе. **Реплики боссов** (злобные с юмором) — в диалогах миссии
-      `Content/Dialogues/<mission>_boss.yaml` (строки с `tag: intro/phase2/phase3/defeat`),
-      показ через MessageLog (бой не прерывается). *(Уязвимые зоны/мультиспрайт — позже.)*
+- [x] **Боссы: data-driven фазы/атаки/движение** — [BossAI.cs](RiotGalaxy.Core/AI/BossAI.cs)
+      (`ai: boss` в enemies.yaml), весь тюнинг — [ai.yaml](RiotGalaxy.Content/Config/ai.yaml):
+      пер-босс конфиги `bosses.<тип>` (boss/ukroboss/trapp/reaper/overmind, незаданное — из
+      `bossDefault`); фазы-список произвольной длины (у overmind 4), у фазы свои атаки
+      (aimedBurst/aimedFan/fanDown/radial/spiral/weapon/aimedShot + «волна» shotDelay),
+      темп, «оружие» (скорость/урон снаряда), подмога (тип+кол-во) и паттерн движения
+      (sweep/static/figure8/circle/roam; босс плывёт к точке паттерна — телепортов нет).
+      Телеграф-вспышка перед залпом. **Шкала HP босса** ([HudRenderer.DrawBossBar](RiotGalaxy.Core/Interface/HudRenderer.cs)):
+      имя боя, засечки/цвет по порогам фаз из конфига. **Реплики боссов** — в диалогах миссии
+      `Content/Dialogues/<mission>_boss.yaml` (`tag: intro/phase2/phase3…/defeat`), показ через
+      MessageLog (бой не прерывается). *(Уязвимые зоны/мультиспрайт — позже.)*
 - [ ] **Фикс техдолга контента:** Route→formation враги не регистрируются в улье для `sortie`
       (вылетают только спавненные `formation: true`). Из [TODO.md](TODO.md).
 - [ ] **Кат-сцены/радиопереговоры между волнами** (`CutScene` из оригинала — не переносилось).

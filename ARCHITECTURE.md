@@ -511,7 +511,9 @@ UKRO..UKRO_BOSS — укропитеки Акта II, KORMA/BRIZ + боссы TR
 `EnemyAIRed` (TakeOff→Swarming), `EnemyAIBlue` (TakeOff→Swarming↔Attack), `EnemyAIDumb` (ничего).
 Состояния через API `Enemy` управляют движением/скоростью/темпом стрельбы
 (`UseBounceMovement`, `SetMoveDirection`, `SetShootInterval`, `ShootSafe`). `Ai` отключается
-при входе в формацию/маршрут (там движение задаёт YAML).
+при входе в формацию/маршрут (там движение задаёт YAML). Все числа контроллеров/состояний
+(зона роения, период «идей», интервалы стрельбы, шанс атаки, курсы) — `ai.yaml`
+([AiConfig](RiotGalaxy.Core/Utils/AiConfig.cs)); там же формы sortie-тактик и параметры улья.
 
 **Вылеты из улья (sortie, Galaga)** — поверх формации. В описании уровня `sortie: true`
 (+ `sortieInterval`, `sortieCount`) включает у `Hive` координатор: раз в N секунд он
@@ -541,16 +543,31 @@ UKRO..UKRO_BOSS — укропитеки Акта II, KORMA/BRIZ + боссы TR
 `scatter` (случайный разлёт) или `formation` (занять ячейку улья и встать в строй).
 В уровне: `{ enemy: blue, route: zmeyka1-left, after: formation }`.
 
-**Боссы** — `EnemyType.BOSS` / `UKRO_BOSS` в `enemies.yaml` (отдельного класса нет): живучие
-крупные враги (`scale: 2.5`/`2.6`). С `ai: boss` подключается [BossAI.cs](RiotGalaxy.Core/AI/BossAI.cs) —
-**фазовая** машина: влёт → горизонтальный свип у верхней кромки; 3 фазы по доле HP (>66% / >33% / ≤33%)
-с разными паттернами (прицельная очередь → веер вниз → радиальный залп); перед каждым залпом —
-**телеграф** (вспышка `Tint` ~0.6с + почти остановка), в фазе 3 — подмога (`SpawnAdds`) и тряска.
-BossAI сам ведёт движение (`Movement=null`) и огонь (`ShootSafe=true`, через `Weapon.FireShell`),
-таймерная стрельба `Enemy` отключена. **Реплики босса** — `GameManager.ShowBossTaunt(intro/phase2/phase3/defeat)`
-из диалога миссии `Content/Dialogues/<mission>_boss.yaml` (строки с `tag:`) через MessageLog, бой не прерывается. **Шкала HP босса** — `HudRenderer.DrawBossBar` (по центру сверху,
-имя = описание боя, засечки фаз 66%/33%, цвет по фазе); рисуется из `DrawGameplay`, когда
-`FindActiveBoss()` нашёл живого `BOSS`/`UKRO_BOSS`.
+**Боссы** — типы `BOSS`/`UKRO_BOSS`/`TRAPP`/`REAPER`/`OVERMIND` в `enemies.yaml` (отдельных классов
+нет, `Enemy.IsBossType`); статы (HP/scale/спрайт) — там же. С `ai: boss` подключается
+[BossAI.cs](RiotGalaxy.Core/AI/BossAI.cs) — **полностью data-driven** по `ai.yaml`:
+у каждого типа босса свой конфиг `bosses.<тип>` (незаданное — из `bossDefault`), см. справку в самом файле.
+
+- **Фазы — список произвольной длины** (`phases`, от полного HP к низкому, порог `hpAbove`;
+  у overmind — 4). У фазы свои: темп (`attackInterval`), «оружие» (`shellSpeed`/`shellDamage`),
+  подмога (`addsCount`/`addsType` — любой враг из enemies.yaml) и набор атак.
+- **Атаки залпа** (`attacks`, исполняются все разом): `aimedBurst`/`aimedFan` (очередь по игроку),
+  `fanDown` (веер вниз), `radial` (по кругу), `spiral` (вращающаяся серия), `aimedShot`,
+  `weapon` (стрельба оружием игрока из weapons.yaml: спрайт/пробивание лазера/разброс пулемёта/веер).
+  `shotDelay` у любой атаки → «волна»: снаряды выходят поочерёдно (веер-волна, радиал-вертушка) —
+  очередь отложенных выстрелов тикает независимо от телеграфа.
+- **Движение — паттерн на фазу** (`movement`: `sweep`/`static`/`figure8`/`circle`/`roam`).
+  Паттерн задаёт ЦЕЛЕВУЮ точку, босс плывёт к ней со скоростью `moveSpeed` — телепортов при
+  смене фаз/паттернов нет конструктивно. Перед каждым залпом — **телеграф** (вспышка `Tint` +
+  почти остановка, `telegraphTime`).
+
+BossAI сам ведёт движение (`Movement=null`) и огонь (`ShootSafe=true`, через `Weapon.FireShell`,
+у паттерна `weapon` — перегрузка со спрайтом/пирсингом), таймерная стрельба `Enemy` отключена.
+**Реплики босса** — `GameManager.ShowBossTaunt(intro/phase2/phase3…/defeat)` из диалога миссии
+`Content/Dialogues/<mission>_boss.yaml` (строки с `tag:`) через MessageLog, бой не прерывается.
+**Шкала HP босса** — `HudRenderer.DrawBossBar` (по центру сверху, имя = описание боя; засечки и
+цвет — по порогам фаз из пер-босс конфига); рисуется из `DrawGameplay`, когда `FindActiveBoss()`
+нашёл живого босса.
 
 ## 13. Бонусы и столкновения (бой)
 
