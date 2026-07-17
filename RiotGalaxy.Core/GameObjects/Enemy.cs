@@ -75,6 +75,9 @@ namespace RiotGalaxy.Core.GameObjects
         /// <summary>Источник случайности для состояний ИИ.</summary>
         public Random AiRandom => Rnd;
 
+        // Вспышка при попадании (hit-flash): оставшееся время белой подсветки силуэта.
+        private float _hitFlash;
+
         /// <summary>
         /// Создаёт врага заданного типа, конфигурируя себя целиком из enemies.yaml
         /// (спрайт, масштаб, движение/ИИ, режим стрельбы, блуждание). Раньше это делали
@@ -120,6 +123,8 @@ namespace RiotGalaxy.Core.GameObjects
                 return;
 
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
+
+            if (_hitFlash > 0f) _hitFlash -= dt; // затухание вспышки попадания
 
             // ИИ-машина состояний (если задана): управляет движением/скоростью/стрельбой
             Ai?.Update(dt);
@@ -279,6 +284,41 @@ namespace RiotGalaxy.Core.GameObjects
                 Hp = 0;
                 Die();
             }
+        }
+
+        /// <summary>Запустить вспышку силуэта (фидбэк попадания, если враг выжил).</summary>
+        public void HitFlash() => _hitFlash = Utils.EffectsConfig.HitFlashTime;
+
+        /// <summary>
+        /// Отрисовка. При попадании — вспышка: кратко «раздуваем» спрайт (пунч масштаба) и кладём
+        /// поверх белый блик (GlowTexture — premultiplied-белый, реально высветляет в alpha-batch,
+        /// в отличие от White-tint, который на цветном спрайте лишь умножает). Не трогает Tint —
+        /// совместимо с красным телеграфом босса.
+        /// </summary>
+        public override void Draw(GameTime gameTime, SpriteBatch spriteBatch)
+        {
+            if (_hitFlash > 0f && Texture != null && IsAlive)
+            {
+                float k = _hitFlash / Utils.EffectsConfig.HitFlashTime; // 1 → 0
+
+                var saved = Scale;
+                Scale = saved * (1f + 0.22f * k); // пунч: спрайт кратко крупнее
+                base.Draw(gameTime, spriteBatch);
+                Scale = saved;
+
+                var glow = GameManager.Instance.GlowTexture;
+                if (glow != null)
+                {
+                    float a = k * Utils.EffectsConfig.HitFlashStrength;
+                    float scale = (Texture.Width * saved.X * 1.4f) / glow.Width;
+                    var origin = new Vector2(glow.Width / 2f, glow.Height / 2f);
+                    spriteBatch.Draw(glow, Position, null, Color.White * a, 0f, origin,
+                                     scale, SpriteEffects.None, 0f);
+                }
+                return;
+            }
+
+            base.Draw(gameTime, spriteBatch);
         }
 
         /// <summary>

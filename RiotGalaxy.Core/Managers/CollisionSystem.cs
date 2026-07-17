@@ -80,10 +80,13 @@ namespace RiotGalaxy.Core.Managers
 
         private void ShellHitsEnemy(Shell shell, Enemy enemy)
         {
-            // Искра в точке попадания (если враг выживет — это hit-feedback; если умрёт,
-            // ProcessObjectRemoval добавит полноценный взрыв сверху).
+            // Искра в точке попадания + вспышка силуэта (если враг выживет — это hit-feedback;
+            // если умрёт, ProcessObjectRemoval добавит полноценный взрыв сверху).
             if (enemy.Hp > shell.Damage)
+            {
                 _particles.HitSpark(shell.Position, enemy.ExplosionColor);
+                enemy.HitFlash();
+            }
 
             // Всплывающее число урона над врагом.
             Effects.FloatingText.Add(shell.Damage.ToString(), enemy.Position, new Color(255, 240, 150));

@@ -250,8 +250,15 @@ _spriteBatch.End();                     // 6. закрыть пакет → вс
   Пул фиксированного размера (1024), рисуется простой текстурой `SimpleTexture` (без ассетов).
   Обновляется в `UpdateGameplay`, рисуется в `DrawGameplay` поверх объектов, под HUD.
   Методы: `Explosion(...)` (разлёт при гибели врага, цвет — по `EnemyType`), `HitSpark(...)`
-  (искра попадания/урона), `Clear()` (смена уровня/состояния). Дульная вспышка — из
+  (искра попадания/урона), `Jet(...)` (направленная струя — выхлоп двигателя игрока из
+  `PlayerShip.Update`, `engineExhaust`), `Clear()` (смена уровня/состояния). Дульная вспышка — из
   `Weapon.FireOnce` (`MuzzleFlash`), трассер-след — из `Shell.Update` (`ShellTrail`, снаряды игрока).
+- **Вспышка врага при попадании (hit-flash)** — `Enemy.HitFlash()` (из `CollisionSystem`, когда враг
+  выжил): в `Enemy.Draw` кратко «раздуваем» спрайт (пунч масштаба) + кладём поверх белый блик
+  `GlowTexture` (premultiplied-белый — реально высветляет в alpha-batch, тогда как White-tint на
+  цветном спрайте лишь умножает цвет). Не трогает `Tint` — совместимо с красным телеграфом босса.
+- **Анимация бонусов-баффов** — `Bonus.AnimateIdle` (вращение + пульс масштаба; звёзды-кредиты не
+  трогаются, их на экране десятки).
 - **Screenshake** — `GameManager.Shake(magnitude, duration)`. Смещение `_shakeOffset` (в
   виртуальных пикселях) подмешивается в `_renderMatrix` letterbox'а (× scale), затухает
   линейно в `UpdateScreenShake`. Слабая тряска не перебивает более сильную активную.
@@ -269,6 +276,7 @@ _spriteBatch.End();                     // 6. закрыть пакет → вс
   Обновляется в `UpdateGameplay`, рисуется в `DrawGameplay` поверх частиц, под HUD.
 
 Все числовые параметры этих систем (частицы, тряска, слои звёзд, дульная вспышка/трассер,
+выхлоп `engineExhaust`, вспышка `hitFlash`, анимация бонусов `bonusAnim`,
 рост снаряда по уровню `shellLevelScaleStep`, всплывающие числа `floatingText`) задаются в
 [Content/Config/effects.yaml](RiotGalaxy.Content/Config/effects.yaml) и грузятся в
 `Utils.EffectsConfig` (дефолты в коде, фолбэк без файла). См. §16. Оттенок спрайта — `GameObject.Tint`.

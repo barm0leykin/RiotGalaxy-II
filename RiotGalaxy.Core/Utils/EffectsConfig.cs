@@ -40,9 +40,24 @@ namespace RiotGalaxy.Core.Utils
         public static Burst HitSpark       = new Burst { Count = 6,  Speed = 140f, Size = 4f, Life = 0.25f };
         public static Burst MuzzleFlash    = new Burst { Count = 8,  Speed = 90f,  Size = 5f, Life = 0.12f };
         public static Burst ShellTrail     = new Burst { Count = 1,  Speed = 12f,  Size = 3f, Life = 0.18f };
+        public static Burst EngineExhaust  = new Burst { Count = 2,  Speed = 150f, Size = 5f, Life = 0.28f };
 
         /// <summary>Прирост размера снаряда за уровень оружия (0 — снаряды одинаковы).</summary>
         public static float ShellLevelScaleStep = 0.12f;
+
+        // ── Вспышка врага при попадании (hit-flash) ──────────────────────────
+        /// <summary>Длительность белой вспышки спрайта врага при попадании (сек; 0 — выкл).</summary>
+        public static float HitFlashTime = 0.08f;
+        /// <summary>Сила вспышки: доля «побеления» силуэта (0..1).</summary>
+        public static float HitFlashStrength = 0.85f;
+
+        // ── Анимация бонусов (вращение + пульс масштаба) ─────────────────────
+        /// <summary>Скорость вращения бонуса-баффа (рад/сек; 0 — не крутится).</summary>
+        public static float BonusRotateSpeed = 1.2f;
+        /// <summary>Амплитуда пульсации масштаба бонуса (0.1 = ±10%).</summary>
+        public static float BonusPulseAmp = 0.12f;
+        /// <summary>Скорость пульсации масштаба бонуса (рад/сек).</summary>
+        public static float BonusPulseSpeed = 5f;
 
         // ── Всплывающие числа (урон/очки) ───────────────────────────────────
         public static float FloatingTextRiseSpeed = 45f;
@@ -77,9 +92,23 @@ namespace RiotGalaxy.Core.Utils
                 ApplyBurst(ref HitSpark,       data.Particles.HitSpark);
                 ApplyBurst(ref MuzzleFlash,    data.Particles.MuzzleFlash);
                 ApplyBurst(ref ShellTrail,     data.Particles.ShellTrail);
+                ApplyBurst(ref EngineExhaust,  data.Particles.EngineExhaust);
             }
 
             ShellLevelScaleStep = data.ShellLevelScaleStep; // 0 = снаряды одинаковы на всех уровнях
+
+            if (data.HitFlash != null)
+            {
+                HitFlashTime = data.HitFlash.Time; // 0 допустимо — вспышка выключена
+                if (data.HitFlash.Strength > 0) HitFlashStrength = data.HitFlash.Strength;
+            }
+
+            if (data.BonusAnim != null)
+            {
+                BonusRotateSpeed = data.BonusAnim.RotateSpeed; // 0 допустимо — не крутится
+                BonusPulseAmp = data.BonusAnim.PulseAmp;       // 0 допустимо — без пульса
+                if (data.BonusAnim.PulseSpeed > 0) BonusPulseSpeed = data.BonusAnim.PulseSpeed;
+            }
 
             if (data.FloatingText != null)
             {
@@ -142,6 +171,8 @@ namespace RiotGalaxy.Core.Utils
             public StarFieldYaml StarField { get; set; }
             public float ShellLevelScaleStep { get; set; }
             public FloatingTextYaml FloatingText { get; set; }
+            public HitFlashYaml HitFlash { get; set; }
+            public BonusAnimYaml BonusAnim { get; set; }
         }
         private class ParticlesYaml
         {
@@ -150,6 +181,18 @@ namespace RiotGalaxy.Core.Utils
             public BurstYaml HitSpark { get; set; }
             public BurstYaml MuzzleFlash { get; set; }
             public BurstYaml ShellTrail { get; set; }
+            public BurstYaml EngineExhaust { get; set; }
+        }
+        private class HitFlashYaml
+        {
+            public float Time { get; set; }
+            public float Strength { get; set; }
+        }
+        private class BonusAnimYaml
+        {
+            public float RotateSpeed { get; set; }
+            public float PulseAmp { get; set; }
+            public float PulseSpeed { get; set; }
         }
         private class BurstYaml
         {

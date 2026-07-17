@@ -243,6 +243,11 @@ namespace RiotGalaxy.Core.GameObjects
             // Обновляем оружие (очереди/перезарядка)
             Gun?.Update(gameTime);
 
+            // Выхлоп двигателя: струя частиц вниз от хвоста корабля (плазменно-голубая).
+            Managers.GameManager.Instance.Particles.Jet(
+                Position + new Vector2(0f, Size.Y * 0.42f), new Vector2(0f, 1f),
+                new Color(130, 195, 255), Utils.EffectsConfig.EngineExhaust, spreadDeg: 14f);
+
             // Вызываем базовый метод (обновляет компоненты)
             base.Update(gameTime);
         }

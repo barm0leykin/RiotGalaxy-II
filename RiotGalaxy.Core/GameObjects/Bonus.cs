@@ -21,6 +21,18 @@ namespace RiotGalaxy.Core.GameObjects
         protected Vector2 Velocity;
         public bool IsCollected { get; private set; }
 
+        private float _animT; // фаза покачивания/пульса (сек)
+
+        /// <summary>Лёгкая «живость»: пульс масштаба (и опц. вращение) — притягивает взгляд.</summary>
+        protected void AnimateIdle(float dt, bool rotate)
+        {
+            _animT += dt;
+            if (rotate) Rotation += Utils.EffectsConfig.BonusRotateSpeed * dt;
+            float pulse = 1f + Utils.EffectsConfig.BonusPulseAmp
+                             * (float)System.Math.Sin(_animT * Utils.EffectsConfig.BonusPulseSpeed);
+            Scale = new Vector2(pulse, pulse);
+        }
+
         protected Bonus(Vector2 position) : base(position, new Vector2(20, 20))
         {
             SetDirection(180f); // по умолчанию падает вниз
@@ -75,6 +87,7 @@ namespace RiotGalaxy.Core.GameObjects
 
             float dt = (float)gameTime.ElapsedGameTime.TotalSeconds;
             Position += Velocity * dt;
+            AnimateIdle(dt, rotate: true); // бафф-бонусы медленно крутятся и пульсируют
 
             var gm = GameManager.Instance;
             if (Position.Y > gm.ScreenHeight + 50 || Position.Y < -50)

@@ -92,6 +92,34 @@ namespace RiotGalaxy.Core.Effects
             Explosion(position, color, Utils.EffectsConfig.HitSpark);
         }
 
+        /// <summary>
+        /// Направленная струя (выхлоп двигателя): частицы летят вдоль dir с угловым разбросом.
+        /// </summary>
+        public void Jet(Vector2 position, Vector2 dir, Color color,
+                        Utils.EffectsConfig.Burst b, float spreadDeg = 18f)
+        {
+            if (dir != Vector2.Zero) dir.Normalize();
+            for (int i = 0; i < b.Count; i++)
+            {
+                var p = Acquire();
+                if (p == null) return;
+
+                float ang = (float)((_rng.NextDouble() * 2.0 - 1.0) * spreadDeg * Math.PI / 180.0);
+                float ca = (float)Math.Cos(ang), sa = (float)Math.Sin(ang);
+                var v = new Vector2(dir.X * ca - dir.Y * sa, dir.X * sa + dir.Y * ca)
+                      * (b.Speed * (0.5f + (float)_rng.NextDouble()));
+
+                p.Position = position + new Vector2((float)(_rng.NextDouble() * 2.0 - 1.0) * 3f, 0f);
+                p.Velocity = v;
+                p.MaxLife = b.Life * (0.6f + (float)_rng.NextDouble() * 0.8f);
+                p.Life = p.MaxLife;
+                p.Size = b.Size * (0.5f + (float)_rng.NextDouble());
+                p.Drag = 3.5f;
+                p.Color = TintVariation(color);
+                p.Active = true;
+            }
+        }
+
         /// <summary>Слегка варьирует цвет, чтобы взрыв «играл» оттенками.</summary>
         private Color TintVariation(Color baseColor)
         {
