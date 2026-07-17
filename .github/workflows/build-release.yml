@@ -62,10 +62,21 @@ jobs:
           WINEDEBUG: -all
           WINEDLLOVERRIDES: mscoree,mshtml=   # без установщиков mono/gecko (headless)
         run: |
+          set -e
+          # WineHQ stable — как в локальной среде разработки (Ubuntu-пакет wine 6.0.3
+          # слишком старый для .NET 6, который mgfxc гоняет под wine).
           sudo dpkg --add-architecture i386
+          sudo mkdir -pm755 /etc/apt/keyrings
+          sudo wget -qO /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key
+          sudo wget -qNP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/winehq-jammy.sources
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends wine64 wine32 p7zip-full
-          if [ ! -f "$HOME/.winemonogame/system.reg" ]; then
+          sudo apt-get install -y --install-recommends winehq-stable
+          sudo apt-get install -y --no-install-recommends p7zip-full
+          # WineHQ 9+ не ставит бинарь wine64, а и setup-скрипт, и mgfxc зовут именно его
+          # (из PATH) — обёртка перенаправляет на унифицированный wine.
+          sudo ln -sf /usr/bin/wine /usr/local/bin/wine64
+          # Префикс с .NET 6 + d3dcompiler_47 (штатный скрипт MonoGame); при кэш-хите — пропускаем.
+          if [ ! -f "$HOME/.winemonogame/drive_c/windows/system32/dotnet.exe" ]; then
             curl -sSL -o /tmp/mgfxc_wine_setup.sh \
               https://raw.githubusercontent.com/MonoGame/MonoGame/v3.8.1/Tools/MonoGame.Effect.Compiler/mgfxc_wine_setup.sh
             bash /tmp/mgfxc_wine_setup.sh
