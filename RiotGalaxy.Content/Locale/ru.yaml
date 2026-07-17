@@ -45,6 +45,7 @@ shop.hint: "Тап — купить · ↑↓ — выбор · Esc — выхо
 # Настройки
 settings.title: "Настройки"
 settings.volume: "Громкость эффектов: {0}%"
+settings.music: "Громкость музыки: {0}%"
 settings.language: "Язык: {0}"
 settings.back: "Назад"
 settings.hint: "↑↓ — выбор · ←/→ — изменить · Enter/тап · Esc — назад"

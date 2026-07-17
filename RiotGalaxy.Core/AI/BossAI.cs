@@ -87,6 +87,8 @@ namespace RiotGalaxy.Core.AI
                     ApplyPhaseWeapon(Phase); // «оружие» первой фазы
                     GameManager.Instance.ShowBossTaunt("intro"); // реплика босса — когда долетел и виден
                     Barks.Fire("bossAppear");                     // ответная реплика пилота
+                    AudioManager.Instance.Play("boss.warning");   // тревога + босс-трек
+                    AudioManager.Instance.PlayMusicKey("boss");
                 }
                 return;
             }
@@ -221,6 +223,7 @@ namespace RiotGalaxy.Core.AI
             if (gun == null) return;
             var player = GameManager.Instance.Player;
             var angles = new System.Collections.Generic.List<float>();
+            AudioManager.Instance.Play("shot.enemy"); // один звук на залп (не на каждый снаряд)
 
             foreach (var a in phase.Attacks)
             {

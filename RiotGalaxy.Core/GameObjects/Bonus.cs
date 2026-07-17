@@ -94,6 +94,7 @@ namespace RiotGalaxy.Core.GameObjects
         public virtual void Apply(PlayerShip player)
         {
             Managers.Barks.Fire("bonusGrab"); // реплика пилота на подбор бонуса-баффа (STAR — свой Apply)
+            Managers.AudioManager.Instance.Play("bonus.pickup");
             switch (Type)
             {
                 case BonusType.HP_UP:
@@ -192,6 +193,7 @@ namespace RiotGalaxy.Core.GameObjects
         public override void Apply(PlayerShip player)
         {
             player.Currency += _credits; // звезда = кредиты (на магазин)
+            Managers.AudioManager.Instance.Play("star.pickup");
             Effects.FloatingText.Add($"+{_credits}", Position, Color.Gold); // число у места подбора
         }
     }

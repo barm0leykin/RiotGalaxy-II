@@ -139,7 +139,12 @@ namespace RiotGalaxy.Core.Screens
 
         private void TryBuy(Entry r)
         {
-            if (r == null || r.Max || SaveData.Currency < r.Cost) return;
+            if (r == null || r.Max || SaveData.Currency < r.Cost)
+            {
+                if (r != null && !r.Max) AudioManager.Instance.Play("ui.error"); // не хватает кредитов
+                return;
+            }
+            AudioManager.Instance.Play("ui.buy");
             r.Buy();
         }
 

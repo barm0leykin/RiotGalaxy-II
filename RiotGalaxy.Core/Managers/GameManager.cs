@@ -331,7 +331,12 @@ namespace RiotGalaxy.Core.Managers
         }
 
         /// <summary>Применить биом акта: цвет неба + оттенок звёзд (Effects.BackgroundRenderer).</summary>
-        private void ApplyBiome(string id) => _background.SetBiome(id);
+        private void ApplyBiome(string id)
+        {
+            _background.SetBiome(id);
+            // Трек боёв биома (biomes.yaml music:, фолбэк — id биома); включится при входе в бой.
+            AudioManager.Instance.BattleTrack = Utils.BiomeConfig.Get(id).Music ?? id;
+        }
 
         /// <summary>
         /// Показать реплику босса текущей миссии (which: intro/phase2/phase3/defeat) через MessageLog —
@@ -418,6 +423,30 @@ namespace RiotGalaxy.Core.Managers
             }
 
             CurrentGameState = newState;
+
+            // Музыка по состоянию: меню-экраны — трек меню; бой — трек биома (босс переключает сам);
+            // итоговые экраны — тишина (+джингл победы). Пауза/диалог/магазин трек не трогают.
+            switch (newState)
+            {
+                case GameState.Splash:
+                case GameState.Profile:
+                case GameState.MainMenu:
+                case GameState.DevMenu:
+                    AudioManager.Instance.PlayMusicKey("menu");
+                    break;
+                case GameState.Playing:
+                    // Не с паузы: пауза посреди босс-боя не должна сбрасывать босс-трек.
+                    if (oldState != GameState.Paused)
+                        AudioManager.Instance.PlayMusic(AudioManager.Instance.BattleTrack);
+                    break;
+                case GameState.GameOver:
+                    AudioManager.Instance.StopMusic();
+                    break;
+                case GameState.Victory:
+                    AudioManager.Instance.StopMusic();
+                    AudioManager.Instance.Play("jingle.win");
+                    break;
+            }
 
             // Инициализация ресурсов при входе в состояние
             switch (newState)
@@ -875,7 +904,11 @@ namespace RiotGalaxy.Core.Managers
         }
 
         /// <summary>Уничтожить всех врагов на экране (бонус NukeBomb). Делегирует в CollisionSystem.</summary>
-        public void KillAllEnemies() => _collisions.KillAllEnemies(GameObjects);
+        public void KillAllEnemies()
+        {
+            AudioManager.Instance.Play("nuke");
+            _collisions.KillAllEnemies(GameObjects);
+        }
 
         // ProcessCollision/ShellHitsEnemy/EnemyHitsPlayer/ShellHitsPlayer вынесены в CollisionSystem.
         // DrawHUD/DrawHealthBar вынесены в Interface.HudRenderer.

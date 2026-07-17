@@ -44,6 +44,7 @@ shop.hint: "Tap to buy · ↑↓ — select · Esc — exit"
 # Settings
 settings.title: "Settings"
 settings.volume: "Effects volume: {0}%"
+settings.music: "Music volume: {0}%"
 settings.language: "Language: {0}"
 settings.back: "Back"
 settings.hint: "↑↓ — select · ←/→ — change · Enter/tap · Esc — back"

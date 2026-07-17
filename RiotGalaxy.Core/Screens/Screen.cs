@@ -266,6 +266,8 @@ namespace RiotGalaxy.Core.Screens
                 return;
             }
 
+            int was = selected;
+
             // Hover — только при движении указателя (замерший курсор не должен глушить клавиатуру).
             if (PointerMoved)
                 for (int i = 0; i < count; i++)
@@ -274,14 +276,31 @@ namespace RiotGalaxy.Core.Screens
             if (KeyPressed(Keys.Down) || KeyPressed(Keys.S)) selected = (selected + 1) % count;
             if (KeyPressed(Keys.Up) || KeyPressed(Keys.W)) selected = (selected - 1 + count) % count;
 
+            if (selected != was)
+                Managers.AudioManager.Instance.Play("ui.move");
+
             if (MouseClicked())
             {
                 for (int i = 0; i < count; i++)
-                    if (itemRect(i).Contains(MousePoint)) { activate(i); return; }
+                    if (itemRect(i).Contains(MousePoint))
+                    {
+                        Managers.AudioManager.Instance.Play("ui.select");
+                        activate(i);
+                        return;
+                    }
             }
 
-            if (KeyPressed(Keys.Enter) || KeyPressed(Keys.Space)) { activate(selected); return; }
-            if (back != null && KeyPressed(Keys.Escape)) back();
+            if (KeyPressed(Keys.Enter) || KeyPressed(Keys.Space))
+            {
+                Managers.AudioManager.Instance.Play("ui.select");
+                activate(selected);
+                return;
+            }
+            if (back != null && KeyPressed(Keys.Escape))
+            {
+                Managers.AudioManager.Instance.Play("ui.back");
+                back();
+            }
         }
 
         /// <summary>Прямоугольник плашки на всю ширину панели для центрированного пункта (topY — верх текста).</summary>

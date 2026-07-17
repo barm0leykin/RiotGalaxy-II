@@ -23,7 +23,18 @@ namespace RiotGalaxy.Core.Utils
             var data = Yaml.LoadFile<SettingsYaml>(FilePath);
             if (data == null)
                 return;
-            AudioManager.Instance.EffectsVolume = MathHelper.Clamp(data.EffectsVolume, 0f, 1f);
+            // Старый формат (без MusicVolume): EffectsVolume был абсолютной громкостью (~0.1),
+            // теперь это общий множитель к пер-событийным из sounds.yaml — сбрасываем на новые дефолты.
+            if (data.MusicVolume < 0f)
+            {
+                AudioManager.Instance.EffectsVolume = 0.8f;
+                AudioManager.Instance.MusicVolume = 0.6f;
+            }
+            else
+            {
+                AudioManager.Instance.EffectsVolume = MathHelper.Clamp(data.EffectsVolume, 0f, 1f);
+                AudioManager.Instance.MusicVolume = MathHelper.Clamp(data.MusicVolume, 0f, 1f);
+            }
             if (!string.IsNullOrWhiteSpace(data.Language))
                 Language = data.Language;
             LastProfile = data.LastProfile >= 1 ? data.LastProfile : 1;
@@ -36,6 +47,7 @@ namespace RiotGalaxy.Core.Utils
                 var data = new SettingsYaml
                 {
                     EffectsVolume = AudioManager.Instance.EffectsVolume,
+                    MusicVolume = AudioManager.Instance.MusicVolume,
                     Language = Language,
                     LastProfile = LastProfile,
                 };
@@ -50,7 +62,9 @@ namespace RiotGalaxy.Core.Utils
         // POCO для settings.yaml
         public class SettingsYaml
         {
-            public float EffectsVolume { get; set; } = 0.1f;
+            public float EffectsVolume { get; set; } = 0.8f;
+            // -1 = поля не было в файле (старый формат) — маркер для миграции громкостей.
+            public float MusicVolume { get; set; } = -1f;
             public string Language { get; set; } = "ru";
             public int LastProfile { get; set; } = 1;
         }

@@ -75,8 +75,7 @@ namespace RiotGalaxy.Core.Weapons
 
             _burstRemaining = Math.Max(1, Options.burst);
             _reloadTimer = Options.reloadSpeed / OwnerFireRateMult; // апгрейд/бафф темпа — короче перезарядка
-            if (_owner is PlayerShip)
-                AudioManager.Instance.PlayEffect("fire1");
+            AudioManager.Instance.Play(_owner is PlayerShip && Def != null ? "shot." + Def.Id : "shot.enemy");
 
             FireOnce();
             _burstRemaining--;

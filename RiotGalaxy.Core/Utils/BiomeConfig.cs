@@ -14,6 +14,8 @@ namespace RiotGalaxy.Core.Utils
             public Color SkyTop;
             public Color SkyBottom;
             public Color Star;
+            /// <summary>Трек боёв биома (Content/Music, без расширения); null → id биома.</summary>
+            public string Music;
         }
 
         // Дефолты по актам.
@@ -52,11 +54,13 @@ namespace RiotGalaxy.Core.Utils
             public List<int> SkyTop { get; set; }
             public List<int> SkyBottom { get; set; }
             public List<int> Star { get; set; }
+            public string Music { get; set; }
             public Biome ToBiome() => new Biome
             {
                 SkyTop = C(SkyTop, new Color(20, 28, 66)),
                 SkyBottom = C(SkyBottom, new Color(4, 5, 16)),
                 Star = C(Star, new Color(200, 215, 255)),
+                Music = Music,
             };
         }
     }

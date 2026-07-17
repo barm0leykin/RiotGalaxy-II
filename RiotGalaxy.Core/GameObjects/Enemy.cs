@@ -287,7 +287,7 @@ namespace RiotGalaxy.Core.GameObjects
         protected virtual void Die()
         {
             IsAlive = false; // GameManager удалит объект и обновит счётчики
-            AudioManager.Instance.PlayEffect("explode1");
+            AudioManager.Instance.Play(IsBossType ? "explode.boss" : "explode.enemy");
         }
     }
 }

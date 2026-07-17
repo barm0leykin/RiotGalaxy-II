@@ -1,0 +1,43 @@
+# Звуковые события игры (Utils.SoundConfig / Managers.AudioManager). CC0-ассеты — см. AUDIO-CREDITS.md.
+#
+# events: событие → звук. Поля:
+#   files       — файлы из Content/Sounds (без расширения); если несколько — случайный вариант
+#   volume      — множитель к общей громкости эффектов (настройки), 0..1
+#   pitchVar    — случайное отклонение тона ± (0.1 = лёгкое разнообразие повторов)
+#   minInterval — не чаще раза в N секунд (защита от «пулемётного» спама одним звуком)
+#
+# Ключи выстрелов — "shot.<id оружия из weapons.yaml>" (враги/боссы — shot.enemy).
+# Игра работает и без файла/ключа — событие просто беззвучно.
+
+events:
+  # ── выстрелы игрока (по id оружия) ──
+  shot.blaster:  { files: [shot_blaster],  volume: 0.30, pitchVar: 0.06 }
+  shot.cannon:   { files: [shot_cannon],   volume: 0.45, pitchVar: 0.05 }
+  shot.minigun:  { files: [shot_minigun],  volume: 0.22, pitchVar: 0.10, minInterval: 0.06 }
+  shot.laser:    { files: [shot_laser],    volume: 0.38, pitchVar: 0.04 }
+  shot.spread:   { files: [shot_spread],   volume: 0.35, pitchVar: 0.08 }
+  # ── враги/боссы ──
+  shot.enemy:    { files: [shot_enemy],    volume: 0.14, pitchVar: 0.12, minInterval: 0.09 }
+  explode.enemy: { files: [explode_1, explode_2, explode_3], volume: 0.50, pitchVar: 0.12, minInterval: 0.05 }
+  explode.boss:  { files: [explode_big],   volume: 0.95 }
+  boss.warning:  { files: [boss_warning],  volume: 0.75 }
+  # ── игрок ──
+  player.hit:    { files: [player_hit, player_hit2], volume: 0.65, pitchVar: 0.08 }
+  shield:        { files: [shield],        volume: 0.60 }
+  nuke:          { files: [nuke],          volume: 0.85 }
+  # ── подборы ──
+  bonus.pickup:  { files: [powerup],       volume: 0.55 }
+  star.pickup:   { files: [star],          volume: 0.25, pitchVar: 0.18, minInterval: 0.05 }
+  # ── интерфейс ──
+  ui.move:       { files: [ui_move],       volume: 0.35 }
+  ui.select:     { files: [ui_select],     volume: 0.45 }
+  ui.back:       { files: [ui_back],       volume: 0.40 }
+  ui.error:      { files: [ui_error],      volume: 0.45 }
+  ui.buy:        { files: [ui_buy],        volume: 0.55 }
+  # ── джинглы ──
+  jingle.win:    { files: [jingle_win],    volume: 0.90 }
+
+# Треки Content/Music (без расширения). Треки боёв — по биому (biomes.yaml, поле music).
+music:
+  menu: menu   # главное меню и экраны вокруг него
+  boss: boss   # включается при прилёте босса

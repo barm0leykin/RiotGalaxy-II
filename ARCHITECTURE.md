@@ -77,7 +77,7 @@ RiotGalaxy.Core/
 │   ├── BonusSpawner.cs      #   звёзды-кредиты и авторские дропы при смерти врага
 │   ├── InputManager.cs      #   геймплейный ввод (движение/огонь/скиллы), GUI-кнопки
 │   ├── MessageLog.cs, Barks.cs  # тост-лог и реплики пилота
-│   └── AudioManager.cs      #   загрузка/проигрывание звуков
+│   └── AudioManager.cs      #   звуковые события (sounds.yaml) + музыка (MediaPlayer, треки по биому)
 ├── GameObjects/             # всё, что живёт на экране
 │   ├── GameObject.cs        #   базовый класс (позиция/размер/текстура/Update/Draw/LoadSprite)
 │   ├── PlayerShip.cs        #   корабль игрока (HP, щит, оружие, очки)
@@ -352,7 +352,8 @@ RiotGalaxy.Content/
 │       │                       #   thin: green/blue/pink/yellow/red; fat: green/blue/purple/orange/red
 │       └── …                   # фон убран в прозрачность; на тип врага вешаются через enemies.yaml `sprite:`
 ├── Backgrounds/                # фоны: background_blue (1280×768), background, SCConvoy_0
-├── Sounds/                     # звуки: fire1.wav, explode1.wav
+├── Sounds/                     # SFX (CC0 Kenney): выстрелы/взрывы/UI… — карта событий в Config/sounds.yaml
+├── Music/                      # BGM (CC0, NES Shooter Music): menu/act1–3/boss (wav → ogg пайплайном)
 ├── TestFont.spritefont         # шрифт DejaVu Sans Mono: ASCII + Latin-1 + кириллица + тире/стрелки
 ├── Config/                     # YAML-конфиги (НЕ через MGCB): weapons.yaml, options.yaml
 ├── Levels/                     # бои: level1..5.yaml + m1_b*/m1_boss.yaml (НЕ через MGCB)
@@ -447,16 +448,27 @@ var pad = GamePad.GetState(PlayerIndex.One);
 
 ## 10. Аудио
 
-[AudioManager.cs](RiotGalaxy.Core/Managers/AudioManager.cs) (синглтон) загружает звуки в
-словарь и играет их по имени:
+Полностью **data-driven** (CC0-ассеты Kenney/OpenGameArt, источники — [AUDIO-CREDITS.md](RiotGalaxy.Content/AUDIO-CREDITS.md)).
 
-```csharp
-AudioManager.Instance.PlayEffect("fire1");   // громкость 0.1, как в оригинале
-```
+**SFX — звуковые события.** [AudioManager.cs](RiotGalaxy.Core/Managers/AudioManager.cs) (синглтон) играет
+*события* из [sounds.yaml](RiotGalaxy.Content/Config/sounds.yaml) ([SoundConfig](RiotGalaxy.Core/Utils/SoundConfig.cs)):
+`AudioManager.Instance.Play("explode.enemy")`. У события: `files` (варианты — случайный выбор),
+`volume` (множитель к общей громкости эффектов), `pitchVar` (случайный разброс тона — оживляет повторы),
+`minInterval` (троттлинг от спама). Неизвестное событие — тишина (игра работает и без файла/ассетов).
+Кто что играет: выстрелы — `Weapon.Fire` (`shot.<id оружия>`, враги/залпы босса — `shot.enemy`),
+взрывы — `Enemy.Die` (`explode.enemy|boss`), урон/щит — `PlayerShip`, нюк — `GameManager.KillAllEnemies`,
+подборы — `Bonus.Apply` (`bonus.pickup`/`star.pickup`), тревога босса — `BossAI` (`boss.warning`),
+UI — `Screen.UpdateListNav` (`ui.move/select/back`) и магазин (`ui.buy`/`ui.error`).
 
-Загрузка — в `GameManager.LoadContent`. `fire1` играет на выстреле игрока (оружие),
-`explode1` — при гибели врага. Громкость `EffectsVolume` берётся из `settings.yaml`
-(меню «Настройки», см. §14/§16). Музыки (BGM) в проекте нет.
+**Музыка (BGM)** — `MediaPlayer`/`Song` (луп; повторный запуск того же трека — no-op). Треки в
+`Content/Music/*` (wav → пайплайн сжимает в ogg). Меню — `music.menu` из sounds.yaml
+(включается в `ChangeGameState`); бой — трек биома (`biomes.yaml`, поле `music`; `ApplyBiome`
+запоминает → включается при входе в `Playing`, кроме возврата с паузы); прилёт босса —
+`PlayMusicKey("boss")` из BossAI; GameOver — стоп; Victory — стоп + джингл `jingle.win`.
+
+Громкости `EffectsVolume`/`MusicVolume` — `settings.yaml` (меню «Настройки», две строки с [-]/[+];
+старый формат файла без MusicVolume мигрирует на новые дефолты 0.8/0.6). Всё аудио в try/catch —
+на машинах без звука игра работает беззвучно.
 
 ---
 

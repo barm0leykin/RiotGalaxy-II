@@ -152,6 +152,7 @@ namespace RiotGalaxy.Core.GameObjects
             {
                 case "shield":
                     ActivateInvulnerability(s.Duration);
+                    Managers.AudioManager.Instance.Play("shield");
                     break;
                 case "nuke":
                     Managers.GameManager.Instance.KillAllEnemies();
@@ -306,6 +307,7 @@ namespace RiotGalaxy.Core.GameObjects
             // Наносим урон
             bool wasLow = Health <= MaxHealth * 0.3f;
             Health -= damage;
+            Managers.AudioManager.Instance.Play("player.hit");
 
             // Если еще живы, активируем временную неуязвимость (щит)
             if (IsAlive)
