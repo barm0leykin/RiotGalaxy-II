@@ -463,7 +463,8 @@ var pad = GamePad.GetState(PlayerIndex.One);
 `AudioManager.Instance.Play("explode.enemy")`. У события: `files` (варианты — случайный выбор),
 `volume` (множитель к общей громкости эффектов), `pitchVar` (случайный разброс тона — оживляет повторы),
 `minInterval` (троттлинг от спама). Неизвестное событие — тишина (игра работает и без файла/ассетов).
-Кто что играет: выстрелы — `Weapon.Fire` (`shot.<id оружия>`, враги/залпы босса — `shot.enemy`),
+Кто что играет: выстрелы — `Weapon.FireOnce` (`shot.<id оружия>`; звук на каждый «тик» стрельбы —
+очередь `burst` даёт звук на выстрел, одновременный веер `fanCount` — один звук; враги/залпы босса — `shot.enemy`),
 взрывы — `Enemy.Die` (`explode.enemy|boss`), урон/щит — `PlayerShip`, нюк — `GameManager.KillAllEnemies`,
 подборы — `Bonus.Apply` (`bonus.pickup`/`star.pickup`), тревога босса — `BossAI` (`boss.warning`),
 UI — `Screen.UpdateListNav` (`ui.move/select/back`) и магазин (`ui.buy`/`ui.error`).

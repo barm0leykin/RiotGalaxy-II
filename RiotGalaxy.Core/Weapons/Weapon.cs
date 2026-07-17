@@ -75,7 +75,6 @@ namespace RiotGalaxy.Core.Weapons
 
             _burstRemaining = Math.Max(1, Options.burst);
             _reloadTimer = Options.reloadSpeed / OwnerFireRateMult; // апгрейд/бафф темпа — короче перезарядка
-            AudioManager.Instance.Play(_owner is PlayerShip && Def != null ? "shot." + Def.Id : "shot.enemy");
 
             FireOnce();
             _burstRemaining--;
@@ -105,6 +104,10 @@ namespace RiotGalaxy.Core.Weapons
         /// <summary>Один «тик» стрельбы: веер (если задан) или одиночный снаряд (с разбросом).</summary>
         private void FireOnce()
         {
+            // Звук — на каждый «тик»: очередь (burst) даёт звук на выстрел, веер (одновременный
+            // залп в одном тике) — один звук на весь веер.
+            AudioManager.Instance.Play(_owner is PlayerShip && Def != null ? "shot." + Def.Id : "shot.enemy");
+
             if (Def != null && Def.FanCount > 1)
             {
                 int pellets = Def.FanCount + (Level - 1) * Def.FanPerLevel;
