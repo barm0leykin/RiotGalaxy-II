@@ -305,7 +305,11 @@
 - [x] **CI/CD-пайплайн** ([.github/workflows/build-release.yml](.github/workflows/build-release.yml)):
       по коммиту в master/тегу `v*` собирает Desktop (Linux/Windows, self-contained) и Android APK
       (в Docker-образе `Dockerfile.android` с кэшем слоёв) и выкладывает в GitHub Releases —
-      `nightly` (катящийся пререлиз) на master, стабильный релиз на тег. Desktop-сборка проверена локально.
+      `nightly` (катящийся пререлиз) на master, стабильный релиз на тег.
+      Десктоп-джоба на `ubuntu-22.04` настраивает **wine** (штатный `mgfxc_wine_setup.sh` MonoGame,
+      префикс `~/.winemonogame` кэшируется) — иначе mgcb не может скомпилировать HLSL-шейдер
+      `Bloom.fx` (`EffectsDesktop.mgcb`) и обе десктоп-сборки падают. Android-джобе wine не нужен
+      (Android не собирает `.fx`).
 - [ ] **Release-подпись APK** (сейчас debug-ключ; нужен keystore в секретах репозитория). Из [TODO.md](TODO.md).
 - [ ] (опц.) Кросс-сборка macOS desktop + проверка APK-сборки на первом прогоне CI.
 - [ ] **Android-логи в файл**, читаемые ассистентом (`adb logcat -s` / ветка `Android.Util.Log` в `Log`). Из [TODO.md](TODO.md).

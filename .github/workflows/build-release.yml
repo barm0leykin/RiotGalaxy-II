@@ -25,7 +25,9 @@ jobs:
   # поэтому ставим оба SDK (6 и 9). MGCB рендерит spritefont → нужны шрифты DejaVu.
   # ─────────────────────────────────────────────────────────────
   desktop:
-    runs-on: ubuntu-latest
+    # ubuntu-22.04 — стабильная упаковка wine (нужен для компиляции HLSL-шейдера Bloom.fx
+    # через mgfxc; на 24.04+ пакеты wine32/wine64 переходные и ломаются).
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -46,6 +48,29 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             fontconfig fonts-dejavu-core libfreetype6
           sudo fc-cache -f
+
+      # Bloom.fx (EffectsDesktop.mgcb) — HLSL-шейдер; mgfxc на Linux компилирует его через wine.
+      # Префикс ~/.winemonogame (.NET 6 + d3dcompiler_47) кэшируется между прогонами.
+      - name: Кэш wine-префикса (mgfxc)
+        uses: actions/cache@v4
+        with:
+          path: ~/.winemonogame
+          key: winemonogame-mgfxc-v3.8.1
+
+      - name: Wine для компилятора шейдеров (Bloom.fx)
+        env:
+          WINEDEBUG: -all
+          WINEDLLOVERRIDES: mscoree,mshtml=   # без установщиков mono/gecko (headless)
+        run: |
+          sudo dpkg --add-architecture i386
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends wine64 wine32 p7zip-full
+          if [ ! -f "$HOME/.winemonogame/system.reg" ]; then
+            curl -sSL -o /tmp/mgfxc_wine_setup.sh \
+              https://raw.githubusercontent.com/MonoGame/MonoGame/v3.8.1/Tools/MonoGame.Effect.Compiler/mgfxc_wine_setup.sh
+            bash /tmp/mgfxc_wine_setup.sh
+          fi
+          echo "MGFXC_WINE_PATH=$HOME/.winemonogame" >> "$GITHUB_ENV"
 
       - name: Restore tools (mgcb)
         run: dotnet tool restore
