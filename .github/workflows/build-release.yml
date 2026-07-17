@@ -25,9 +25,11 @@ jobs:
   # поэтому ставим оба SDK (6 и 9). MGCB рендерит spritefont → нужны шрифты DejaVu.
   # ─────────────────────────────────────────────────────────────
   desktop:
-    # ubuntu-22.04 — стабильная упаковка wine (нужен для компиляции HLSL-шейдера Bloom.fx
-    # через mgfxc; на 24.04+ пакеты wine32/wine64 переходные и ломаются).
-    runs-on: ubuntu-22.04
+    # Десктоп собирается В КОНТЕЙНЕРЕ (docker/Dockerfile.desktop) — как Android. Причина:
+    # HLSL-шейдер Bloom.fx компилируется mgfxc через wine, а настраивать wine на голом раннере
+    # хрупко (ломалось на bitness .NET и версиях wine-пакетов). В образе всё зафиксировано:
+    # .NET SDK 6 + шрифты + WineHQ + готовый префикс с 64-битным .NET. Образ кэшируется (GHA).
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
@@ -35,63 +37,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup .NET (6 + 9)
-        uses: actions/setup-dotnet@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Собрать сборочный образ Desktop
+        uses: docker/build-push-action@v6
         with:
-          dotnet-version: |
-            6.0.x
-            9.0.x
+          context: .
+          file: docker/Dockerfile.desktop
+          tags: riotgalaxy-desktop-build:ci
+          load: true
+          cache-from: type=gha,scope=desktop
+          cache-to: type=gha,mode=max,scope=desktop
 
-      - name: Зависимости MGCB (шрифты/freetype для spritefont)
+      - name: Publish (${{ matrix.rid }}) в контейнере
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            fontconfig fonts-dejavu-core libfreetype6
-          sudo fc-cache -f
-
-      # Bloom.fx (EffectsDesktop.mgcb) — HLSL-шейдер; mgfxc на Linux компилирует его через wine.
-      # Префикс ~/.winemonogame (.NET 6 + d3dcompiler_47) кэшируется между прогонами.
-      - name: Кэш wine-префикса (mgfxc)
-        uses: actions/cache@v4
-        with:
-          path: ~/.winemonogame
-          key: winemonogame-mgfxc-v3.8.1
-
-      - name: Wine для компилятора шейдеров (Bloom.fx)
-        env:
-          WINEDEBUG: -all
-          WINEDLLOVERRIDES: mscoree,mshtml=   # без установщиков mono/gecko (headless)
-        run: |
-          set -e
-          # WineHQ stable — как в локальной среде разработки (Ubuntu-пакет wine 6.0.3
-          # слишком старый для .NET 6, который mgfxc гоняет под wine).
-          sudo dpkg --add-architecture i386
-          sudo mkdir -pm755 /etc/apt/keyrings
-          sudo wget -qO /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key
-          sudo wget -qNP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/winehq-jammy.sources
-          sudo apt-get update
-          sudo apt-get install -y --install-recommends winehq-stable
-          sudo apt-get install -y --no-install-recommends p7zip-full
-          # WineHQ 9+ не ставит бинарь wine64, а и setup-скрипт, и mgfxc зовут именно его
-          # (из PATH) — обёртка перенаправляет на унифицированный wine.
-          sudo ln -sf /usr/bin/wine /usr/local/bin/wine64
-          # Префикс с .NET 6 + d3dcompiler_47 (штатный скрипт MonoGame); при кэш-хите — пропускаем.
-          if [ ! -f "$HOME/.winemonogame/drive_c/windows/system32/dotnet.exe" ]; then
-            curl -sSL -o /tmp/mgfxc_wine_setup.sh \
-              https://raw.githubusercontent.com/MonoGame/MonoGame/v3.8.1/Tools/MonoGame.Effect.Compiler/mgfxc_wine_setup.sh
-            bash /tmp/mgfxc_wine_setup.sh
-          fi
-          echo "MGFXC_WINE_PATH=$HOME/.winemonogame" >> "$GITHUB_ENV"
-
-      - name: Restore tools (mgcb)
-        run: dotnet tool restore
-
-      - name: Publish (${{ matrix.rid }})
-        run: |
-          dotnet publish RiotGalaxy.DesktopGL/RiotGalaxy.DesktopGL.csproj \
-            -c Release -r ${{ matrix.rid }} --self-contained true \
-            -p:PublishReadyToRun=false \
-            -o publish/${{ matrix.rid }}
+          docker run --rm -v "$PWD:/src" -w /src riotgalaxy-desktop-build:ci bash -c '
+            set -e
+            mkdir -p "$XDG_RUNTIME_DIR"
+            dotnet tool restore
+            dotnet publish RiotGalaxy.DesktopGL/RiotGalaxy.DesktopGL.csproj \
+              -c Release -r ${{ matrix.rid }} --self-contained true \
+              -p:PublishReadyToRun=false -o publish/${{ matrix.rid }}
+          '
 
       - name: Упаковать в zip
         run: |

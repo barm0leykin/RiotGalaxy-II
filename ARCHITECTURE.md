@@ -680,7 +680,9 @@ glow-заголовки (`GlowTextCentered`), двухколоночные ст�
 сцена рендерится в `_sceneRT`, затем extract ярких зон (порог) → гаусс H/V в половинном разрешении
 (`_bloomA/_bloomB`) → композиция в back buffer (сцена + аддитивно свечение). Параметры — в
 `options.yaml` секция `bloom` (`enabled/threshold/intensity/blurAmount`, читаются в `Utils.GameOptions`),
-меняются без пересборки. На Linux компиляция HLSL требует wine — он уже настроен (`~/.winemonogame`).
+меняются без пересборки. На Linux компиляция HLSL (`Bloom.fx`) требует wine — локально настроен
+(`~/.winemonogame`), в CI/релизе десктоп собирается в Docker ([Dockerfile.desktop](docker/Dockerfile.desktop),
+готовый wine-префикс с 64-битным .NET — 32-битный падает под wine с `c0000135`).
 
 ## 15. Уровни и прогрессия
 

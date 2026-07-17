@@ -1,0 +1,50 @@
+# Сборочное окружение для ДЕСКТОП-сборки RiotGalaxy (DesktopGL, self-contained Linux/Windows).
+# По той же политике, что и Android: всё ставится ВНУТРЬ образа — сборка не зависит от
+# системы хоста/CI-раннера. Причина появления: HLSL-шейдер Bloom.fx (EffectsDesktop.mgcb)
+# компилируется mgfxc через wine, а настраивать wine на голом раннере оказалось хрупко.
+#
+# Состав: .NET 6 SDK (все проекты — net6.0; mgcb-tool тоже net6.0), шрифты DejaVu (MGCB рендерит
+# spritefont), WineHQ stable + 32-бит и готовый wine-префикс с .NET 6 + d3dcompiler_47 (mgfxc).
+#
+# Сборка образа:   docker build -f docker/Dockerfile.desktop -t riotgalaxy-desktop-build .
+# Запуск (см. docker/build-desktop.sh): монтируем исходники в /src.
+FROM mcr.microsoft.com/dotnet/sdk:6.0-jammy
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# --- шрифты для spritefont (MGCB) + утилиты (zip — упаковка артефакта, p7zip — нужен wine-setup) ---
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        fontconfig fonts-dejavu-core libfreetype6 \
+        p7zip-full wget curl ca-certificates zip \
+    && fc-cache -f \
+    && rm -rf /var/lib/apt/lists/*
+
+# --- WineHQ stable + 32-бит (mgfxc гоняет 32-битный .NET-хост под wine) ---
+RUN dpkg --add-architecture i386 \
+    && mkdir -pm755 /etc/apt/keyrings \
+    && wget -qO /etc/apt/keyrings/winehq-archive.key https://dl.winehq.org/wine-builds/winehq.key \
+    && wget -qNP /etc/apt/sources.list.d/ https://dl.winehq.org/wine-builds/ubuntu/dists/jammy/winehq-jammy.sources \
+    && apt-get update \
+    && apt-get install -y --install-recommends winehq-stable \
+    && rm -rf /var/lib/apt/lists/* \
+    # WineHQ 9+ не кладёт бинарь wine64, а его зовут и setup-скрипт, и mgfxc — обёртка → wine
+    && ln -sf /usr/bin/wine /usr/local/bin/wine64
+
+# --- wine-префикс с .NET + d3dcompiler_47 (штатный скрипт MonoGame) ---
+# ВАЖНО: берём master-версию скрипта — она кладёт 64-битный .NET (x64). Версия v3.8.1
+# ставит 32-битный .NET 6 (win-x86), который под wine падает с c0000135 (STATUS_DLL_NOT_FOUND).
+# mgfxc (net6.0) имеет rollForward:Major и прекрасно исполняется на 64-битном .NET 8.
+ENV WINEDEBUG=-all \
+    WINEDLLOVERRIDES="mscoree,mshtml="
+# Печём префикс в /opt (HOME=/opt → /opt/.winemonogame) и открываем права — чтобы контейнер
+# работал и под root (CI), и под --user (локальный build-desktop.sh, как у Android).
+RUN curl -sSL -o /tmp/mgfxc_wine_setup.sh \
+        https://raw.githubusercontent.com/MonoGame/MonoGame/master/Tools/MonoGame.Effect.Compiler/mgfxc_wine_setup.sh \
+    && HOME=/opt bash /tmp/mgfxc_wine_setup.sh \
+    && rm -f /tmp/mgfxc_wine_setup.sh \
+    && chmod -R 0777 /opt/.winemonogame
+ENV MGFXC_WINE_PATH=/opt/.winemonogame \
+    XDG_RUNTIME_DIR=/tmp/xdg
+
+WORKDIR /src
