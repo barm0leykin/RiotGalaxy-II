@@ -305,7 +305,15 @@
 - [x] **CI/CD-пайплайн** ([.github/workflows/build-release.yml](.github/workflows/build-release.yml)):
       по коммиту в master/тегу `v*` собирает Desktop (Linux/Windows, self-contained) и Android APK
       (в Docker-образе `Dockerfile.android` с кэшем слоёв) и выкладывает в GitHub Releases —
-      `nightly` (катящийся пререлиз) на master, стабильный релиз на тег. Desktop-сборка проверена локально.
+      `nightly` (катящийся пререлиз) на master, стабильный релиз на тег.
+      **Обе сборки — в Docker** (как того требует PRD для Android; десктоп добавлен туда же, чтобы не
+      зависеть от системы раннера): десктоп — [Dockerfile.desktop](docker/Dockerfile.desktop)
+      (.NET 6 SDK + шрифты + WineHQ + готовый wine-префикс с **64-битным** .NET для компиляции
+      HLSL-шейдера `Bloom.fx` через mgfxc), Android — [Dockerfile.android](docker/Dockerfile.android).
+      Локальные хелперы: [build-desktop.sh](docker/build-desktop.sh) / [build-apk.sh](docker/build-apk.sh).
+      *Грабли:* штатный `mgfxc_wine_setup.sh` версии `v3.8.1` кладёт **32-битный** .NET 6, который под wine
+      падает с `c0000135`; берём `master`-версию скрипта (64-битный .NET 8), а mgfxc (net6, `rollForward:Major`)
+      на нём исполняется. Android `.fx` не собирает — wine ему не нужен.
 - [ ] **Release-подпись APK** (сейчас debug-ключ; нужен keystore в секретах репозитория). Из [TODO.md](TODO.md).
 - [ ] (опц.) Кросс-сборка macOS desktop + проверка APK-сборки на первом прогоне CI.
 - [ ] **Android-логи в файл**, читаемые ассистентом (`adb logcat -s` / ветка `Android.Util.Log` в `Log`). Из [TODO.md](TODO.md).

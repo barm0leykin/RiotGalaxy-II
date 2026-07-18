@@ -25,6 +25,10 @@ jobs:
   # поэтому ставим оба SDK (6 и 9). MGCB рендерит spritefont → нужны шрифты DejaVu.
   # ─────────────────────────────────────────────────────────────
   desktop:
+    # Десктоп собирается В КОНТЕЙНЕРЕ (docker/Dockerfile.desktop) — как Android. Причина:
+    # HLSL-шейдер Bloom.fx компилируется mgfxc через wine, а настраивать wine на голом раннере
+    # хрупко (ломалось на bitness .NET и версиях wine-пакетов). В образе всё зафиксировано:
+    # .NET SDK 6 + шрифты + WineHQ + готовый префикс с 64-битным .NET. Образ кэшируется (GHA).
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -33,29 +37,28 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup .NET (6 + 9)
-        uses: actions/setup-dotnet@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Собрать сборочный образ Desktop
+        uses: docker/build-push-action@v6
         with:
-          dotnet-version: |
-            6.0.x
-            9.0.x
+          context: .
+          file: docker/Dockerfile.desktop
+          tags: riotgalaxy-desktop-build:ci
+          load: true
+          cache-from: type=gha,scope=desktop
+          cache-to: type=gha,mode=max,scope=desktop
 
-      - name: Зависимости MGCB (шрифты/freetype для spritefont)
+      - name: Publish (${{ matrix.rid }}) в контейнере
         run: |
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends \
-            fontconfig fonts-dejavu-core libfreetype6
-          sudo fc-cache -f
-
-      - name: Restore tools (mgcb)
-        run: dotnet tool restore
-
-      - name: Publish (${{ matrix.rid }})
-        run: |
-          dotnet publish RiotGalaxy.DesktopGL/RiotGalaxy.DesktopGL.csproj \
-            -c Release -r ${{ matrix.rid }} --self-contained true \
-            -p:PublishReadyToRun=false \
-            -o publish/${{ matrix.rid }}
+          docker run --rm -v "$PWD:/src" -w /src riotgalaxy-desktop-build:ci bash -c '
+            set -e
+            mkdir -p "$XDG_RUNTIME_DIR"
+            dotnet tool restore
+            dotnet publish RiotGalaxy.DesktopGL/RiotGalaxy.DesktopGL.csproj \
+              -c Release -r ${{ matrix.rid }} --self-contained true \
+              -p:PublishReadyToRun=false -o publish/${{ matrix.rid }}
+          '
 
       - name: Упаковать в zip
         run: |
