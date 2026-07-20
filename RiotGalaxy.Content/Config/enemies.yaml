@@ -87,8 +87,8 @@ boss:
   speed: 50
   shootInterval: 1.2
   tactics: []
-  sprite: Images/Enemies/fat_purple_1   # крупный «толстый» фиолетовый — отличает босса визуально
-  scale: 2.5
+  sprite: Images/Bosses/boss_blue       # уникальный спрайт-босс (скат-«манта» с глазом), Акт I
+  scale: 1.6
   ai: boss            # фазы по HP + телеграф атак (BossAI); движение/огонь ведёт сам
   shoot: aim
   dirMin: 135
@@ -147,8 +147,8 @@ ukroboss:
   speed: 45
   shootInterval: 1.0
   tactics: []
-  sprite: Images/Enemies/fat_orange_6
-  scale: 2.6
+  sprite: Images/Bosses/boss_red        # красный краб — финал Акта II (война укропитеков)
+  scale: 1.7
   ai: boss            # фазовый босс (BossAI)
   shoot: aim
   dirMin: 135
@@ -191,8 +191,8 @@ trapp:
   speed: 45
   shootInterval: 1.0
   tactics: []
-  sprite: Images/Enemies/fat_blue_6
-  scale: 2.7
+  sprite: Images/Bosses/boss_gold       # золотой «диджей» — флагман DJ Trapp «Трапизон»
+  scale: 1.8
   ai: boss
   shoot: aim
   dirMin: 135
@@ -205,8 +205,8 @@ reaper:
   speed: 45
   shootInterval: 0.9
   tactics: []
-  sprite: Images/Enemies/fat_purple_6
-  scale: 2.9
+  sprite: Images/Bosses/boss_grey       # серый паук с красным глазом — бризанский «Жнец из тени»
+  scale: 1.9
   ai: boss
   shoot: aim
   dirMin: 135
@@ -219,8 +219,8 @@ overmind:
   speed: 40
   shootInterval: 0.8
   tactics: []
-  sprite: Images/Enemies/thin_pink_6
-  scale: 3.0
+  sprite: Images/Bosses/boss_purple     # фиолетовый глаз-псионик — Сверхразум J-D-bI (финал)
+  scale: 2.0
   ai: boss
   shoot: aim
   dirMin: 135
