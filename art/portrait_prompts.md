@@ -73,10 +73,11 @@
 > viewer. Square 1:1, flat purple solid background, no text, no logos. plain solid background. resolution 1024x1024. same art style as previous
 
 ### portrait_gaechka — Бригадир Гаечка
-> Flat-shaded cartoon vector portrait of a gruff asteroid-mining foreman, heavy stubble, tired
+> Flat-shaded cartoon vector portrait of a gruff asteroid-mining women, tired
 > squint, smudges of dirt, a bright yellow hard hat with a headlamp. Working-class space miner.
 > Bold clean outlines, soft cel shading, bust centered, facing viewer. Square 1:1, flat industrial-
-> yellow solid background, no text, no logos. plain solid background. resolution 1024x1024. same art style as previous
+> yellow solid background, no text, no logos. тёмно-кирпичный фон. resolution 1024x1024. same art style as previous
+женщина 30 лет, рыжая, жёлтая роба, тёмно-кирпичный фон
 
 ### portrait_ognev — Брандмайор Огнев
 > Flat-shaded cartoon vector portrait of a bombastic space fire-brigade chief with a big bushy
@@ -89,6 +90,12 @@
 > a round reflective head-mirror on the forehead, white medical coat collar, weary polite smile.
 > Bold clean outlines, soft cel shading, bust centered, facing viewer. Square 1:1, flat teal solid
 > background, no text, no logos. plain solid background. resolution 1024x1024. same art style as previous
+ 
+ Плоский мультяшный векторный портрет измученного, перегруженного работой главного космического врача, с седыми волосами,
+ на колове hi-tech футуристичный стетоскоп, за спеной мехадендрит, белый медицинский воротник, усталая вежливая улыбка.
+ Четкие четкие контуры, мягкая штриховка, по центру груди, лицом к зрителю. Квадратный 1:1, плоский, бирюзовый, сплошной
+ фона, без текста, без логотипов. простой сплошной фон. разрешение 1024х1024. тот же художественный стиль, что и предыдущий
+
 
 ### portrait_podorozhnik — ИИ-Подорожник
 > Flat-shaded cartoon vector portrait of a goofy medical assistant robot: a rounded screen-face

@@ -1,0 +1,34 @@
+{
+  // Не ходить по симлинкам при поиске (частая причина зацикливания rg)
+  "search.followSymlinks": false,
+  "search.useIgnoreFiles": true,
+
+  // Исключить тяжёлые/сгенерированные папки из полнотекстового поиска
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true,
+    "**/docker": true,
+    "**/publish": true,
+    "**/dist": true,
+    "**/node_modules": true,
+    "**/.git": true,
+    "**/*.i64": true
+  },
+
+  // Не следить файловым вотчером за этими путями (снижает фоновый CPU)
+  "files.watcherExclude": {
+    "**/bin/**": true,
+    "**/obj/**": true,
+    "**/docker/**": true,
+    "**/publish/**": true,
+    "**/dist/**": true,
+    "**/node_modules/**": true,
+    "**/.git/objects/**": true
+  },
+
+  // Скрыть сгенерированное из дерева файлов (необязательно, но чище)
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  }
+}
