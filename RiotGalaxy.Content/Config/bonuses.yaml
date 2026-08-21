@@ -23,3 +23,15 @@ maxStarsPerKill: 30
 
 # Сколько секунд после зачистки уровня дать на сбор оставшихся звёзд перед переходом.
 levelClearCollectSeconds: 2.5
+
+# Комбо-множитель ОЧКОВ (кредиты не трогает): серия убийств поднимает множитель, пауза дольше
+# window или полученный урон (resetOnDamage) сбрасывают серию. tiers — порог серии → множитель,
+# перечислять по возрастанию kills.
+combo:
+  window: 3.5
+  resetOnDamage: true
+  tiers:
+    - { kills: 5,  mult: 2 }
+    - { kills: 12, mult: 3 }
+    - { kills: 22, mult: 4 }
+    - { kills: 35, mult: 5 }

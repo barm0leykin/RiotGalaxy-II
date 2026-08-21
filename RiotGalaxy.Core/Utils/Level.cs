@@ -31,6 +31,7 @@ namespace RiotGalaxy.Core.Utils
             public string After;    // поведение после маршрута: formation/scatter/bounce
             public string Drop;     // бонус при смерти (hp/power/rapid/speed/nuke/bulletup); null — только звёзды
             public int DropChance;  // % шанс дропа (100 — гарантированно)
+            public bool Elite;      // элитная версия врага (см. секцию elite в enemies.yaml)
         }
 
         private enum ActionKind { Spawn, SetInterval, Wait, Parallel }
@@ -44,6 +45,7 @@ namespace RiotGalaxy.Core.Utils
             public string After;
             public string Drop;
             public int DropChance;
+            public bool Elite;
             public float Value;                 // интервал или пауза
             public List<List<Action>> Groups;   // для Parallel: группы под-таймлайнов
         }
@@ -138,7 +140,7 @@ namespace RiotGalaxy.Core.Utils
                     int dropChance = ev.DropChance ?? 100; // drop задан без шанса → гарантированно
                     for (int i = 0; i < count; i++)
                         list.Add(new Action { Kind = ActionKind.Spawn, Enemy = type, Formation = ev.Formation, Route = ev.Route, After = ev.After,
-                                              Drop = ev.Drop, DropChance = dropChance });
+                                              Drop = ev.Drop, DropChance = dropChance, Elite = ev.Elite });
                     total += count;
                 }
                 else if (ev.Interval.HasValue)
@@ -212,7 +214,7 @@ namespace RiotGalaxy.Core.Utils
                     t.Timer += a.Value;
                     break;
                 case ActionKind.Spawn:
-                    output.Add(new SpawnInfo { Type = a.Enemy, Formation = a.Formation, Route = a.Route, After = a.After, Drop = a.Drop, DropChance = a.DropChance });
+                    output.Add(new SpawnInfo { Type = a.Enemy, Formation = a.Formation, Route = a.Route, After = a.After, Drop = a.Drop, DropChance = a.DropChance, Elite = a.Elite });
                     t.Timer += t.Interval;
                     break;
             }
@@ -248,6 +250,7 @@ namespace RiotGalaxy.Core.Utils
             public string After { get; set; }
             public string Drop { get; set; }        // бонус при смерти: hp/power/rapid/speed/nuke/bulletup
             public int? DropChance { get; set; }     // % шанс (нет → 100, если drop задан)
+            public bool Elite { get; set; }          // элитная версия врага (enemies.yaml → elite)
             public float? Interval { get; set; }
             public float? Wait { get; set; }
             public List<List<EventYaml>> Parallel { get; set; } // параллельные группы

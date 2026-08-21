@@ -82,6 +82,7 @@ hud.weapon: "Weapon: {0} (lv. {1})"
 hud.credits: "Credits: {0}"
 hud.buff: "{0} {1}s"
 hud.actmission: "Act {0} · Mission {1}/{2}: {3}"
+hud.combo: "Combo ×{0}"
 
 # Short buff labels (HUD)
 buff.power: "Dmg+"
@@ -92,6 +93,7 @@ buff.speed: "Speed+"
 dialogue.hint: "{0}/{1}  ·  tap / space — next · Esc — skip"
 
 # Battle messages (MessageLog)
+combo.up: "Combo ×{0}! Score multiplier is on"
 battle.cleared_collect: "Zone cleared! Grab the stars…"
 battle.cleared_bonus: "Zone cleared: +{0}"
 bonus.hp_gain: "+{0} HP"

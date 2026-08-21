@@ -33,6 +33,9 @@ namespace RiotGalaxy.Core.GameObjects
         /// <summary>Шанс дропа DropBonus, % (100 — гарантированно).</summary>
         public int DropChance { get; set; } = 100;
 
+        /// <summary>Элитная версия: те же повадки, но живучее/больнее/дороже, со свечением.</summary>
+        public bool IsElite { get; private set; }
+
         /// <summary>Является ли враг боссом (фазовый ИИ, HP-шкала, реплики, усиленный взрыв).</summary>
         public bool IsBossType => Type == EnemyType.BOSS || Type == EnemyType.UKRO_BOSS
                                || Type == EnemyType.TRAPP || Type == EnemyType.REAPER || Type == EnemyType.OVERMIND;
@@ -231,6 +234,31 @@ namespace RiotGalaxy.Core.GameObjects
             _actionTime = (float)Rnd.NextDouble() * (ShootInterval > 0 ? ShootInterval : 1f); // разнобой старта
         }
 
+        /// <summary>
+        /// Сделать врага элитным (флаг `elite: true` у события спавна в YAML боя): множители
+        /// HP/урона/награды, размер и оттенок — из секции `elite` в enemies.yaml. Скорость не
+        /// трогаем: компоненты движения уже созданы с текущей, а строй должен идти ровно.
+        /// Боссы элитными не становятся — у них своя шкала и фазы.
+        /// </summary>
+        public void MakeElite()
+        {
+            if (IsElite || IsBossType)
+                return;
+
+            var e = Utils.EnemyConfig.Elite;
+            IsElite = true;
+            MaxHp = Hp = Math.Max(1, (int)Math.Round(Hp * e.HpMult));
+            Damage = Math.Max(1, (int)Math.Round(Damage * e.DamageMult));
+            Reward = Math.Max(1, (int)Math.Round(Reward * e.RewardMult));
+            Tint = e.TintColor;
+
+            if (e.Scale > 0f && Math.Abs(e.Scale - 1f) > 0.001f)
+            {
+                Scale *= e.Scale;
+                Size *= e.Scale; // хитбокс — вслед за спрайтом
+            }
+        }
+
         /// <summary>Стартовый курс при движении с отскоком: случайный из [dirMin..dirMax] градусов.</summary>
         private void PickWanderDirection()
         {
@@ -297,6 +325,9 @@ namespace RiotGalaxy.Core.GameObjects
         /// </summary>
         public override void Draw(GameTime gameTime, SpriteBatch spriteBatch)
         {
+            if (IsElite && IsAlive && IsVisible)
+                DrawEliteAura(gameTime, spriteBatch);
+
             if (_hitFlash > 0f && Texture != null && IsAlive)
             {
                 float k = _hitFlash / Utils.EffectsConfig.HitFlashTime; // 1 → 0
@@ -319,6 +350,22 @@ namespace RiotGalaxy.Core.GameObjects
             }
 
             base.Draw(gameTime, spriteBatch);
+        }
+
+        /// <summary>Пульсирующий ореол под спрайтом элиты — чтобы её было видно в толпе.</summary>
+        private void DrawEliteAura(GameTime gameTime, SpriteBatch spriteBatch)
+        {
+            var e = Utils.EnemyConfig.Elite;
+            var glow = GameManager.Instance.GlowTexture;
+            if (glow == null || e.AuraStrength <= 0f)
+                return;
+
+            float t = (float)gameTime.TotalGameTime.TotalSeconds;
+            float pulse = 0.75f + 0.25f * (float)Math.Sin(t * e.AuraPulse);
+            float size = (Size.X > 0 ? Size.X : 45f) * 2.1f / glow.Width;
+            var origin = new Vector2(glow.Width / 2f, glow.Height / 2f);
+            spriteBatch.Draw(glow, Position, null, Tint * (e.AuraStrength * pulse), 0f, origin,
+                             size * pulse, SpriteEffects.None, 0f);
         }
 
         /// <summary>

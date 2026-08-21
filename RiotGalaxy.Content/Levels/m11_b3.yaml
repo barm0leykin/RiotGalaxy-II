@@ -10,3 +10,4 @@ events:
   - { wait: 1 }
   - { enemy: kamik, count: 5 }
   - { enemy: korma, count: 1, drop: power }
+  - { enemy: korma, count: 1, elite: true, drop: hp }

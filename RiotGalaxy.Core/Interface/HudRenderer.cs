@@ -56,10 +56,40 @@ namespace RiotGalaxy.Core.Interface
             }
 
             // ── Справа: очки и кредиты (выровнены по правому краю) ───────────
+            int line = (int)(font.LineSpacing * Big) + 4;
             DrawTextRight(spriteBatch, font, Utils.Loc.F("hud.score", player.Score), screenWidth, Margin, Color.White, Big);
             DrawTextRight(spriteBatch, font, Utils.Loc.F("hud.credits", player.Currency),
-                screenWidth, Margin + (int)(font.LineSpacing * Big) + 4, Color.Gold, Big);
+                screenWidth, Margin + line, Color.Gold, Big);
+
+            DrawCombo(spriteBatch, font, pixel, screenWidth, Margin + line * 2);
         }
+
+        /// <summary>
+        /// Комбо-множитель очков (Managers.Combo) под кредитами: «×N» и тонкая полоска остатка
+        /// окна серии — видно, сколько ещё есть времени на следующее убийство. При множителе 1
+        /// ничего не рисуем, чтобы не засорять HUD.
+        /// </summary>
+        private static void DrawCombo(SpriteBatch sb, SpriteFont font, Texture2D pixel, int screenWidth, int y)
+        {
+            int mult = Managers.Combo.Multiplier;
+            if (mult <= 1) return;
+
+            var color = ComboColors[System.Math.Min(mult - 2, ComboColors.Length - 1)];
+            string text = Utils.Loc.F("hud.combo", mult);
+            DrawTextRight(sb, font, text, screenWidth, y, color, Big);
+
+            if (pixel == null) return;
+            const int barW = 140, barH = 5;
+            var bar = new Rectangle(screenWidth - barW - Margin, y + (int)(font.LineSpacing * Big) + 2, barW, barH);
+            sb.Draw(pixel, bar, new Color(20, 20, 28, 200));
+            sb.Draw(pixel, new Rectangle(bar.X, bar.Y, (int)(barW * Managers.Combo.Fraction), barH), color);
+        }
+
+        // Цвет множителя по ступени: чем выше комбо, тем горячее.
+        private static readonly Color[] ComboColors =
+        {
+            new Color(255, 210, 110), new Color(255, 170, 60), new Color(255, 120, 50), new Color(255, 70, 70),
+        };
 
         // Цвета заливки шкалы по номеру фазы (дальше последнего — самый тревожный).
         private static readonly Color[] PhaseColors =

@@ -10,3 +10,5 @@ events:
       - - { enemy: kamik, count: 5, route: loop-right, after: scatter }
   - { enemy: heavy, count: 5, formation: true }
   - { enemy: briz, count: 4 }
+  - { enemy: heavy, count: 1, elite: true, drop: hp }
+  - { enemy: briz, count: 1, elite: true, drop: nuke }

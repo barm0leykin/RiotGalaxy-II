@@ -8,3 +8,4 @@ events:
   - { enemy: briz, count: 8 }
   - { enemy: briz, count: 1, drop: speed }
   - { enemy: kamik, count: 4 }
+  - { enemy: briz, count: 2, elite: true }

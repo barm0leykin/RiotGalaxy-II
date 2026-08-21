@@ -599,6 +599,7 @@ namespace RiotGalaxy.Core.Managers
             _levels.Update(deltaTime);
             MessageLog.Update(deltaTime);
             Barks.Update(deltaTime);
+            Combo.Update(deltaTime);
             ProcessGameObjects(gameTime);
 
             // Зачистка боя и переход к следующему шагу миссии — ведёт CampaignFlow.
@@ -847,18 +848,20 @@ namespace RiotGalaxy.Core.Managers
             // Для врагов выполняем дополнительные действия (аналог GamePlay.cs)
             if (obj is Enemy enemy)
             {
-                // Визуальный взрыв + тряска экрана (босс — заметно мощнее). Параметры — из effects.yaml.
+                // Визуальный взрыв + тряска экрана (босс — заметно мощнее, элита — посередине).
+                // Параметры — из effects.yaml, множитель элиты — из enemies.yaml.
                 bool isBoss = enemy.IsBossType;
-                Particles.Explosion(obj.Position, enemy.ExplosionColor,
-                    isBoss ? Utils.EffectsConfig.BossExplosion : Utils.EffectsConfig.EnemyExplosion);
+                Particles.Explosion(obj.Position, enemy.ExplosionColor, EnemyExplosionBurst(enemy, isBoss));
                 var deathShake = isBoss ? Utils.EffectsConfig.BossDeathShake : Utils.EffectsConfig.EnemyDeathShake;
                 Shake(deathShake.Magnitude, deathShake.Duration);
 
                 if (isBoss) ShowBossTaunt("defeat"); // предсмертная реплика босса
 
-                // Очки за убийство (идут в рекорд). Кредиты игрок получит, собрав звезду.
+                // Очки за убийство (идут в рекорд) с комбо-множителем серии.
+                // Кредиты игрок получит, собрав звезду, — на них множитель не действует.
+                int mult = Combo.RegisterKill();
                 if (Player != null)
-                    Player.Score += enemy.Reward;
+                    Player.Score += enemy.Reward * mult;
 
                 if (!isBoss) Barks.RegisterKill(); // килстрик — только по рядовым врагам
 
@@ -872,6 +875,22 @@ namespace RiotGalaxy.Core.Managers
 
             // Выполняем базовое удаление объекта
             obj.IsAlive = false; // Помечаем объект как мертвый
+        }
+
+        /// <summary>Всплеск частиц на гибель врага: босс → свой, элита → обычный с множителем.</summary>
+        private static Utils.EffectsConfig.Burst EnemyExplosionBurst(Enemy enemy, bool isBoss)
+        {
+            if (isBoss)
+                return Utils.EffectsConfig.BossExplosion;
+
+            var burst = Utils.EffectsConfig.EnemyExplosion;
+            if (!enemy.IsElite)
+                return burst;
+
+            float k = Utils.EnemyConfig.Elite.ExplosionMult;
+            burst.Count = (int)(burst.Count * k);
+            burst.Size *= 1f + (k - 1f) * 0.4f;
+            return burst;
         }
 
         // Спавн бонусов при смерти врага вынесен в BonusSpawner (звёзды + авторские дропы).

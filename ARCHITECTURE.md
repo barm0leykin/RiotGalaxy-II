@@ -524,6 +524,13 @@ UKRO..UKRO_BOSS — укропитеки Акта II, KORMA/BRIZ + боссы TR
   `ShootSafe` временно глушит стрельбу (им управляют состояния ИИ).
 - Гибель: `TakeDamage`→`Die` (звук `explode1`), уменьшает `EnemiesRemaining`, роняет бонус,
   начисляет игроку валюту `Reward` (поле `reward` в enemies.yaml).
+- **Элита** — модификатор поверх любого рядового типа: в YAML боя у события спавна ставится
+  `elite: true` (`Level.SpawnInfo.Elite` → `LevelDirector.SpawnEnemy` → `Enemy.MakeElite`).
+  Множители HP/урона/награды, масштаб, оттенок спрайта и параметры ореола — секция `elite`
+  в enemies.yaml (`EnemyConfig.Elite`). Элита рисует под собой пульсирующий ореол
+  (`Enemy.DrawEliteAura`, radial `GlowTexture`) и взрывается ярче (`explosionMult`).
+  Боссы элитными не становятся (`MakeElite` их игнорирует). Скорость намеренно не меняется —
+  компоненты движения создаются в конструкторе, а строй должен идти ровно.
 
 **ИИ — машина состояний** ([AI/](RiotGalaxy.Core/AI/), порт `BehAI`/`AIState` из CocoSharp).
 У врага есть опциональный `Ai` ([EnemyAI](RiotGalaxy.Core/AI/EnemyAI.cs)) — контроллер с
@@ -616,6 +623,15 @@ BossAI сам ведёт движение (`Movement=null`) и огонь (`Shoo
 идут в рекорд (`SaveData.HighScore`), не тратятся. **Кредиты** (`Currency`) — мета-валюта магазина:
 их даёт **сбор звёзд** (+ бонус за уровень), банкуются в `SaveData.Currency`. Пропустил звезду —
 потерял кредиты, очки за кил остаются. Апгрейд «Магнит» напрямую повышает сбор кредитов.
+
+**Комбо-множитель очков** — [Combo.cs](RiotGalaxy.Core/Managers/Combo.cs) (статический, как `Barks`):
+серия убийств поднимает множитель, на который умножаются **очки** (кредиты и звёзды не трогает).
+Серия живёт, пока между убийствами меньше `window` секунд, и обрывается уроном по игроку
+(`resetOnDamage`). Пороги и множители — секция `combo` в bonuses.yaml (`BonusConfig.ComboDef`).
+Точки вызова: `GameManager.ProcessObjectRemoval` (`RegisterKill`, результат умножает `enemy.Reward`),
+`PlayerShip.TakeDamage` (`OnPlayerDamaged`), `UpdateGameplay` (`Update`), `CampaignFlow.EnterBattle`
+(`Reset` — серия не переносится между боями). Показ — `HudRenderer.DrawCombo`: «×N» под кредитами
+с полоской остатка окна; при переходе на новый порог — сообщение в `MessageLog` (`combo.up`).
 
 **Временные баффы (этап 3).** Подборы `POWER`/`RAPID`/`SPEED` (`BonusType`) дают временный эффект:
 `Apply` → `PlayerShip.ApplyBuff(id)`, бафф тикает по времени (`TickBuffs`), показан в HUD. Множители
@@ -736,6 +752,7 @@ events:
   - { wait: 2 }                          # пауза
   - { enemy: green, count: 8, formation: true }  # спавн в формацию (улей)
   - { enemy: blue, count: 3, route: zmeyka1-left, after: formation } # вход по маршруту; after: bounce/scatter/formation
+  - { enemy: heavy, count: 1, elite: true }      # элита: ×HP/урон/награда + свечение (enemies.yaml → elite)
   - { enemy: boss, count: 1 }            # босс
   - parallel:                            # синхронные волны: группы спавнятся одновременно,
       - - { enemy: blue, count: 3, route: zmeyka1-left }   # основной таймлайн ждёт их завершения
@@ -750,8 +767,8 @@ events:
 | Файл | Что | Загрузчик |
 |---|---|---|
 | `Content/Config/weapons.yaml` | реестр оружия (поведение/уровни/цены) + `magnet` | `Weapons.WeaponConfig.Load()` |
-| `Content/Config/enemies.yaml` | враги: hp/урон/скорость/`attackSpeed`/`tactics`/`reward` + вид и поведение (`sprite`/`scale`/`shoot`/`ai`/`wander`/`dirMin`/`dirMax`) | `Utils.EnemyConfig.Load()` |
-| `Content/Config/bonuses.yaml` | параметры бонусов (хил HP, очки за звезду) | `Utils.BonusConfig.Load()` |
+| `Content/Config/enemies.yaml` | враги: hp/урон/скорость/`attackSpeed`/`tactics`/`reward` + вид и поведение (`sprite`/`scale`/`shoot`/`ai`/`wander`/`dirMin`/`dirMax`); секция `elite` — множители элитной версии | `Utils.EnemyConfig.Load()` |
+| `Content/Config/bonuses.yaml` | параметры бонусов (хил HP, очки за звезду), секция `combo` — пороги множителя очков | `Utils.BonusConfig.Load()` |
 | `Content/Config/options.yaml` | экран + игрок (HP, скорость, время неуязвимости…) | `Utils.GameOptions.Load()` |
 | `Content/Config/effects.yaml` | частицы (взрывы/искры), screenshake, слои параллакса | `Utils.EffectsConfig.Load()` |
 | `Content/Config/upgrades.yaml` | постоянные апгрейды магазина (цена/рост/эффект) | `Utils.UpgradeConfig.Load()` |

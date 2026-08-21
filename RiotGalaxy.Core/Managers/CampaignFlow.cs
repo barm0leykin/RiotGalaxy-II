@@ -167,6 +167,7 @@ namespace RiotGalaxy.Core.Managers
             _levels.LoadBattle(battleName, _gm.ScreenWidth, _gm.ScreenHeight);
             _levelClearTimer = 0f;
             Barks.Reset();                            // барки пилота — с чистого листа на каждый бой
+            Combo.Reset();                            // комбо-серия не переносится между боями
             Barks.Fire("battleStart");
 
             // Чекпоинт «последней волны» — чтобы «Продолжить» возобновляло именно этот бой.

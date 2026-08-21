@@ -94,7 +94,32 @@ namespace RiotGalaxy.Core.Utils
                                                Sprite = "Images/Enemies/thin_pink_6", Scale = 3.0f, Ai = "boss", Shoot = "aim", DirMin = 135, DirMax = 135, Reward = 500 },
         };
 
+        /// <summary>
+        /// Модификатор «элита»: тот же тип врага, но живучее/больнее/дороже и со свечением.
+        /// Ставится врагу флагом `elite: true` в YAML боя (см. <see cref="GameObjects.Enemy.MakeElite"/>).
+        /// </summary>
+        public class EliteDef
+        {
+            public float HpMult { get; set; } = 3f;
+            public float DamageMult { get; set; } = 1.25f;
+            public float RewardMult { get; set; } = 2.5f;
+            public float Scale { get; set; } = 1.18f;
+            public List<int> Tint { get; set; }
+            public float AuraStrength { get; set; } = 0.45f;
+            public float AuraPulse { get; set; } = 3f;
+            public float ExplosionMult { get; set; } = 2f;
+
+            /// <summary>Оттенок спрайта элиты (по умолчанию — золото).</summary>
+            public Microsoft.Xna.Framework.Color TintColor =>
+                (Tint != null && Tint.Count >= 3)
+                    ? new Microsoft.Xna.Framework.Color(Tint[0], Tint[1], Tint[2])
+                    : new Microsoft.Xna.Framework.Color(255, 214, 130);
+        }
+
         private static Dictionary<EnemyType, Stats> _stats;
+
+        /// <summary>Параметры элитной версии врагов (секция `elite` в enemies.yaml).</summary>
+        public static EliteDef Elite { get; private set; } = new EliteDef();
 
         public static Stats Get(EnemyType type)
         {
@@ -105,6 +130,12 @@ namespace RiotGalaxy.Core.Utils
 
         public static void Load()
         {
+            // Файл читаем дважды: как словарь типов и как обёртку ради секции `elite` —
+            // ключи, не подходящие под конкретную схему, десериализатор игнорирует.
+            var elite = Yaml.LoadAsset<EliteWrapper>(Yaml.ConfigAsset("enemies.yaml"));
+            if (elite?.Elite != null)
+                Elite = elite.Elite;
+
             var data = Yaml.LoadAsset<Dictionary<string, Stats>>(Yaml.ConfigAsset("enemies.yaml"));
             if (data == null)
                 return;
@@ -115,6 +146,11 @@ namespace RiotGalaxy.Core.Utils
                 if (TryParseType(kv.Key, out var type) && kv.Value != null)
                     _stats[type] = kv.Value;
             }
+        }
+
+        private class EliteWrapper
+        {
+            public EliteDef Elite { get; set; }
         }
 
         /// <summary>Разбор имени типа врага (yaml) — ЕДИНСТВЕННЫЙ источник соответствия

@@ -7,6 +7,9 @@
 #   drop: <hp|power|rapid|speed|nuke> [, dropChance: %] — бонус при смерти врага (привязка к врагу).
 #       Без drop враг даёт только звёзды (кредиты). dropChance не задан → 100% (гарантированно).
 #       Пример: { enemy: heavy, count: 1, drop: hp }  /  { enemy: ukro, count: 8, drop: power, dropChance: 20 }
+#   elite: true — элитная версия того же типа: ×HP, ×урон, ×награда, золотое свечение
+#       (множители — секция elite в Config/enemies.yaml). На боссов не действует.
+#       Пример: { enemy: heavy, count: 1, elite: true, drop: hp }
 description: "First Contact"
 spawnInterval: 1.2
 events:

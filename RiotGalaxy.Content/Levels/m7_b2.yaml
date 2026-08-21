@@ -1,4 +1,5 @@
 # Корован — конвой. Камикадзе с двух сторон одновременно + строй тяжёлых.
+# Здесь игрок впервые встречает ЭЛИТУ — бронированного конвойного (золотое свечение, ×3 HP).
 description: "Корован — конвой"
 spawnInterval: 0.4
 sortie: true
@@ -9,3 +10,4 @@ events:
       - - { enemy: kamik, count: 4, route: cross-left, after: scatter }
       - - { enemy: kamik, count: 4, route: cross-right, after: scatter }
   - { enemy: heavy, count: 3, formation: true }
+  - { enemy: heavy, count: 1, elite: true, drop: hp }
